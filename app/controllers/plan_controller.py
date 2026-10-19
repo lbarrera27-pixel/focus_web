@@ -6,6 +6,7 @@ from app.database import get_db
 from app.dependencies import usuario_actual
 from app.models import Usuario
 from app.repositories.ajuste_repository import AjusteRepository
+from app.repositories.pausa_repository import PausaRepository
 from app.repositories.plan_repository import PlanRepository
 from app.schemas.ajuste_plan import AjusteActualizar, AjusteCrear, AjusteRespuesta
 from app.schemas.plan import PlanActualizar, PlanCrear, PlanRespuesta
@@ -19,7 +20,7 @@ def get_service(db: Session = Depends(get_db)) -> PlanService:
 
 
 def get_ajustes(db: Session = Depends(get_db)) -> AjusteService:
-    return AjusteService(PlanService(PlanRepository(db)), AjusteRepository(db))
+    return AjusteService(PlanService(PlanRepository(db)), AjusteRepository(db), PausaRepository(db))
 
 
 # ---------- PLAN ----------

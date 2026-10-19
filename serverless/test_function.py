@@ -28,7 +28,20 @@ def test_get_con_query():
     assert s == 200 and b["nivel"] == "baja" and b["cambio_pct"] == 5.0
 
 
+def test_pausas_ignoradas_reducen_menos():
+    s, b = llamar(cuerpo={"uso_real_min": 200, "uso_meta_min": 210, "limite_actual_min": 240, "pct_ignoradas": 0.8})
+    assert s == 200 and b["cambio_pct"] == -5.0 and b["nuevo_limite_min"] == 228
+    assert b["mensaje"] == "¡Gran semana! Reducimos tu límite un 5 %."
+
+
+def test_ajuste_gradual():
+    # 0.9 de adherencia queda entre "buena" (-5 %) y "excelente" (-10 %)
+    s, b = llamar(cuerpo={"uso_real_min": 220, "uso_meta_min": 200})
+    assert s == 200 and -10.0 < b["cambio_pct"] < -5.0
+
+
 def test_errores():
+    assert llamar(cuerpo={"uso_real_min": 10, "uso_meta_min": 200, "pct_ignoradas": 1.5})[0] == 400
     assert llamar(cuerpo={"uso_meta_min": 200})[0] == 400
     assert llamar(cuerpo={"uso_real_min": "x", "uso_meta_min": 200})[0] == 400
     assert llamar(cuerpo={"uso_real_min": 10, "uso_meta_min": 0})[0] == 400

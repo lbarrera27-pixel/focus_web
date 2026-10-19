@@ -1,4 +1,7 @@
+from datetime import datetime, time, timedelta
+
 from app.repositories.ajuste_repository import AjusteRepository
+from app.repositories.pausa_repository import PausaRepository
 from app.repositories.plan_repository import PlanRepository
 from app.services.base import ServicioPorUsuario
 from app.utils.errores import Conflicto, NoEncontrado
@@ -22,9 +25,17 @@ class PlanService(ServicioPorUsuario):
 
 
 class AjusteService:
-    def __init__(self, planes: PlanService, repo: AjusteRepository):
+    def __init__(self, planes: PlanService, repo: AjusteRepository, pausas: PausaRepository):
         self.planes = planes
         self.repo = repo
+        self.pausas = pausas
+
+    def _cambio(self, plan, semana: int, adherencia: float) -> float:
+        """Cambio % con las reglas difusas, usando las pausas ignoradas de esa semana del plan."""
+        desde = datetime.combine(plan.fecha_inicio + timedelta(weeks=semana - 1), time.min)
+        total, ignoradas = self.pausas.contar_entre(plan.usuario_id, desde, desde + timedelta(weeks=1))
+        cambio, _ = calcular_cambio(adherencia, ignoradas / total if total else 0.0)
+        return cambio
 
     def listar(self, usuario_id: int, plan_numero: int):
         return self.repo.listar(self.planes.obtener(usuario_id, plan_numero))
@@ -42,7 +53,7 @@ class AjusteService:
             raise Conflicto(f"Ya existe un ajuste para la semana {datos.semana}")
         valores = datos.model_dump()
         if valores["cambio_pct"] is None:
-            valores["cambio_pct"], _ = calcular_cambio(valores["adherencia"])
+            valores["cambio_pct"] = self._cambio(plan, datos.semana, valores["adherencia"])
         ajuste = self.repo.crear(plan, valores)
         if datos.semana > plan.semana_actual:
             self.planes.repo.actualizar(plan, {"semana_actual": datos.semana})
@@ -52,7 +63,7 @@ class AjusteService:
         ajuste = self.obtener(usuario_id, plan_numero, semana)
         datos = {k: v for k, v in cambios.model_dump(exclude_unset=True).items() if v is not None}
         if "adherencia" in datos and "cambio_pct" not in datos:
-            datos["cambio_pct"], _ = calcular_cambio(datos["adherencia"])
+            datos["cambio_pct"] = self._cambio(ajuste.plan, semana, datos["adherencia"])
         return self.repo.actualizar(ajuste, datos) if datos else ajuste
 
     def eliminar(self, usuario_id: int, plan_numero: int, semana: int) -> None:

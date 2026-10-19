@@ -4,28 +4,42 @@ Focus! — API serverless (Azure Functions, modelo de programación v2 de Python
 Ruta:  POST /api/ajuste-semanal   (también acepta GET con query string)
 
 Calcula el ajuste semanal del plan de reducción a partir del uso real y la
-meta de la semana. Usa las mismas reglas difusas que la API principal
-(app/utils/reglas_plan.py), así la app Android puede previsualizar el ajuste
+meta de la semana. Usa las mismas reglas difusas que la API principal:
+reglas_plan.py es una copia exacta de app/utils/reglas_plan.py (una prueba
+de tests/ lo verifica), así la app Android puede previsualizar el ajuste
 sin guardar nada en la base de datos.
 
 Ejemplo:
     POST https://<function-app>.azurewebsites.net/api/ajuste-semanal
-    {"uso_real_min": 230, "uso_meta_min": 210, "limite_actual_min": 240}
+    {"uso_real_min": 230, "uso_meta_min": 210, "limite_actual_min": 240, "pct_ignoradas": 0.3}
 """
 import json
 import logging
 
 import azure.functions as func
 
+from reglas_plan import calcular_cambio
+
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-REGLAS = [
-    # (adherencia mínima, cambio %, nivel, mensaje)
-    (0.90, -10.0, "excelente", "¡Gran semana! Reducimos tu límite un 10 %."),
-    (0.75, -5.0, "buena", "Vas bien. Reducimos tu límite un 5 %."),
-    (0.50, 0.0, "regular", "Mantengamos el mismo límite una semana más."),
-    (0.00, 5.0, "baja", "Fue una semana difícil; relajamos el límite un 5 %."),
-]
+INTRO = {
+    "excelente": "¡Gran semana!",
+    "buena": "Vas bien.",
+    "regular": "Semana regular.",
+    "baja": "Fue una semana difícil;",
+}
+
+
+def _mensaje(nivel: str, cambio: float) -> str:
+    if cambio <= -0.5:
+        accion = f"reducimos tu límite un {abs(cambio):g} %."
+    elif cambio >= 0.5:
+        accion = f"relajamos tu límite un {cambio:g} %."
+    else:
+        accion = "mantenemos el mismo límite una semana más."
+    if not INTRO[nivel].endswith(";"):
+        accion = accion[0].upper() + accion[1:]
+    return f"{INTRO[nivel]} {accion}"
 
 
 def _respuesta(cuerpo: dict, status: int = 200) -> func.HttpResponse:
@@ -52,21 +66,23 @@ def _leer_numero(datos: dict, campo: str, obligatorio: bool = True) -> float | N
     return numero
 
 
-def calcular_ajuste(uso_real: float, uso_meta: float, limite_actual: float | None) -> dict:
+def calcular_ajuste(uso_real: float, uso_meta: float, limite_actual: float | None,
+                    pct_ignoradas: float = 0.0) -> dict:
     if uso_meta <= 0:
         raise ValueError("'uso_meta_min' debe ser mayor que 0")
+    if pct_ignoradas > 1:
+        raise ValueError("'pct_ignoradas' debe estar entre 0 y 1")
     # Adherencia: 1.0 si usó lo mismo o menos que la meta; baja conforme se excede.
     adherencia = 1.0 if uso_real <= uso_meta else max(0.0, 1 - (uso_real - uso_meta) / uso_meta)
-    for minimo, cambio, nivel, mensaje in REGLAS:
-        if adherencia >= minimo:
-            break
+    cambio, nivel = calcular_cambio(adherencia, pct_ignoradas)
     resultado = {
         "uso_real_min": uso_real,
         "uso_meta_min": uso_meta,
+        "pct_ignoradas": pct_ignoradas,
         "adherencia": round(adherencia, 3),
         "nivel": nivel,
         "cambio_pct": cambio,
-        "mensaje": mensaje,
+        "mensaje": _mensaje(nivel, cambio),
     }
     if limite_actual is not None:
         resultado["limite_actual_min"] = limite_actual
@@ -91,6 +107,7 @@ def ajuste_semanal(req: func.HttpRequest) -> func.HttpResponse:
             _leer_numero(datos, "uso_real_min"),
             _leer_numero(datos, "uso_meta_min"),
             _leer_numero(datos, "limite_actual_min", obligatorio=False),
+            _leer_numero(datos, "pct_ignoradas", obligatorio=False) or 0.0,
         )
     except ValueError as e:
         return _respuesta({"detail": str(e)}, 400)

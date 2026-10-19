@@ -15,6 +15,7 @@ os.environ.pop("AZURE_STORAGE_CONNECTION_STRING", None)
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
+from app.models._comun import ahora  # noqa: E402
 from main import app  # noqa: E402
 
 
@@ -155,9 +156,9 @@ def test_planes_y_ajustes(client, u1):
     planes = client.get("/planes", headers=u1).json()
     assert [p["activo"] for p in planes] == [False, True]
     assert client.get("/planes/activo", headers=u1).json()["numero"] == 2
-    # ajuste sin cambio_pct -> lo calcula con las reglas difusas
+    # ajuste sin cambio_pct -> lo calcula con las reglas difusas (0.92 queda entre "buena" y "excelente")
     r = client.post("/planes/2/ajustes", headers=u1, json={"semana": 2, "uso_meta": 210, "adherencia": 0.92})
-    assert r.status_code == 201 and r.json()["cambio_pct"] == -10.0
+    assert r.status_code == 201 and -10.0 < r.json()["cambio_pct"] < -5.0
     assert client.get("/planes/2", headers=u1).json()["semana_actual"] == 2
     assert client.post("/planes/2/ajustes", headers=u1, json={"semana": 2, "uso_meta": 210, "adherencia": 0.5}).status_code == 409
     r = client.put("/planes/2/ajustes/2", headers=u1, json={"adherencia": 0.6})
@@ -169,6 +170,24 @@ def test_planes_y_ajustes(client, u1):
     client.post("/planes/2/ajustes", headers=u1, json={"semana": 3, "uso_meta": 190, "adherencia": 0.8})
     assert client.delete("/planes/2", headers=u1).status_code == 204  # borra también sus ajustes
     assert client.get("/planes/activo", headers=u1).status_code == 404
+
+
+def test_ajuste_considera_pausas_ignoradas(client):
+    u3 = registrar(client, "cuatro@focus.app")
+    client.post("/apps", headers=u3, json={"nombre": "Instagram", "paquete": "com.instagram.android"})
+    hoy = ahora().date().isoformat()
+    client.post("/planes", headers=u3, json={"fecha_inicio": hoy, "limite_base": 240})
+    # sin pausas en la semana: cumplió la meta -> reducción máxima
+    r = client.post("/planes/1/ajustes", headers=u3, json={"semana": 1, "uso_meta": 210, "adherencia": 1.0})
+    assert r.json()["cambio_pct"] == -10.0
+    # ignoró 3 de 4 pausas esa semana -> cumplió "a la fuerza", se reduce menos
+    for i in range(4):
+        client.post("/pausas", headers=u3, json={"app_numero": 1, "tipo": "media", "duracion_seg": 10, "ignorada": i > 0})
+    r = client.put("/planes/1/ajustes/1", headers=u3, json={"adherencia": 1.0})
+    assert r.json()["cambio_pct"] == -5.0
+    # las pausas de otra semana no cuentan
+    r = client.post("/planes/1/ajustes", headers=u3, json={"semana": 2, "uso_meta": 190, "adherencia": 1.0})
+    assert r.json()["cambio_pct"] == -10.0
 
 
 def test_dominios(client, u1):
