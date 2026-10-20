@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 
 from app.config import CORS_ORIGINS
 from app.controllers import (
@@ -28,6 +28,7 @@ from app.database import sincronizar_esquema
 from app.utils.errores import Conflicto, NoEncontrado
 
 logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("focus.api")
 
 
 @asynccontextmanager
@@ -71,6 +72,17 @@ async def manejar_conflicto(_: Request, exc: Conflicto):
 @app.exception_handler(IntegrityError)
 async def manejar_integridad(_: Request, exc: IntegrityError):
     return JSONResponse(status_code=409, content={"detail": "El registro viola una restricción de la base de datos"})
+
+
+@app.exception_handler(DBAPIError)
+async def manejar_bd_no_disponible(_: Request, exc: DBAPIError):
+    # Azure SQL serverless se pausa tras 1 h sin uso; la primera petición falla mientras despierta
+    log.warning("Base de datos no disponible: %s", exc.orig)
+    return JSONResponse(
+        status_code=503,
+        headers={"Retry-After": "30"},
+        content={"detail": "La base de datos se está iniciando; reintenta en unos 30 segundos"},
+    )
 
 
 # ---------- Controladores ----------
