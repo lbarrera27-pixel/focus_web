@@ -2482,7 +2482,84 @@
       ]
     },
     {
-      "name": "12 Casos de error",
+      "name": "12 Configuración",
+      "description": "Ajustes del portal web: un objeto JSON libre por usuario (máximo ~20 KB). PUT reemplaza el JSON completo.",
+      "item": [
+        {
+          "name": "GET /configuracion/me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT /configuracion/me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Devuelve el JSON guardado', () => pm.expect(pm.response.json().tema).to.eql('oscuro'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tema\": \"oscuro\",\n  \"notificaciones\": {\n    \"resumenDiario\": true,\n    \"hora\": \"21:00\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Casos de error",
       "description": "",
       "item": [
         {
@@ -2689,11 +2766,53 @@
               }
             }
           }
+        },
+        {
+          "name": "PUT /configuracion/me con un arreglo (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422', () => pm.expect(pm.response.code).to.be.oneOf([422]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "[1, 2, 3]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         }
       ]
     },
     {
-      "name": "13 Serverless (Azure Function)",
+      "name": "14 Serverless (Azure Function)",
       "description": "API serverless desplegada en Azure Functions. funcUrl = https://<function-app>.azurewebsites.net",
       "item": [
         {

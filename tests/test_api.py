@@ -232,6 +232,27 @@ def test_estadisticas(client, u1, u2):
     assert client.get("/estadisticas", headers=u2).json()["total_apps"] == 1
 
 
+def test_configuracion(client, u1, u2):
+    assert client.get("/configuracion/me").status_code == 422
+    assert client.put("/configuracion/me", json={"tema": "oscuro"}).status_code == 422
+    assert client.get("/configuracion/me", headers=u1).json() == {}
+    datos = {"tema": "oscuro", "notificaciones": {"resumen": True, "hora": "21:00"}, "idioma": "es-MX"}
+    r = client.put("/configuracion/me", headers=u1, json=datos)
+    assert r.status_code == 200 and r.json() == datos
+    assert client.get("/configuracion/me", headers=u1).json() == datos
+    # el PUT reemplaza el JSON completo
+    assert client.put("/configuracion/me", headers=u1, json={"tema": "claro"}).json() == {"tema": "claro"}
+    assert client.get("/configuracion/me", headers=u1).json() == {"tema": "claro"}
+    # cada usuario tiene su propia configuración
+    assert client.get("/configuracion/me", headers=u2).json() == {}
+    client.put("/configuracion/me", headers=u2, json={"tema": "oscuro"})
+    assert client.get("/configuracion/me", headers=u1).json() == {"tema": "claro"}
+    # solo objetos y de máximo ~20 KB
+    assert client.put("/configuracion/me", headers=u1, json=[1, 2]).status_code == 422
+    assert client.put("/configuracion/me", headers=u1, json={"x": "a" * 21000}).status_code == 422
+    assert client.get("/configuracion/me", headers=u1).json() == {"tema": "claro"}
+
+
 def test_desactivar_cuenta(client):
     h = registrar(client, "tres@focus.app")
     assert client.delete("/usuarios/me", headers=h).status_code == 204

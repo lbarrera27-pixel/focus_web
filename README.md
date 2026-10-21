@@ -5,7 +5,7 @@ Proyecto final de **Servicios Cloud** (Facultad de Informática, UAQ).
 
 | Requisito de la entrega (19/oct/2026) | Cómo se cumple |
 |---|---|
-| CRUD de las APIs mediante controladores y rutas de cada tabla | 10 tablas, un controlador por tabla en `app/controllers/` (56 operaciones) |
+| CRUD de las APIs mediante controladores y rutas de cada tabla | 11 tablas, un controlador por tabla en `app/controllers/` (58 operaciones) |
 | Base de datos en la nube | **Azure SQL Database** con SQLAlchemy (`create_all` sincroniza el esquema al arrancar) |
 | Servicio de almacenamiento | **Azure Blob Storage**: `POST /usuarios/me/foto/archivo` sube la foto de perfil |
 | 1 API desplegada en la nube (mínimo 12 rutas) | FastAPI en **Azure App Service** (Linux, Python 3.12) |
@@ -35,7 +35,7 @@ focus-api/
 │   ├── config.py            # variables de entorno (BD, Blob, CORS)
 │   ├── database.py          # engine, sesión y sincronización del esquema
 │   ├── dependencies.py      # usuario_actual(): lee el header X-Usuario-Id
-│   ├── models/              # 10 tablas (una por archivo)
+│   ├── models/              # 11 tablas (una por archivo)
 │   ├── schemas/             # entrada / salida de cada tabla
 │   ├── repositories/        # acceso a datos
 │   ├── services/            # lógica de negocio
@@ -124,7 +124,7 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
    a cada petición (script a nivel colección). Incluye casos de error (401, 404, 409, 422).
 4. Para la foto con Blob Storage: en *POST /usuarios/me/foto/archivo* → Body → form-data → elige una imagen.
 
-## Rutas (56 operaciones)
+## Rutas (58 operaciones)
 
 | Método | Ruta | Tabla / módulo |
 |---|---|---|
@@ -155,6 +155,7 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
 | POST / GET | `/tokens-dispositivo` | TOKEN_DISPOSITIVO |
 | GET / PUT / DELETE | `/tokens-dispositivo/{numero}` | TOKEN_DISPOSITIVO |
 | GET | `/estadisticas?desde=&hasta=` | Indicadores del usuario |
+| GET / PUT | `/configuracion/me` | CONFIGURACION_USUARIO (ajustes del portal web, JSON de máx. ~20 KB) |
 | POST / GET | `/api/ajuste-semanal` | **Azure Function** (serverless) |
 
 ## Reglas de negocio destacadas
