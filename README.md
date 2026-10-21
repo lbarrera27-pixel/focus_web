@@ -83,6 +83,28 @@ pip install pytest httpx
 pytest -q
 ```
 
+## Portal web (`web/`)
+
+Panel de investigación hecho con React + Vite a partir del diseño de Figma ("Dashboards web").
+Consume esta misma API: inicia sesión con `/auth/login` y manda `X-Usuario-Id` en cada petición.
+
+```powershell
+cd web
+copy .env.example .env    # VITE_API_URL apunta a la API (local o Azure)
+npm install
+npm run dev               # http://localhost:5173
+```
+
+- **Ver demo sin cuenta** muestra el portal con datos de ejemplo, sin servidor.
+- Hecho: Panel General (6 tarjetas con datos reales), Telemetría Cloud (dispositivo, estado de
+  la API, bitácora en vivo), Análisis e IA (curva de riesgo y el mismo motor Mamdani de la API)
+  y Clústeres (K-Means sobre los días del usuario; "Aplicar" llama a `PUT /apps` y
+  `POST /planes/{n}/ajustes`) y Ajustes y Perfil (4 pestañas).
+- En Ajustes, "Guardar" envía a la API el límite diario (`PUT /planes/{n}`) y el límite de aperturas
+  de cada app (`PUT /apps/{n}`); también se pueden crear apps (`POST /apps`) y desactivar la cuenta
+  (`DELETE /usuarios/me`). Los ajustes sin endpoint (niveles de fricción, modo foco, privacidad…)
+  se guardan solo en el navegador y la interfaz lo indica con la etiqueta "Solo en este navegador".
+
 ## Desplegar en Azure
 
 Requisitos: [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) y
