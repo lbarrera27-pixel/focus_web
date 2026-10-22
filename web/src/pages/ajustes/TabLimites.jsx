@@ -5,7 +5,7 @@ import iconoVideo from '../../assets/icons/cat-video.svg'
 import iconoJuegos from '../../assets/icons/cat-juegos.svg'
 import iconoMensajeria from '../../assets/icons/cat-mensajeria.svg'
 import iconoLuna from '../../assets/icons/aj-luna.svg'
-import { Cabecera, Chip, Interruptor, Nota, Pasos, SoloLocal } from './Comunes.jsx'
+import { Cabecera, Chip, Interruptor, Nota, Pasos } from './Comunes.jsx'
 import { NOMBRE_CATEGORIA, formatoMin, proximoAjuste, usoHoyPorGrupo, usoPorDiaSemana } from '../../data/ajustes.js'
 
 const CATEGORIAS = [
@@ -105,7 +105,7 @@ export default function TabLimites({ datos, locales, setLocales, borrador, setBo
           <p className="vacio">No tienes un plan activo. Créalo desde la app Android o con POST /planes para fijar un límite diario.</p>
         )}
 
-        <p className="aj-subtitulo">LÍMITE POR CATEGORÍA <SoloLocal /></p>
+        <p className="aj-subtitulo">LÍMITE POR CATEGORÍA</p>
         <div className="aj-categorias">
           {CATEGORIAS.map((c) => {
             const lim = locales.categorias[c.id]
@@ -201,7 +201,7 @@ export default function TabLimites({ datos, locales, setLocales, borrador, setBo
           <span className="aj-opcion__icono"><img src={iconoLuna} alt="" /></span>
           <span className="aj-opcion__texto">
             <b>Descanso nocturno</b>
-            <small>Bloquea todas las apps restringidas durante tu horario de sueño. <SoloLocal /></small>
+            <small>Bloquea todas las apps restringidas durante tu horario de sueño.</small>
           </span>
           <input type="time" className="aj-hora-chip" value={locales.descanso.inicio} onChange={(e) => cambiar((l) => ((l.descanso.inicio = e.target.value), l))} aria-label="Inicio del descanso" />
           <small className="aj-a">a</small>

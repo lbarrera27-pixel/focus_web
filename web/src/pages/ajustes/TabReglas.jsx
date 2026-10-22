@@ -6,7 +6,7 @@ import iconoConfig from '../../assets/icons/aj-config.svg'
 import iconoReloj from '../../assets/icons/aj-reloj.svg'
 import iconoFoco from '../../assets/icons/aj-foco.svg'
 import iconoCalendario from '../../assets/icons/aj-calendario.svg'
-import { Cabecera, Chip, ChipNivel, Interruptor, Nota, Pasos, SoloLocal } from './Comunes.jsx'
+import { Cabecera, Chip, ChipNivel, Interruptor, Nota, Pasos } from './Comunes.jsx'
 import { progresionSemanal } from '../../data/ajustes.js'
 
 const NIVELES = [
@@ -104,7 +104,7 @@ export default function TabReglas({ datos, locales, setLocales }) {
           {editando ? 'Listo' : 'Personalizar tiempos de espera'}
         </button>
         <div className="aj-pie">
-          <Nota>La IA sugiere el nivel de cada semana según tu adherencia al plan. <SoloLocal /></Nota>
+          <Nota>La IA sugiere el nivel de cada semana según tu adherencia al plan.</Nota>
         </div>
       </section>
 
@@ -260,7 +260,7 @@ export default function TabReglas({ datos, locales, setLocales }) {
               <Icono src={iconoCalendario} tam={15} />
               <span>
                 <b>{foco.dias.length} días activos · {foco.inicio}–{foco.fin}</b>
-                <small>Las notificaciones se silenciarán y se aplicará Fricción Nivel 3. <SoloLocal /></small>
+                <small>Las notificaciones se silenciarán y se aplicará Fricción Nivel 3.</small>
               </span>
             </div>
           </div>

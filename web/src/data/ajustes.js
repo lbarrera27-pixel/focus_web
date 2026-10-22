@@ -1,8 +1,10 @@
 // Estado de la sección "Ajustes y Perfil".
 // - Lo que tiene endpoint se guarda en la API: límite diario (PUT /planes/{n}) y límite de aperturas
 //   de cada app (PUT /apps/{n}).
-// - Lo demás (niveles de fricción, modo foco, privacidad…) no existe en la API todavía, así que se
-//   guarda en este navegador por usuario (localStorage) y la interfaz lo indica.
+// - Lo demás (niveles de fricción, modo foco, privacidad…) se guarda como un JSON por usuario en
+//   GET/PUT /configuracion/me. localStorage queda como copia de respaldo si la API no responde, y
+//   es el único almacenamiento en el modo demo.
+import { api } from '../api.js'
 import { fechaISO, fechaServidor } from './panel.js'
 
 const DIA_MS = 86_400_000
@@ -25,21 +27,45 @@ export const DEFAULTS = {
 
 const clave = (usuarioId) => `focus.ajustes.${usuarioId}`
 
+const conDefaults = (guardado) => ({ ...structuredClone(DEFAULTS), ...guardado })
+
+// Copia del navegador: se muestra al abrir la sección mientras responde la API
 export function leerLocales(usuarioId) {
   try {
     const guardado = JSON.parse(localStorage.getItem(clave(usuarioId)))
-    return guardado ? { ...structuredClone(DEFAULTS), ...guardado } : structuredClone(DEFAULTS)
+    return guardado ? conDefaults(guardado) : structuredClone(DEFAULTS)
   } catch {
     return structuredClone(DEFAULTS)
   }
 }
 
-export function guardarLocales(usuarioId, locales) {
+function guardarEnNavegador(usuarioId, locales) {
   try {
     localStorage.setItem(clave(usuarioId), JSON.stringify(locales))
   } catch {
-    // Sin almacenamiento (modo privado): los cambios viven solo en esta sesión
+    // Sin almacenamiento (modo privado): la copia del navegador no se conserva
   }
+}
+
+// Ajustes guardados en la API, o null si no responde (se sigue con la copia del navegador).
+// Si el usuario nunca ha guardado en la API se usa la copia del navegador, que se sube al guardar.
+export async function cargarLocales(usuario) {
+  if (usuario.demo) return null
+  try {
+    const remotos = await api.configuracion(usuario.id)
+    if (!remotos || Object.keys(remotos).length === 0) return leerLocales(usuario.id)
+    const locales = conDefaults(remotos)
+    guardarEnNavegador(usuario.id, locales)
+    return locales
+  } catch {
+    return null
+  }
+}
+
+// En la demo solo se guarda en el navegador; si no, en la API y una copia en el navegador
+export async function guardarLocales(usuario, locales) {
+  if (!usuario.demo) await api.guardarConfiguracion(usuario.id, locales)
+  guardarEnNavegador(usuario.id, locales)
 }
 
 // ---------- Utilidades de datos ----------

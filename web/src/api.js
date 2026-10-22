@@ -63,6 +63,9 @@ export const api = {
   actualizarPlan: (id, numero, cambios) => pedir(`/planes/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   eliminarCuenta: (id) => pedir('/usuarios/me', { usuarioId: id, metodo: 'DELETE' }),
   actualizarApp: (id, numero, cambios) => pedir(`/apps/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  // Ajustes del portal (JSON libre por usuario); {} si nunca se han guardado
+  configuracion: (id) => pedir('/configuracion/me', { usuarioId: id }),
+  guardarConfiguracion: (id, datos) => pedir('/configuracion/me', { usuarioId: id, metodo: 'PUT', cuerpo: datos }),
   // Sin cambio_pct: el servidor lo calcula con sus reglas difusas (409 si la semana ya existe)
   crearAjuste: (id, numero, ajuste) => pedir(`/planes/${numero}/ajustes`, { usuarioId: id, metodo: 'POST', cuerpo: ajuste }),
   // Estado del servidor y de la base de datos; también sirve para medir la latencia

@@ -56,11 +56,6 @@ export function Pasos({ onMenos, onMas, etiqueta, deshabilitarMenos, deshabilita
   )
 }
 
-// Etiqueta corta para lo que solo se guarda en este navegador
-export function SoloLocal() {
-  return <span className="aj-local" title="La API aún no tiene dónde guardar este ajuste">Solo en este navegador</span>
-}
-
 export const CHIP_NIVEL = {
   1: { fondo: '#fef3c7', texto: '#92400e' },
   2: { fondo: '#e0f2fe', texto: '#0369a1' },

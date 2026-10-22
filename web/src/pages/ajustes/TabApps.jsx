@@ -10,7 +10,7 @@ import logoX from '../../assets/icons/logo-x.svg'
 import logoYoutube from '../../assets/icons/logo-youtube.svg'
 import logoFacebook from '../../assets/icons/logo-facebook.svg'
 import logoClash from '../../assets/icons/logo-clash.png'
-import { Cabecera, Chip, ChipNivel, Interruptor, Nota, Pasos, SoloLocal } from './Comunes.jsx'
+import { Cabecera, Chip, ChipNivel, Interruptor, Nota, Pasos } from './Comunes.jsx'
 import { etiquetaCategoria, pausasDeHoy, resumenApps } from '../../data/ajustes.js'
 import { api } from '../../api.js'
 
@@ -226,8 +226,7 @@ export default function TabApps({ usuario, datos, locales, setLocales, borrador,
         )}
         <div className="aj-pie">
           <Nota>
-            {aviso ?? 'El límite se guarda en la API (aperturas por día). Desactivar una app solo aplica en este navegador.'}{' '}
-            {!aviso && <SoloLocal />}
+            {aviso ?? 'El límite (aperturas por día) y las apps desactivadas se guardan en tu cuenta en la nube.'}
           </Nota>
         </div>
       </section>

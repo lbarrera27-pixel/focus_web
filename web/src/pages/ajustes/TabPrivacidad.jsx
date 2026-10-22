@@ -5,7 +5,7 @@ import iconoResultados from '../../assets/icons/pr-resultados.svg'
 import iconoErrores from '../../assets/icons/pr-errores.svg'
 import iconoFirmado from '../../assets/icons/pr-firmado.svg'
 import iconoNo from '../../assets/icons/pr-no.svg'
-import { Cabecera, Chip, Interruptor, Nota, SoloLocal } from './Comunes.jsx'
+import { Cabecera, Chip, Interruptor, Nota } from './Comunes.jsx'
 import { csvDeDatos } from '../../data/ajustes.js'
 import { fechaServidor } from '../../data/panel.js'
 import { api } from '../../api.js'
@@ -142,7 +142,7 @@ export default function TabPrivacidad({ usuario, datos, locales, setLocales, onC
         </div>
 
         <div className="aj-pie">
-          <Nota>Estas preferencias aún no tienen endpoint en la API. <SoloLocal /></Nota>
+          <Nota>Estas preferencias se guardan en tu cuenta en la nube.</Nota>
         </div>
       </section>
 

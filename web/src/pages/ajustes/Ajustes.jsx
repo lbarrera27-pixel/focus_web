@@ -3,7 +3,7 @@ import Icono from '../../components/Icono.jsx'
 import iconoCandado from '../../assets/icons/aj-candado.svg'
 import iconoRestablecer from '../../assets/icons/aj-restablecer.svg'
 import iconoGuardar from '../../assets/icons/aj-guardar.svg'
-import { DEFAULTS, guardarLocales, leerLocales } from '../../data/ajustes.js'
+import { DEFAULTS, cargarLocales, guardarLocales, leerLocales } from '../../data/ajustes.js'
 import { haceCuanto } from '../../data/panel.js'
 import { api } from '../../api.js'
 import TabReglas from './TabReglas.jsx'
@@ -33,8 +33,10 @@ function borradorApi(datos) {
 
 export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, onCuentaEliminada }) {
   const [pestana, setPestana] = useState('reglas')
-  const [locales, setLocales] = useState(() => leerLocales(usuario.id))
-  const [guardadosLocales, setGuardadosLocales] = useState(() => leerLocales(usuario.id))
+  // Se empieza con la copia del navegador y se reemplaza con lo que devuelva GET /configuracion/me
+  const [inicial] = useState(() => leerLocales(usuario.id))
+  const [locales, setLocales] = useState(() => structuredClone(inicial))
+  const [guardadosLocales, setGuardadosLocales] = useState(inicial)
   const [borrador, setBorrador] = useState(() => borradorApi(datos))
   const [estado, setEstado] = useState({ guardando: false, mensaje: null, error: false })
   const [ultimaSync, setUltimaSync] = useState(cargadoEn)
@@ -58,6 +60,20 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
   useEffect(() => {
     setUltimaSync(cargadoEn)
   }, [cargadoEn])
+
+  // Si el usuario ya empezó a editar antes de que responda la API, se conservan sus cambios
+  useEffect(() => {
+    let vigente = true
+    cargarLocales(usuario).then((remotos) => {
+      if (!vigente || !remotos) return
+      setLocales((l) => (JSON.stringify(l) === JSON.stringify(inicial) ? structuredClone(remotos) : l))
+      setGuardadosLocales(remotos)
+    })
+    return () => {
+      vigente = false
+    }
+  }, [usuario, inicial])
+
   const cambiosApi = useMemo(() => {
     const apps = Object.entries(borrador.limitesApps).filter(([n, v]) => original.limitesApps[n] !== v)
     return { plan: borrador.limiteGlobal !== original.limiteGlobal, apps }
@@ -80,18 +96,19 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
         if (cambiosApi.plan && datos.plan) await api.actualizarPlan(usuario.id, datos.plan.numero, { limite_base: borrador.limiteGlobal })
         for (const [numero, limite] of cambiosApi.apps) await api.actualizarApp(usuario.id, numero, { limite_aperturas: limite })
       }
-      guardarLocales(usuario.id, locales)
+      // PUT /configuracion/me (en la demo, solo en el navegador)
+      if (cambiosLocales) await guardarLocales(usuario, locales)
       setGuardadosLocales(structuredClone(locales))
       // En la demo no hay API: los cambios de límites se descartan
       if (usuario.demo) setBorrador(borradorApi(datos))
-      const enApi = (cambiosApi.plan ? 1 : 0) + cambiosApi.apps.length
+      const enApi = (cambiosApi.plan ? 1 : 0) + cambiosApi.apps.length + (cambiosLocales ? 1 : 0)
       setEstado({
         guardando: false,
         error: false,
-        mensaje: usuario.demo ? 'Guardado en este navegador (demo: los límites no se envían a la API)' : enApi ? `Guardado · ${enApi} cambio(s) enviados a la API` : 'Guardado en este navegador',
+        mensaje: usuario.demo ? 'Guardado en este navegador (demo: no se envía nada a la API)' : `Guardado · ${enApi} cambio(s) enviados a la API`,
       })
       setUltimaSync(Date.now())
-      if (enApi && !usuario.demo) onRecargar()
+      if ((cambiosApi.plan || cambiosApi.apps.length) && !usuario.demo) onRecargar()
     } catch (err) {
       setEstado({ guardando: false, error: true, mensaje: `No se pudo guardar: ${err.message || 'sin conexión'}` })
     }
