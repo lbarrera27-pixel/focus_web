@@ -41,6 +41,7 @@ focus-api/
 │   ├── services/            # lógica de negocio
 │   ├── controllers/         # rutas (un controlador por tabla)
 │   └── utils/               # bcrypt, Blob Storage, reglas del plan, errores
+├── ia/                      # IA: generador sintético, regresión logística desde cero y métricas
 ├── serverless/              # Azure Function (API serverless)
 ├── deploy/                  # scripts de PowerShell para crear y desplegar en Azure
 ├── postman/                 # colección Focus_API_v2 con pruebas automáticas
@@ -124,7 +125,7 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
    a cada petición (script a nivel colección). Incluye casos de error (401, 404, 409, 422).
 4. Para la foto con Blob Storage: en *POST /usuarios/me/foto/archivo* → Body → form-data → elige una imagen.
 
-## Rutas (56 operaciones)
+## Rutas (57 operaciones)
 
 | Método | Ruta | Tabla / módulo |
 |---|---|---|
@@ -155,6 +156,7 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
 | POST / GET | `/tokens-dispositivo` | TOKEN_DISPOSITIVO |
 | GET / PUT / DELETE | `/tokens-dispositivo/{numero}` | TOKEN_DISPOSITIVO |
 | GET | `/estadisticas?desde=&hasta=` | Indicadores del usuario |
+| GET | `/riesgo` | **IA:** riesgo de recaída (regresión logística) |
 | POST / GET | `/api/ajuste-semanal` | **Azure Function** (serverless) |
 
 ## Reglas de negocio destacadas
@@ -163,6 +165,33 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
   Eventos y pausas validan que la app (y la franja) existan (`404`).
 - **Contraseñas** con bcrypt; el email se guarda en minúsculas y es único.
 - **Un solo plan activo:** al crear un plan, los anteriores se desactivan.
-- **Ajuste semanal:** si no se envía `cambio_pct`, se calcula por la adherencia
-  (≥ 0.90 → −10 %, ≥ 0.75 → −5 %, ≥ 0.50 → 0 %, menor → +5 %). La Azure Function usa las mismas reglas.
+- **Ajuste semanal:** si no se envía `cambio_pct`, lo calcula un controlador difuso Mamdani con la
+  adherencia y las pausas ignoradas de esa semana (`app/utils/reglas_plan.py`). La Azure Function usa las mismas reglas.
 - **Sesión de foco:** al marcarla `completada`, se registra la hora de fin.
+
+## IA: riesgo de recaída
+
+`GET /riesgo` estima la probabilidad de que el usuario **se pase de su límite la semana siguiente**
+a su último ajuste (adherencia < 0.9). Usa 7 variables de esa semana: adherencia, tendencia,
+pausas ignoradas, uso nocturno (22–06 h), sesiones de foco completadas, recorte difuso y racha.
+Responde la probabilidad, el nivel (`bajo` debajo del umbral del modelo, `medio`, `alto` desde 0.6)
+y los factores ordenados por cuánto pesan (`w_j · z_j`).
+
+El modelo es una **regresión logística programada desde cero con NumPy** (`ia/regresion_logistica.py`)
+y entrenada con usuarios sintéticos (`ia/generador.py`). La API solo lee los parámetros de
+`app/utils/modelo_riesgo.json` y hace la inferencia en Python puro, así que no necesita NumPy.
+
+```powershell
+pip install -r ia/requirements.txt
+python -m ia.generador   # resumen de los datos sintéticos
+python -m ia.entrenar    # entrena, evalúa y reescribe modelo_riesgo.json e ia/resultados/
+```
+
+Resultados en prueba (usuarios que el modelo nunca vio), en `ia/resultados/metricas.json`:
+
+| | Exactitud | Precisión | Recall | F1 | AUC |
+|---|---|---|---|---|---|
+| Modelo (umbral 0.42, recall ≥ 80 % en validación) | 0.761 | 0.720 | 0.759 | 0.739 | 0.848 |
+| Línea base (siempre "no recae") | 0.553 | 0 | 0 | 0 | 0.5 |
+
+Los coeficientes coinciden con `LogisticRegression` de scikit-learn (diferencia < 0.0001).

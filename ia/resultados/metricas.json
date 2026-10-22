@@ -1,0 +1,113 @@
+{
+  "datos": {
+    "filas": 22100,
+    "usuarios": 2000,
+    "tasa_recaida": 0.45665158371040726,
+    "entrenamiento": 15645,
+    "validacion": 3271,
+    "prueba": 3184
+  },
+  "hiperparametros": {
+    "alfa": 1.0,
+    "lambda": 10.0,
+    "epocas": 5000
+  },
+  "busqueda": [
+    {
+      "alfa": 1.0,
+      "lambda": 0.0,
+      "costo_validacion": 0.4577824306765172
+    },
+    {
+      "alfa": 1.0,
+      "lambda": 0.1,
+      "costo_validacion": 0.4577777954961795
+    },
+    {
+      "alfa": 1.0,
+      "lambda": 1.0,
+      "costo_validacion": 0.45773777755640566
+    },
+    {
+      "alfa": 1.0,
+      "lambda": 10.0,
+      "costo_validacion": 0.457477889057236
+    },
+    {
+      "alfa": 1.0,
+      "lambda": 100.0,
+      "costo_validacion": 0.4590821162073385
+    }
+  ],
+  "umbral": 0.42,
+  "prueba": {
+    "exactitud": 0.760678391959799,
+    "precision": 0.7204803202134756,
+    "recall": 0.7589599437807449,
+    "f1": 0.7392197125256673,
+    "f2": 0.7509386733416771,
+    "auc_roc": 0.8478564413706356,
+    "matriz_confusion": {
+      "vp": 1080,
+      "fp": 419,
+      "fn": 343,
+      "vn": 1342
+    }
+  },
+  "prueba_umbral_0_5": {
+    "exactitud": 0.7713567839195979,
+    "precision": 0.7666922486569455,
+    "recall": 0.702037947997189,
+    "f1": 0.7329420396184886,
+    "f2": 0.7140814867762687,
+    "auc_roc": 0.8478564413706356,
+    "matriz_confusion": {
+      "vp": 999,
+      "fp": 304,
+      "fn": 424,
+      "vn": 1457
+    }
+  },
+  "linea_base_mayoritaria": {
+    "exactitud": 0.5530778894472361,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "f2": 0.0,
+    "auc_roc": 0.5,
+    "matriz_confusion": {
+      "vp": 0,
+      "fp": 0,
+      "fn": 1423,
+      "vn": 1761
+    }
+  },
+  "coeficientes": {
+    "adherencia": -1.749291,
+    "tendencia": 0.424413,
+    "pct_ignoradas": 0.291217,
+    "pct_nocturno": 0.287886,
+    "pct_foco_completadas": -0.468326,
+    "cambio_pct": -0.703977,
+    "racha": -0.515245
+  },
+  "sklearn": {
+    "w_sklearn": [
+      -1.7492903682031449,
+      0.4244130143802985,
+      0.2912170004184843,
+      0.28788602734736,
+      -0.46832644076072255,
+      -0.7039766571462649,
+      -0.5152448046871417
+    ],
+    "b_sklearn": -0.17224836805314778,
+    "max_dif_coeficientes": 2.475396445600353e-07,
+    "max_dif_probabilidad": 5.853730067340024e-08
+  },
+  "graficas": [
+    "curva_entrenamiento.png",
+    "roc.png",
+    "coeficientes.png"
+  ]
+}

@@ -222,6 +222,42 @@ def test_tokens_dispositivo(client, u1, u2):
     assert client.delete("/tokens-dispositivo/1", headers=u1).status_code == 204
 
 
+def test_riesgo_de_recaida(client):
+    h = registrar(client, "riesgo@focus.app")
+    assert client.get("/riesgo", headers=h).status_code == 404  # sin plan
+    hoy = ahora().date().isoformat()
+    client.post("/planes", headers=h, json={"fecha_inicio": hoy, "limite_base": 240})
+    assert client.get("/riesgo", headers=h).status_code == 404  # sin ajustes
+    client.post("/apps", headers=h, json={"nombre": "TikTok", "paquete": "com.zhiliaoapp.musically"})
+    # semana 1: una hora de noche y una de día, 1 de 2 pausas ignorada, 1 de 2 sesiones completada
+    client.post("/eventos", headers=h, json={"app_numero": 1, "inicio": f"{hoy}T01:00:00", "fin": f"{hoy}T02:00:00"})
+    client.post("/eventos", headers=h, json={"app_numero": 1, "inicio": f"{hoy}T10:00:00", "fin": f"{hoy}T11:00:00"})
+    for ignorada in (True, False):
+        client.post("/pausas", headers=h, json={"app_numero": 1, "tipo": "media", "duracion_seg": 10, "ignorada": ignorada})
+    client.post("/sesiones-foco", headers=h, json={"duracion_min": 25})
+    client.put("/sesiones-foco/1", headers=h, json={"completada": True})
+    client.post("/sesiones-foco", headers=h, json={"duracion_min": 25})
+    client.post("/planes/1/ajustes", headers=h, json={"semana": 1, "uso_meta": 210, "adherencia": 1.0})
+
+    r = client.get("/riesgo", headers=h)
+    assert r.status_code == 200
+    s1 = r.json()
+    assert (s1["plan"], s1["semana"]) == (1, 1)
+    assert s1["variables"] == {
+        "adherencia": 1.0, "tendencia": 0.0, "pct_ignoradas": 0.5, "pct_nocturno": 0.5,
+        "pct_foco_completadas": 0.5, "cambio_pct": s1["variables"]["cambio_pct"], "racha": 1.0,
+    }
+    assert 0 < s1["probabilidad"] < 1 and s1["nivel"] in ("bajo", "medio", "alto")
+    assert len(s1["factores"]) == 7
+
+    # semana 2 sin cumplir: la racha se corta y el riesgo sube
+    client.post("/planes/1/ajustes", headers=h, json={"semana": 2, "uso_meta": 190, "adherencia": 0.4})
+    s2 = client.get("/riesgo", headers=h).json()
+    assert s2["semana"] == 2 and s2["variables"]["racha"] == 0.0
+    assert s2["variables"]["tendencia"] == pytest.approx(-0.6)
+    assert s2["probabilidad"] > s1["probabilidad"]
+
+
 def test_estadisticas(client, u1, u2):
     e = client.get("/estadisticas", headers=u1).json()
     assert e["total_apps"] == 2 and e["total_eventos"] == 1 and e["minutos_uso"] == 30.0

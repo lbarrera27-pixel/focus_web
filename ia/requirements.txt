@@ -1,0 +1,5 @@
+# Solo para entrenar y evaluar (python -m ia.entrenar); la API no los necesita.
+numpy>=2.0
+scikit-learn>=1.5   # solo para comparar coeficientes
+matplotlib>=3.8     # curvas de entrenamiento y ROC
+pytest>=8.0

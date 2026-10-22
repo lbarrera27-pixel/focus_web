@@ -8,6 +8,12 @@ from app.utils.errores import Conflicto, NoEncontrado
 from app.utils.reglas_plan import calcular_cambio
 
 
+def rango_semana(plan, semana: int) -> tuple[datetime, datetime]:
+    """[inicio, fin) de la semana `semana` del plan (la 1 empieza en fecha_inicio)."""
+    desde = datetime.combine(plan.fecha_inicio + timedelta(weeks=semana - 1), time.min)
+    return desde, desde + timedelta(weeks=1)
+
+
 class PlanService(ServicioPorUsuario):
     no_encontrado = "No existe el plan {numero} para este usuario"
     repo: PlanRepository
@@ -32,8 +38,7 @@ class AjusteService:
 
     def _cambio(self, plan, semana: int, adherencia: float) -> float:
         """Cambio % con las reglas difusas, usando las pausas ignoradas de esa semana del plan."""
-        desde = datetime.combine(plan.fecha_inicio + timedelta(weeks=semana - 1), time.min)
-        total, ignoradas = self.pausas.contar_entre(plan.usuario_id, desde, desde + timedelta(weeks=1))
+        total, ignoradas = self.pausas.contar_entre(plan.usuario_id, *rango_semana(plan, semana))
         cambio, _ = calcular_cambio(adherencia, ignoradas / total if total else 0.0)
         return cambio
 
