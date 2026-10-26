@@ -156,6 +156,14 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
 | GET / PUT / DELETE | `/tokens-dispositivo/{numero}` | TOKEN_DISPOSITIVO |
 | GET | `/estadisticas?desde=&hasta=` | Indicadores del usuario |
 | POST / GET | `/api/ajuste-semanal` | **Azure Function** (serverless) |
+| POST | `/ia/prob-ignorar` | IA (ML): probabilidad de ignorar una pausa, con el contexto completo |
+| POST | `/ia/prob-ignorar/app/{numero}` | IA (ML): lo mismo, con el contexto tomado de la BD del usuario |
+| GET | `/ia/modelo-pausas` | IA (ML): métricas del modelo |
+| POST | `/ia/pronostico-uso` | IA (red neuronal): minutos esperados a partir de 7 días |
+| GET | `/ia/pronostico-uso` | IA (red neuronal): pronóstico de hoy con EVENTO_USO y PLAN |
+| GET | `/ia/modelo-uso` | IA (red neuronal): métricas y curva de aprendizaje |
+| POST | `/ia/optimizar-pausas` | IA (algoritmo genético): horario de pausas del día |
+| POST | `/ia/ruta-plan` | IA (búsqueda A*): ruta semanal del límite a la meta |
 
 ## Reglas de negocio destacadas
 
@@ -163,6 +171,97 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
   Eventos y pausas validan que la app (y la franja) existan (`404`).
 - **Contraseñas** con bcrypt; el email se guarda en minúsculas y es único.
 - **Un solo plan activo:** al crear un plan, los anteriores se desactivan.
-- **Ajuste semanal:** si no se envía `cambio_pct`, se calcula por la adherencia
-  (≥ 0.90 → −10 %, ≥ 0.75 → −5 %, ≥ 0.50 → 0 %, menor → +5 %). La Azure Function usa las mismas reglas.
+- **Ajuste semanal:** si no se envía `cambio_pct`, se calcula con lógica difusa (ver abajo).
+  La Azure Function usa las mismas reglas.
 - **Sesión de foco:** al marcarla `completada`, se registra la hora de fin.
+
+## Inteligencia artificial (materia de IA)
+
+| Técnica | Dónde | Qué hace en Focus! | Ruta |
+|---|---|---|---|
+| Lógica difusa (Mamdani) | `app/utils/reglas_plan.py` | Cuánto bajar el límite cada semana | `/planes/{n}/ajustes`, `/api/ajuste-semanal` |
+| Aprendizaje supervisado | `app/ia/modelo_pausas.py` | Predice si el usuario ignorará una pausa | `/ia/prob-ignorar` |
+| Red neuronal | `app/ia/modelo_uso.py` | Pronostica los minutos de pantalla de mañana | `/ia/pronostico-uso` |
+| Algoritmo genético | `app/ia/genetico.py` | Elige a qué horas y de qué tipo poner las pausas | `/ia/optimizar-pausas` |
+| Búsqueda A* | `app/ia/busqueda.py` | Planea la ruta semanal del límite actual a la meta | `/ia/ruta-plan` |
+
+Las técnicas se apoyan entre sí: el genético usa el modelo de ML para saber qué pausas se
+ignorarán, A* busca recortes graduales como los que premia la lógica difusa, y la red avisa
+si hoy se rebasará el límite del plan.
+
+```
+App Android ──▶ POST /ia/prob-ignorar/app/3 {"tipo": "media"}
+                   la API arma el contexto con APP, EVENTO_USO y PAUSA de hoy
+              ◀── {"tipo_recomendado": "alta", "probabilidad_ignorar": 0.41, …}
+App Android ──▶ muestra la pausa y luego POST /pausas {"ignorada": true|false}
+                   (cada pausa real es un ejemplo más para reentrenar)
+```
+
+### Datos simulados
+
+Aún no hay usuarios con historial, así que `app/ia/simulador.py` genera datos sintéticos:
+
+- **Pausas:** 200 usuarios × 28 días ≈ 36 600 pausas (42 % ignoradas). La probabilidad de ignorar
+  depende de la categoría de la app, el tipo de pausa, la hora, el fin de semana, los minutos que
+  lleva en la app, las pausas previas del día y un rasgo oculto de disciplina de cada usuario.
+- **Uso diario:** 300 usuarios × 120 días. Escala propia de cada usuario, más uso el fin de semana,
+  rachas (proceso AR(1)) y una tendencia que baja poco a poco.
+
+En todos los modelos la partición entrenamiento/prueba es **por usuario** (75 % / 25 %): se evalúa
+con usuarios que el modelo nunca vio. Los modelos se entrenan al primer uso y se quedan en memoria.
+
+### Aprendizaje supervisado: pausas ignoradas
+
+Clasificación binaria comparando regresión logística y árbol de decisión; se sirve el de mejor AUC.
+
+| Modelo | Exactitud | Precisión | Sensibilidad | F1 | AUC |
+|---|---|---|---|---|---|
+| Línea base (siempre "no ignora") | 0.568 | — | — | — | — |
+| Árbol de decisión | 0.676 | 0.702 | 0.434 | 0.536 | 0.726 |
+| **Regresión logística** (elegido) | **0.691** | 0.683 | **0.532** | **0.598** | **0.745** |
+
+El modelo recupera solo los factores del simulador: más minutos de uso y más pausas en el día
+suben el riesgo; las apps de productividad y las pausas altas lo bajan. La disciplina de cada
+usuario no es un atributo, por eso el AUC no llega a 1.
+
+### Red neuronal: pronóstico de uso
+
+Perceptrón multicapa 14 → 32 → 16 → 1 (ReLU, Adam, paro temprano). Entradas: los 7 días previos
+divididos entre su promedio (para que aprenda la forma y no la escala) y el día de la semana.
+
+| Método (error en minutos/día) | MAE | RMSE | MAPE |
+|---|---|---|---|
+| Mismo día de la semana pasada | 46.1 | 61.4 | 21.3 % |
+| Promedio de 7 días | 40.4 | 52.9 | 18.8 % |
+| Lo mismo que ayer | 36.8 | 49.6 | 16.7 % |
+| **Red neuronal** | **28.6** | **37.9** | **13.0 %** |
+
+### Algoritmo genético: horario de pausas
+
+Cromosoma de 24 genes (uno por hora: sin pausa, leve, media o alta), 4^24 ≈ 2.8 × 10^14 horarios.
+Aptitud = minutos ahorrados esperados − molestia, donde la probabilidad de que cada pausa se ignore
+la da el modelo de ML (con las pausas previas, así que poner muchas también cuesta). Torneo,
+cruce de un punto, mutación y elitismo; 60 individuos × 150 generaciones (≈ 0.1 s).
+
+Con un sábado típico en redes sociales (máx. 8 pausas) el genético espera ahorrar **25.8 min**
+contra **8.5 min** de un horario hecho a mano (pausas medias en las 8 horas de más uso). Aprende
+algo poco obvio: conviene poner pausas temprano, cuando todavía se respetan, en lugar de
+amontonarlas en la noche, cuando casi todas se ignoran.
+
+### Búsqueda A*: ruta del plan
+
+Estados (semana, límite); acciones: bajar 5, 10, 15 o 20 % por semana; costo de una semana
+= 1 + (reducción / 10 %)², que castiga los recortes bruscos. Heurística admisible: 1.25 × semanas
+mínimas que faltan. Encuentra la misma ruta óptima que la búsqueda de costo uniforme expandiendo
+menos nodos (300 → 120 min en 12 semanas: costo 17.25 con 155 nodos contra 168).
+
+### Comandos
+
+```bash
+python -m app.ia.simulador --salida pausas_simuladas.csv   # CSV para graficar en Excel
+python -m app.ia.modelo_pausas                              # reporte del modelo de pausas
+python -m app.ia.modelo_uso                                 # reporte de la red neuronal
+```
+
+La hora local de los usuarios se toma de `UTC_OFFSET_HORAS` (por defecto −6, centro de México),
+porque la BD guarda las fechas en UTC.

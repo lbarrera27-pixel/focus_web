@@ -8,3 +8,5 @@ python-multipart>=0.0.9
 bcrypt>=4.1
 pyodbc>=5.1
 azure-storage-blob>=12.20
+scikit-learn>=1.5
+numpy>=1.26

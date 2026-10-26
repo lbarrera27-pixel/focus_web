@@ -232,6 +232,74 @@ def test_estadisticas(client, u1, u2):
     assert client.get("/estadisticas", headers=u2).json()["total_apps"] == 1
 
 
+def test_ia_prob_ignorar(client):
+    contexto = {"categoria": "redes", "tipo": "leve", "hora": 23, "dia_semana": 5,
+                "uso_previo_min": 60, "pausas_previas_hoy": 6}
+    r = client.post("/ia/prob-ignorar", json=contexto)
+    assert r.status_code == 200, r.text
+    p = r.json()
+    assert p["ignorara"] is True and p["probabilidad_ignorar"] == p["probabilidad_por_tipo"]["leve"]
+    assert p["tipo_recomendado"] == "alta"
+    # Una categoría desconocida cuenta como "otros"
+    assert client.post("/ia/prob-ignorar", json={**contexto, "categoria": "inventada"}).status_code == 200
+    assert client.post("/ia/prob-ignorar", json={**contexto, "hora": 24}).status_code == 422
+    reporte = client.get("/ia/modelo-pausas").json()
+    assert reporte["modelo_elegido"] == p["modelo"]
+
+
+def test_ia_con_datos_del_usuario(client):
+    from datetime import timedelta
+
+    from app.services.ia_service import IAService
+
+    h = registrar(client, "ia@focus.app")
+    client.post("/apps", headers=h, json={"nombre": "TikTok", "paquete": "com.tiktok", "categoria": "redes"})
+    _, medianoche = IAService._hoy_local()
+    fmt = "%Y-%m-%dT%H:%M:%S"
+    # Hoy: 20 min en TikTok y 2 pausas
+    client.post("/eventos", headers=h, json={"app_numero": 1, "inicio": medianoche.strftime(fmt),
+                                             "fin": (medianoche + timedelta(minutes=20)).strftime(fmt)})
+    for _ in range(2):
+        client.post("/pausas", headers=h, json={"app_numero": 1, "tipo": "media", "duracion_seg": 30})
+    # Los 7 días anteriores: 130, 120, …, 70 minutos
+    for d in range(7, 0, -1):
+        inicio = medianoche - timedelta(days=d) + timedelta(hours=1)
+        client.post("/eventos", headers=h, json={"app_numero": 1, "inicio": inicio.strftime(fmt),
+                                                 "fin": (inicio + timedelta(minutes=60 + 10 * d)).strftime(fmt)})
+
+    r = client.post("/ia/prob-ignorar/app/1", headers=h, json={"tipo": "leve"})
+    assert r.status_code == 200, r.text
+    ctx = r.json()["contexto"]
+    assert ctx["categoria"] == "redes" and ctx["uso_previo_min"] == 20.0 and ctx["pausas_previas_hoy"] == 2
+    assert client.post("/ia/prob-ignorar/app/9", headers=h, json={}).status_code == 404
+
+    p = client.get("/ia/pronostico-uso", headers=h).json()
+    assert p["ultimos_dias"] == [130.0, 120.0, 110.0, 100.0, 90.0, 80.0, 70.0]
+    assert 30 < p["pronostico_min"] < 200 and p["excedera_limite"] is None
+    client.post("/planes", headers=h, json={"fecha_inicio": "2026-10-01", "limite_base": 10})
+    assert client.get("/ia/pronostico-uso", headers=h).json()["excedera_limite"] is True
+
+
+def test_ia_pronostico_genetico_y_ruta(client):
+    r = client.post("/ia/pronostico-uso", json={"ultimos_dias": [200] * 7, "dia_semana": 5})
+    assert r.status_code == 200 and 150 < r.json()["pronostico_min"] < 300
+    assert client.post("/ia/pronostico-uso", json={"ultimos_dias": [200] * 6, "dia_semana": 5}).status_code == 422
+    assert client.get("/ia/modelo-uso").json()["arquitectura"]["capas_ocultas"] == [32, 16]
+
+    uso = [8, 3, 0, 0, 0, 0, 2, 10, 12, 10, 8, 8, 15, 12, 8, 8, 12, 18, 22, 25, 30, 30, 25, 15]
+    g = client.post("/ia/optimizar-pausas", json={"categoria": "redes", "dia_semana": 5, "uso_por_hora": uso,
+                                                  "max_pausas": 6})
+    assert g.status_code == 200, g.text
+    assert 0 < len(g.json()["horario"]) <= 6
+    assert client.post("/ia/optimizar-pausas", json={"categoria": "redes", "dia_semana": 5,
+                                                     "uso_por_hora": uso[:10]}).status_code == 422
+
+    ruta = client.post("/ia/ruta-plan", json={"limite_actual": 300, "meta": 120}).json()
+    assert ruta["ruta"][-1]["limite_min"] <= 120 and ruta["expandidos"] <= ruta["expandidos_costo_uniforme"]
+    assert client.post("/ia/ruta-plan", json={"limite_actual": 300, "meta": 120, "max_semanas": 2}).status_code == 422
+    assert client.post("/ia/ruta-plan", json={"limite_actual": 100, "meta": 120}).status_code == 422
+
+
 def test_desactivar_cuenta(client):
     h = registrar(client, "tres@focus.app")
     assert client.delete("/usuarios/me", headers=h).status_code == 204
