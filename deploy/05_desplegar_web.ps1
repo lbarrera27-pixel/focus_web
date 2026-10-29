@@ -37,8 +37,14 @@ if (-not $existe) {
 $token = az staticwebapp secrets list -g $Grupo -n $SitioWeb --query "properties.apiKey" -o tsv; Revisar "leer token de despliegue"
 
 Paso "Subiendo web/dist"
-npx --yes @azure/static-web-apps-cli@2.0.10 deploy (Join-Path $carpetaWeb "dist") --deployment-token $token --env production
-Revisar "despliegue del portal"
+# El token va por variable de entorno para que npx no lo imprima en pantalla
+$env:SWA_CLI_DEPLOYMENT_TOKEN = $token
+try {
+    npx --yes @azure/static-web-apps-cli@2.0.10 deploy (Join-Path $carpetaWeb "dist") --env production
+    Revisar "despliegue del portal"
+} finally {
+    Remove-Item Env:SWA_CLI_DEPLOYMENT_TOKEN -ErrorAction SilentlyContinue
+}
 
 $host_ = az staticwebapp show -g $Grupo -n $SitioWeb --query "defaultHostname" -o tsv
 Write-Host "`nPortal: https://$host_" -ForegroundColor Green
