@@ -10,11 +10,13 @@ Proyecto final de **Servicios Cloud** (Facultad de Informática, UAQ).
 | Servicio de almacenamiento | **Azure Blob Storage**: `POST /usuarios/me/foto/archivo` sube la foto de perfil |
 | 1 API desplegada en la nube (mínimo 12 rutas) | FastAPI en **Azure App Service** (Linux, Python 3.12) |
 | 1 API con funciones serverless (una ruta) | **Azure Functions**: `POST /api/ajuste-semanal` (carpeta `serverless/`) |
+| Frontend en la nube conectado a las API | Portal React (`web/`, diseño de Figma) en **Azure Static Web Apps**, llamando a la API de App Service |
 
 ## Arquitectura
 
 ```
-App Android ──HTTPS + X-Usuario-Id──▶ Azure App Service (FastAPI)
+Portal web (Azure Static Web Apps) ──HTTPS + X-Usuario-Id──┐
+App Android ──HTTPS + X-Usuario-Id──▶ Azure App Service (FastAPI) ◀┘
                                          │  Controller → Service → Repository (SQLAlchemy)
                                          ├──────────────▶ Azure SQL Database
                                          └──────────────▶ Azure Blob Storage (fotos)
@@ -107,8 +109,8 @@ npm run dev               # http://localhost:5173
 
 ## Desplegar en Azure
 
-Requisitos: [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) y
-[Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local).
+Requisitos: [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli),
+[Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local) y Node.js 18+ (portal web).
 
 ```powershell
 az login
@@ -116,6 +118,7 @@ az login
 .\deploy\01_crear_recursos.ps1     # SQL, Storage, App Service y Function App
 .\deploy\02_desplegar_api.ps1      # sube la API y prueba /salud
 .\deploy\03_desplegar_funcion.ps1  # publica la función serverless y la prueba
+.\deploy\05_desplegar_web.ps1      # compila web/ contra la API y lo publica en Static Web Apps
 ```
 
 Si PowerShell bloquea los scripts: `Set-ExecutionPolicy -Scope Process Bypass`.
@@ -124,8 +127,9 @@ Al terminar, las URLs quedan en `deploy\salida.env` (**no lo subas a GitHub**, t
 
 - API: `https://focus-api-<sufijo>.azurewebsites.net/docs`
 - Función: `https://focus-func-<sufijo>.azurewebsites.net/api/ajuste-semanal`
+- Portal web: la URL `https://<nombre>.azurestaticapps.net` que imprime `05_desplegar_web.ps1`
 
-Para volver a subir cambios de la API solo ejecuta `02_desplegar_api.ps1`.
+Para volver a subir cambios de la API solo ejecuta `02_desplegar_api.ps1`; los del portal, `05_desplegar_web.ps1`.
 Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos.
 
 ### Problemas comunes
