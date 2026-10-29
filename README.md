@@ -41,7 +41,7 @@ focus-api/
 │   ├── services/            # lógica de negocio
 │   ├── controllers/         # rutas (un controlador por tabla)
 │   └── utils/               # bcrypt, Blob Storage, reglas del plan, errores
-├── ia/                      # IA: generador sintético, regresión logística desde cero y métricas
+├── ia/                      # IA: generador sintético, regresión logística desde cero, métricas y evaluación del Compañero
 ├── serverless/              # Azure Function (API serverless)
 ├── deploy/                  # scripts de PowerShell para crear y desplegar en Azure
 ├── postman/                 # colección Focus_API_v2 con pruebas automáticas
@@ -125,7 +125,7 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
    a cada petición (script a nivel colección). Incluye casos de error (401, 404, 409, 422).
 4. Para la foto con Blob Storage: en *POST /usuarios/me/foto/archivo* → Body → form-data → elige una imagen.
 
-## Rutas (57 operaciones)
+## Rutas (58 operaciones)
 
 | Método | Ruta | Tabla / módulo |
 |---|---|---|
@@ -157,6 +157,7 @@ Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos
 | GET / PUT / DELETE | `/tokens-dispositivo/{numero}` | TOKEN_DISPOSITIVO |
 | GET | `/estadisticas?desde=&hasta=` | Indicadores del usuario |
 | GET | `/riesgo` | **IA:** riesgo de recaída (regresión logística) |
+| POST | `/companero/mensaje` | **IA:** Compañero Foqui (LLM que explica el plan y el riesgo) |
 | POST / GET | `/api/ajuste-semanal` | **Azure Function** (serverless) |
 
 ## Reglas de negocio destacadas
@@ -195,3 +196,39 @@ Resultados en prueba (usuarios que el modelo nunca vio), en `ia/resultados/metri
 | Línea base (siempre "no recae") | 0.553 | 0 | 0 | 0 | 0.5 |
 
 Los coeficientes coinciden con `LogisticRegression` de scikit-learn (diferencia < 0.0001).
+
+## IA: Compañero Foqui (LLM)
+
+`POST /companero/mensaje` es el chat con **Foqui**, la mascota de la app (pantalla *Compañero IA (11)*).
+Une las tres piezas de la IA: la **lógica difusa** decide el ajuste, la **regresión logística** estima el
+riesgo y un **LLM (Claude)** solo lo explica en lenguaje cercano. No decide límites ni fricción.
+
+```json
+// Petición (header X-Usuario-Id). Sin "mensaje", Foqui saluda y explica la semana.
+{ "mensaje": "¿Por qué bajó mi límite?", "historial": [{ "rol": "foqui", "texto": "¡Hola, Dani!" }] }
+
+// Respuesta
+{ "mensaje": "…", "estado_foqui": "Feliz", "fuente": "llm",
+  "contexto": { "nombre": "Dani", "semana": 3, "adherencia": 0.92, "cambio_pct": -7.9, "riesgo_nivel": "bajo", … } }
+```
+
+- **Estado de Foqui** (`Normal`, `Atenta`, `Enfocado`, `Feliz`, `Cansado`, los mismos de `FoquiEstado` en la app):
+  lo deciden reglas fijas con la adherencia, el cambio difuso, el riesgo y si hay una sesión de foco activa,
+  no el LLM, para que siempre sea consistente con los números (`app/utils/companero.py`).
+- **Privacidad:** el LLM recibe solo datos agregados de la semana (minutos totales, adherencia, cambio, nivel de
+  riesgo, racha y el factor que más pesa). Nunca nombres de apps, horarios ni eventos.
+- **La llave se queda en el servidor:** la app llama a la API y la API llama a Claude (`ANTHROPIC_API_KEY`).
+  Modelo por defecto `claude-haiku-5-5` (rápido y económico); se cambia con `COMPANERO_MODELO`.
+- **Respaldo:** sin llave, sin conexión o si el modelo no responde, Foqui usa mensajes predefinidos según su estado
+  (`fuente: "respaldo"`) y la app sigue funcionando.
+- **Conversación:** la API no guarda chats; la app manda los últimos 10 turnos en `historial`.
+- **Seguridad:** tono breve y sin juzgar, sin consejos médicos; ante malestar serio sugiere apoyo profesional
+  (Línea de la Vida 800 911 2000).
+
+Evaluación con 24 casos (adherencia × pausas ignoradas × riesgo) y revisión automática de largo, formato,
+cifras inventadas, porcentaje correcto y tono. Llama al modelo real 24 veces:
+
+```powershell
+$env:ANTHROPIC_API_KEY = "sk-ant-..."
+python -m ia.evaluar_companero   # resultados en ia/resultados/companero.json
+```

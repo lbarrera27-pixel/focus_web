@@ -2836,6 +2836,169 @@
           }
         }
       ]
+    },
+    {
+      "name": "14 IA (riesgo y Compañero Foqui)",
+      "description": "Regresión logística (GET /riesgo) y Compañero IA con LLM (POST /companero/mensaje). Sin ANTHROPIC_API_KEY, Foqui responde con mensajes de respaldo.",
+      "item": [
+        {
+          "name": "GET /riesgo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Probabilidad entre 0 y 1', () => { const p = pm.response.json().probabilidad; pm.expect(p).to.be.within(0, 1); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/riesgo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "riesgo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /companero/mensaje (saludo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Estado de Foqui válido', () => pm.expect(pm.response.json().estado_foqui).to.be.oneOf(['Normal','Atenta','Enfocado','Feliz','Cansado']));",
+                  "pm.test('Trae mensaje', () => pm.expect(pm.response.json().mensaje).to.be.a('string').and.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/companero/mensaje",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companero",
+                "mensaje"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /companero/mensaje (pregunta)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Fuente llm o respaldo', () => pm.expect(pm.response.json().fuente).to.be.oneOf(['llm','respaldo']));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/companero/mensaje",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companero",
+                "mensaje"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"¿Por qué bajó mi límite esta semana?\",\n  \"historial\": [\n    {\n      \"rol\": \"usuario\",\n      \"texto\": \"Hola Foqui\"\n    },\n    {\n      \"rol\": \"foqui\",\n      \"texto\": \"¡Hola! ¿Cómo te fue esta semana?\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /companero/mensaje (rol inválido → 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422', () => pm.expect(pm.response.code).to.be.oneOf([422]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/companero/mensaje",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companero",
+                "mensaje"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"historial\": [\n    {\n      \"rol\": \"otro\",\n      \"texto\": \"hola\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   ]
 }

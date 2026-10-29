@@ -20,9 +20,9 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 
 from app.config import CORS_ORIGINS
 from app.controllers import (
-    app_controller, auth_controller, dominio_controller, estadisticas_controller, evento_controller,
-    franja_controller, pausa_controller, plan_controller, riesgo_controller, salud_controller,
-    sesion_controller, token_controller, usuario_controller,
+    app_controller, auth_controller, companero_controller, dominio_controller, estadisticas_controller,
+    evento_controller, franja_controller, pausa_controller, plan_controller, riesgo_controller,
+    salud_controller, sesion_controller, token_controller, usuario_controller,
 )
 from app.database import sincronizar_esquema
 from app.utils.errores import Conflicto, NoEncontrado
@@ -94,6 +94,6 @@ def inicio():
 for modulo in (
     salud_controller, auth_controller, usuario_controller, app_controller, evento_controller,
     franja_controller, plan_controller, pausa_controller, dominio_controller, sesion_controller,
-    token_controller, estadisticas_controller, riesgo_controller,
+    token_controller, estadisticas_controller, riesgo_controller, companero_controller,
 ):
     app.include_router(modulo.router)
