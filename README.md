@@ -129,6 +129,11 @@ Al terminar, las URLs quedan en `deploy\salida.env` (**no lo subas a GitHub**, t
 - Función: `https://focus-func-<sufijo>.azurewebsites.net/api/ajuste-semanal`
 - Portal web: la URL `https://<nombre>.azurestaticapps.net` que imprime `05_desplegar_web.ps1`
 
+Para tener una cuenta con datos de ejemplo (p. ej. para la profesora), crea una con
+`python deploy/06_datos_demo.py --api https://focus-api-<sufijo>.azurewebsites.net --email profesora@focus.app`:
+pide la contraseña y registra por la API 6 apps, ~2 semanas de eventos, pausas, un plan con ajustes,
+un dispositivo, sesiones de foco y dominios bloqueados.
+
 Para volver a subir cambios de la API solo ejecuta `02_desplegar_api.ps1`; los del portal, `05_desplegar_web.ps1`.
 Al acabar la materia, `04_borrar_todo.ps1` elimina todo para no gastar créditos.
 
