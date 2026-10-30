@@ -21,6 +21,8 @@
   &nbsp;·&nbsp;
   <a href="https://focus-api-luisbb27.azurewebsites.net/docs"><b>📘 API (Swagger)</b></a>
   &nbsp;·&nbsp;
+  <a href="https://github.com/lbarrera27-pixel/focus_app"><b>📱 App Android</b></a>
+  &nbsp;·&nbsp;
   <a href="#-desplegar-en-azure"><b>🚀 Desplegar</b></a>
 </p>
 
@@ -49,6 +51,7 @@
 | 🖥️ | **Frontend** · portal web (`web/`) | Azure Static Web Apps | [green-moss-07816e210.4.azurestaticapps.net](https://green-moss-07816e210.4.azurestaticapps.net) |
 | ⚙️ | **Backend** · API FastAPI | Azure App Service + Azure SQL + Blob Storage | [focus-api-luisbb27.azurewebsites.net/docs](https://focus-api-luisbb27.azurewebsites.net/docs) |
 | ⚡ | **Serverless** · ajuste semanal | Azure Functions | `POST focus-func-luisbb27.azurewebsites.net/api/ajuste-semanal` |
+| 📱 | **App Android** (otro repo) | Usa esta misma API | [lbarrera27-pixel/focus_app](https://github.com/lbarrera27-pixel/focus_app) |
 
 > [!TIP]
 > La base de datos es *serverless* y se pausa tras una hora sin uso. Si el portal tarda en la primera
