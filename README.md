@@ -1,7 +1,13 @@
-# Focus! API — Backend en la nube
+# Focus! — Portal web y API en la nube
 
-Backend de **Focus!**, una app Android que reduce gradualmente el tiempo en pantalla.
+Frontend web y backend de **Focus!**, una app que reduce gradualmente el tiempo en pantalla.
 Proyecto final de **Servicios Cloud** (Facultad de Informática, UAQ).
+
+| Parte | Servicio de Azure | URL |
+|---|---|---|
+| Frontend: portal web (`web/`) | Azure Static Web Apps | https://green-moss-07816e210.4.azurestaticapps.net |
+| Backend: API FastAPI | Azure App Service + Azure SQL + Blob Storage | https://focus-api-luisbb27.azurewebsites.net/docs |
+| API serverless | Azure Functions | `POST https://focus-func-luisbb27.azurewebsites.net/api/ajuste-semanal` |
 
 | Requisito de la entrega (19/oct/2026) | Cómo se cumple |
 |---|---|
