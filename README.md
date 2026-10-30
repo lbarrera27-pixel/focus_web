@@ -36,24 +36,55 @@ Capas (igual que en el proyecto de clase):
 - **Repository** (`app/repositories/`): la única capa que habla con la base de datos.
 - **Models** (`app/models/`): tablas del ORM. **Schemas** (`app/schemas/`): validación de entrada/salida con Pydantic.
 
+## Estructura del repositorio
+
 ```
-focus-api/
-├── main.py                  # crea la app, registra controladores y manejadores de error
+focus_web/
+│
+├── README.md                      ← URLs de Azure, arquitectura, rutas y cómo desplegar
+├── .env.example, .gitignore
+│
+├── ─────────── BACKEND (API FastAPI → Azure App Service) ───────────
+├── main.py                        ← crea la app, registra controladores y manejadores de error
+├── requirements.txt
 ├── app/
-│   ├── config.py            # variables de entorno (BD, Blob, CORS)
-│   ├── database.py          # engine, sesión y sincronización del esquema
-│   ├── dependencies.py      # usuario_actual(): lee el header X-Usuario-Id
-│   ├── models/              # 11 tablas (una por archivo)
-│   ├── schemas/             # entrada / salida de cada tabla
-│   ├── repositories/        # acceso a datos
-│   ├── services/            # lógica de negocio
-│   ├── controllers/         # rutas (un controlador por tabla)
-│   └── utils/               # bcrypt, Blob Storage, reglas del plan, errores
-├── ia/                      # IA: generador sintético, regresión logística desde cero, métricas y evaluación del Compañero
-├── serverless/              # Azure Function (API serverless)
-├── deploy/                  # scripts de PowerShell para crear y desplegar en Azure
-├── postman/                 # colección Focus_API_v2 con pruebas automáticas
-└── tests/                   # pruebas con pytest
+│   ├── config.py                  variables de entorno (BD, Blob, CORS, LLM)
+│   ├── database.py                engine, sesión y sincronización del esquema
+│   ├── dependencies.py            usuario_actual(): lee el header X-Usuario-Id
+│   ├── controllers/               rutas (un controlador por tabla, más riesgo y compañero)
+│   ├── services/                  reglas de negocio
+│   ├── repositories/              acceso a datos (única capa que usa SQLAlchemy)
+│   ├── models/                    11 tablas del ORM (Azure SQL)
+│   ├── schemas/                   validación de entrada / salida con Pydantic
+│   └── utils/                     Blob Storage, reglas difusas, riesgo, LLM, bcrypt, errores
+│
+├── serverless/                    ← API serverless → Azure Functions (/api/ajuste-semanal)
+├── ia/                            ← generador sintético, regresión logística desde cero,
+│                                    métricas y evaluación del Compañero Foqui
+│
+├── ─────────── FRONTEND (portal React + Vite → Azure Static Web Apps) ───────────
+├── web/
+│   ├── package.json, vite.config.js, index.html, .env.example
+│   └── src/
+│       ├── App.jsx, main.jsx
+│       ├── api.js                 cliente de la API (header X-Usuario-Id)
+│       ├── components/            Sidebar, TopBar, Card, Icono
+│       ├── data/                  lógica de cada pantalla (panel, telemetría, análisis, clústeres, ajustes)
+│       ├── pages/                 Login, Panel General, Telemetría, Análisis, Clústeres
+│       │   └── ajustes/           Ajustes y sus 4 pestañas
+│       └── assets/                íconos y logos del diseño de Figma
+│
+├── ─────────── DESPLIEGUE Y PRUEBAS ───────────
+├── deploy/
+│   ├── config.ps1                 nombres y región de los recursos
+│   ├── 01_crear_recursos.ps1      SQL, Storage, App Service y Function App
+│   ├── 02_desplegar_api.ps1       backend
+│   ├── 03_desplegar_funcion.ps1   serverless
+│   ├── 04_borrar_todo.ps1         elimina el grupo de recursos
+│   ├── 05_desplegar_web.ps1       frontend
+│   └── 06_datos_demo.py           cuenta con datos de ejemplo
+├── postman/                       colección Focus_API_v2 con pruebas automáticas
+└── tests/                         pytest: API, riesgo, compañero y reglas del plan
 ```
 
 ## Identificación del usuario por header
