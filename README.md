@@ -39,8 +39,9 @@
 - [Desplegar en Azure](#-desplegar-en-azure)
 - [API: identificación y rutas](#-api-identificación-y-rutas)
 - [Reglas de negocio](#-reglas-de-negocio)
-- [IA: riesgo de recaída](#-ia-riesgo-de-recaída)
-- [IA: Compañero Foqui](#-ia-compañero-foqui-llm)
+- [Inteligencia artificial: las 5 técnicas](#-inteligencia-artificial-las-5-técnicas)
+- [Complemento: riesgo de recaída](#-complemento-riesgo-de-recaída)
+- [Complemento: Compañero Foqui](#-complemento-compañero-foqui-llm)
 
 ---
 
@@ -61,7 +62,7 @@
 
 | Requisito | Cómo se cumple |
 |---|---|
-| CRUD de las APIs con controladores y rutas por tabla | 11 tablas, un controlador por tabla en `app/controllers/` (**60 operaciones**) |
+| CRUD de las APIs con controladores y rutas por tabla | 11 tablas, un controlador por tabla en `app/controllers/` (**68 operaciones**) |
 | Base de datos en la nube | **Azure SQL Database** con SQLAlchemy (`create_all` sincroniza el esquema al arrancar) |
 | Servicio de almacenamiento | **Azure Blob Storage**: `POST /usuarios/me/foto/archivo` sube la foto de perfil |
 | 1 API desplegada en la nube (mínimo 12 rutas) | FastAPI en **Azure App Service** (Linux, Python 3.12) |
@@ -123,11 +124,13 @@ focus_web/
 │   ├── repositories/              acceso a datos (única capa que usa SQLAlchemy)
 │   ├── models/                    11 tablas del ORM (Azure SQL)
 │   ├── schemas/                   validación de entrada / salida con Pydantic
+│   ├── ia/                        las 5 técnicas de IA: modelo de pausas (ML), red neuronal,
+│   │                              algoritmo genético, búsqueda A* y simulador de datos
 │   └── utils/                     Blob Storage, reglas difusas, riesgo, LLM, bcrypt, errores
 │
 ├── serverless/                    ← API serverless → Azure Functions (/api/ajuste-semanal)
-├── ia/                            ← generador sintético, regresión logística desde cero,
-│                                    métricas y evaluación del Compañero Foqui
+├── ia/                            ← entrenamiento del modelo de riesgo (regresión logística desde cero)
+│                                    y evaluación del Compañero Foqui
 │
 ├── ─────────── FRONTEND (portal React + Vite → Azure Static Web Apps) ───────────
 ├── web/
@@ -152,7 +155,7 @@ focus_web/
 │   └── 06_datos_demo.py           cuenta con datos de ejemplo
 ├── docs/                          logo e insignias del README
 ├── postman/                       colección Focus_API_v2 con pruebas automáticas
-└── tests/                         pytest: API, riesgo, compañero y reglas del plan
+└── tests/                         pytest: API, técnicas de IA, riesgo, compañero y reglas
 ```
 
 ## 💻 Correr en local
@@ -271,7 +274,7 @@ Cada tabla del usuario tiene `id` (clave primaria global) y `numero` (consecutiv
 `UNIQUE(usuario_id, numero)`).
 
 <details>
-<summary><b>📋 Ver las 60 operaciones</b></summary>
+<summary><b>📋 Ver las 68 operaciones</b></summary>
 
 | Método | Ruta | Tabla / módulo |
 |---|---|---|
@@ -306,6 +309,14 @@ Cada tabla del usuario tiene `id` (clave primaria global) y `numero` (consecutiv
 | GET | `/riesgo` | **IA:** riesgo de recaída (regresión logística) |
 | POST | `/companero/mensaje` | **IA:** Compañero Foqui (LLM que explica el plan y el riesgo) |
 | POST / GET | `/api/ajuste-semanal` | **Azure Function** (serverless) |
+| POST | `/ia/prob-ignorar` | IA (ML): probabilidad de ignorar una pausa, con el contexto completo |
+| POST | `/ia/prob-ignorar/app/{numero}` | IA (ML): lo mismo, con el contexto tomado de la BD del usuario |
+| GET | `/ia/modelo-pausas` | IA (ML): métricas del modelo |
+| POST | `/ia/pronostico-uso` | IA (red neuronal): minutos esperados a partir de 7 días |
+| GET | `/ia/pronostico-uso` | IA (red neuronal): pronóstico de hoy con EVENTO_USO y PLAN |
+| GET | `/ia/modelo-uso` | IA (red neuronal): métricas y curva de aprendizaje |
+| POST | `/ia/optimizar-pausas` | IA (algoritmo genético): horario de pausas del día |
+| POST | `/ia/ruta-plan` | IA (búsqueda A*): ruta semanal del límite a la meta |
 
 </details>
 
@@ -319,7 +330,108 @@ Cada tabla del usuario tiene `id` (clave primaria global) y `numero` (consecutiv
   adherencia y las pausas ignoradas de esa semana (`app/utils/reglas_plan.py`). La Azure Function usa las mismas reglas.
 - **Sesión de foco:** al marcarla `completada`, se registra la hora de fin.
 
-## 🧠 IA: riesgo de recaída
+## 🧠 Inteligencia artificial: las 5 técnicas
+
+| # | Técnica | Algoritmo | Dónde | Qué decide en Focus! | Ruta |
+|:-:|---|---|---|---|---|
+| 1 | **Lógica difusa** | Controlador Mamdani (6 reglas, centroide) | `app/utils/reglas_plan.py` | Cuánto bajar el límite cada semana | `/planes/{n}/ajustes`, `/api/ajuste-semanal` |
+| 2 | **Aprendizaje supervisado** | Regresión logística (gana) contra árbol de decisión | `app/ia/modelo_pausas.py` | Predice si el usuario ignorará una pausa | `/ia/prob-ignorar` |
+| 3 | **Red neuronal** | Perceptrón multicapa 14 → 32 → 16 → 1 | `app/ia/modelo_uso.py` | Pronostica los minutos de pantalla de mañana | `/ia/pronostico-uso` |
+| 4 | **Algoritmo genético** | Torneo, cruce de un punto, mutación y elitismo | `app/ia/genetico.py` | Elige a qué horas y de qué tipo poner las pausas | `/ia/optimizar-pausas` |
+| 5 | **Búsqueda A\*** | A* con heurística admisible, contra costo uniforme | `app/ia/busqueda.py` | Planea la ruta semanal del límite actual a la meta | `/ia/ruta-plan` |
+
+Las técnicas se apoyan entre sí: el genético usa el modelo de ML para saber qué pausas se
+ignorarán, A* busca recortes graduales como los que premia la lógica difusa, y la red avisa
+si hoy se rebasará el límite del plan.
+
+```
+App Android ──▶ POST /ia/prob-ignorar/app/3 {"tipo": "media"}
+                   la API arma el contexto con APP, EVENTO_USO y PAUSA de hoy
+              ◀── {"tipo_recomendado": "alta", "probabilidad_ignorar": 0.41, …}
+App Android ──▶ muestra la pausa y luego POST /pausas {"ignorada": true|false}
+                   (cada pausa real es un ejemplo más para reentrenar)
+```
+
+### 1 · Lógica difusa: ajuste semanal
+
+Controlador **Mamdani** con dos entradas (adherencia de la semana y porcentaje de pausas ignoradas)
+y 6 reglas; implicación por mínimo, agregación por máximo y defusificación por **centroide**
+(`app/utils/reglas_plan.py`). Si al crear un ajuste no se envía `cambio_pct`, la API lo calcula
+con este controlador; la Azure Function `/api/ajuste-semanal` usa las mismas reglas.
+
+### Datos simulados
+
+Aún no hay usuarios con historial, así que `app/ia/simulador.py` genera datos sintéticos:
+
+- **Pausas:** 200 usuarios × 28 días ≈ 36 600 pausas (42 % ignoradas). La probabilidad de ignorar
+  depende de la categoría de la app, el tipo de pausa, la hora, el fin de semana, los minutos que
+  lleva en la app, las pausas previas del día y un rasgo oculto de disciplina de cada usuario.
+- **Uso diario:** 300 usuarios × 120 días. Escala propia de cada usuario, más uso el fin de semana,
+  rachas (proceso AR(1)) y una tendencia que baja poco a poco.
+
+En todos los modelos la partición entrenamiento/prueba es **por usuario** (75 % / 25 %): se evalúa
+con usuarios que el modelo nunca vio. Los modelos se entrenan al primer uso y se quedan en memoria.
+
+### 2 · Aprendizaje supervisado: pausas ignoradas
+
+Clasificación binaria comparando regresión logística y árbol de decisión; se sirve el de mejor AUC.
+
+| Modelo | Exactitud | Precisión | Sensibilidad | F1 | AUC |
+|---|---|---|---|---|---|
+| Línea base (siempre "no ignora") | 0.568 | — | — | — | — |
+| Árbol de decisión | 0.676 | 0.702 | 0.434 | 0.536 | 0.726 |
+| **Regresión logística** (elegido) | **0.691** | 0.683 | **0.532** | **0.598** | **0.745** |
+
+El modelo recupera solo los factores del simulador: más minutos de uso y más pausas en el día
+suben el riesgo; las apps de productividad y las pausas altas lo bajan. La disciplina de cada
+usuario no es un atributo, por eso el AUC no llega a 1.
+
+### 3 · Red neuronal: pronóstico de uso
+
+Perceptrón multicapa 14 → 32 → 16 → 1 (ReLU, Adam, paro temprano). Entradas: los 7 días previos
+divididos entre su promedio (para que aprenda la forma y no la escala) y el día de la semana.
+
+| Método (error en minutos/día) | MAE | RMSE | MAPE |
+|---|---|---|---|
+| Mismo día de la semana pasada | 46.1 | 61.4 | 21.3 % |
+| Promedio de 7 días | 40.4 | 52.9 | 18.8 % |
+| Lo mismo que ayer | 36.8 | 49.6 | 16.7 % |
+| **Red neuronal** | **28.6** | **37.9** | **13.0 %** |
+
+### 4 · Algoritmo genético: horario de pausas
+
+Cromosoma de 24 genes (uno por hora: sin pausa, leve, media o alta), 4^24 ≈ 2.8 × 10^14 horarios.
+Aptitud = minutos ahorrados esperados − molestia, donde la probabilidad de que cada pausa se ignore
+la da el modelo de ML (con las pausas previas, así que poner muchas también cuesta). Torneo,
+cruce de un punto, mutación y elitismo; 60 individuos × 150 generaciones (≈ 0.1 s).
+
+Con un sábado típico en redes sociales (máx. 8 pausas) el genético espera ahorrar **25.8 min**
+contra **8.5 min** de un horario hecho a mano (pausas medias en las 8 horas de más uso). Aprende
+algo poco obvio: conviene poner pausas temprano, cuando todavía se respetan, en lugar de
+amontonarlas en la noche, cuando casi todas se ignoran.
+
+### 5 · Búsqueda A\*: ruta del plan
+
+Estados (semana, límite); acciones: bajar 5, 10, 15 o 20 % por semana; costo de una semana
+= 1 + (reducción / 10 %)², que castiga los recortes bruscos. Heurística admisible: 1.25 × semanas
+mínimas que faltan. Encuentra la misma ruta óptima que la búsqueda de costo uniforme expandiendo
+menos nodos (300 → 120 min en 12 semanas: costo 17.25 con 155 nodos contra 168).
+
+### Comandos
+
+```bash
+python -m app.ia.simulador --salida pausas_simuladas.csv   # CSV para graficar en Excel
+python -m app.ia.modelo_pausas                              # reporte del modelo de pausas
+python -m app.ia.modelo_uso                                 # reporte de la red neuronal
+```
+
+La hora local de los usuarios se toma de `UTC_OFFSET_HORAS` (por defecto −6, centro de México),
+porque la BD guarda las fechas en UTC.
+
+Además de las 5 técnicas, la API tiene dos piezas que las complementan: un segundo modelo de
+regresión logística (programado desde cero) para el riesgo de recaída y un LLM que explica los resultados.
+
+## 📈 Complemento: riesgo de recaída
 
 `GET /riesgo` estima la probabilidad de que el usuario **se pase de su límite la semana siguiente**
 a su último ajuste (adherencia < 0.9). Usa 7 variables de esa semana: adherencia, tendencia,
@@ -352,11 +464,11 @@ Los coeficientes coinciden con `LogisticRegression` de scikit-learn (diferencia 
   <img src="ia/resultados/coeficientes.png" alt="Coeficientes del modelo de riesgo" width="45%">
 </p>
 
-## 🤖 IA: Compañero Foqui (LLM)
+## 🤖 Complemento: Compañero Foqui (LLM)
 
 `POST /companero/mensaje` es el chat con **Foqui**, la mascota de la app (pantalla *Compañero IA (11)*).
-Une las tres piezas de la IA: la **lógica difusa** decide el ajuste, la **regresión logística** estima el
-riesgo y un **LLM (Claude)** solo lo explica en lenguaje cercano. No decide límites ni fricción.
+Une la **lógica difusa** (decide el ajuste) y la **regresión logística de riesgo** (lo estima) con un
+**LLM (Claude)** que solo lo explica en lenguaje cercano. No decide límites ni fricción.
 
 ```json
 // Petición (header X-Usuario-Id). Sin "mensaje", Foqui saluda y explica la semana.
