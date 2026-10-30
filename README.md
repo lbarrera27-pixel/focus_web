@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.svg" alt="Focus! · Menos pantalla, más enfoque" width="460"></p>
+
 # Focus! — Portal web y API en la nube
 
 Frontend web y backend de **Focus!**, una app que reduce gradualmente el tiempo en pantalla.
