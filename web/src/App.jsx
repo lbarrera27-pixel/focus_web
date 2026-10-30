@@ -9,6 +9,7 @@ import Clusteres from './pages/Clusteres.jsx'
 import Ajustes from './pages/ajustes/Ajustes.jsx'
 import Riesgo from './pages/riesgo/Riesgo.jsx'
 import MiPlan from './pages/plan/MiPlan.jsx'
+import Uso from './pages/uso/Uso.jsx'
 import Pendiente from './pages/Pendiente.jsx'
 import { cargarPanel, construirPanel } from './data/panel.js'
 import { datosDemo } from './data/demo.js'
@@ -18,6 +19,22 @@ const CLAVE_MENU = 'focus.menuContraido'
 
 // Secciones del portal de investigación que siguen disponibles por su dirección (#/telemetria…)
 const SECCIONES_INVESTIGACION = ['telemetria', 'analisis', 'clusteres']
+// Secciones con el diseño nuevo: se adaptan desde 1024 px (las demás siguen fijas a 1440 px)
+const SECCIONES_FLUIDAS = ['riesgo', 'plan', 'uso']
+// Debajo de este ancho el menú se muestra contraído (Figma: "Colapsada se usa en 1024 px")
+const ANCHO_MENU_COMPLETO = 1280
+
+function useAnchoEstrecho() {
+  const medir = () => window.innerWidth < ANCHO_MENU_COMPLETO
+  const [estrecho, setEstrecho] = useState(medir)
+  useEffect(() => {
+    const alCambiar = () => setEstrecho(medir())
+    window.addEventListener('resize', alCambiar)
+    return () => window.removeEventListener('resize', alCambiar)
+  }, [])
+  return estrecho
+}
+
 // Direcciones anteriores al menú nuevo
 const ALIAS = { panel: 'inicio' }
 
@@ -76,6 +93,9 @@ export default function App() {
   const [estado, setEstado] = useState({ cargando: false, error: null })
   const [cargadoEn, setCargadoEn] = useState(null)
   const [menuContraido, setMenuContraido] = useState(leerMenuContraido)
+  const estrecho = useAnchoEstrecho()
+  // En pantallas angostas el menú empieza contraído; el botón lo abre solo mientras dure la visita
+  const [abiertoEstrecho, setAbiertoEstrecho] = useState(false)
 
   function alternarMenu() {
     setMenuContraido((c) => {
@@ -180,6 +200,18 @@ export default function App() {
     )
   } else if (seccion === 'plan') {
     contenido = <MiPlan usuario={usuario} datos={datos} error={estado.error} onRecargar={cargar} />
+  } else if (seccion === 'uso') {
+    contenido = (
+      <Uso
+        usuario={usuario}
+        datos={datos}
+        error={estado.error}
+        periodo={periodo}
+        onPeriodo={setPeriodo}
+        onExportar={exportar}
+        onRecargar={cargar}
+      />
+    )
   } else if (seccion === 'riesgo') {
     contenido = <Riesgo usuario={usuario} datos={datos} onNavegar={navegar} />
   } else if (seccion === 'apps') {
@@ -230,13 +262,13 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${SECCIONES_FLUIDAS.includes(seccion) ? ' app--fluida' : ''}`}>
       <Menu
         activa={seccion}
         onNavegar={navegar}
         usuario={usuario}
-        contraido={menuContraido}
-        onContraer={alternarMenu}
+        contraido={estrecho ? !abiertoEstrecho : menuContraido}
+        onContraer={estrecho ? () => setAbiertoEstrecho((a) => !a) : alternarMenu}
         onSalir={salir}
       />
       <main className="contenido">{contenido}</main>
