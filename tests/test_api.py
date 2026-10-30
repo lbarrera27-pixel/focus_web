@@ -222,6 +222,42 @@ def test_tokens_dispositivo(client, u1, u2):
     assert client.delete("/tokens-dispositivo/1", headers=u1).status_code == 204
 
 
+def test_riesgo_de_recaida(client):
+    h = registrar(client, "riesgo@focus.app")
+    assert client.get("/riesgo", headers=h).status_code == 404  # sin plan
+    hoy = ahora().date().isoformat()
+    client.post("/planes", headers=h, json={"fecha_inicio": hoy, "limite_base": 240})
+    assert client.get("/riesgo", headers=h).status_code == 404  # sin ajustes
+    client.post("/apps", headers=h, json={"nombre": "TikTok", "paquete": "com.zhiliaoapp.musically"})
+    # semana 1: una hora de noche y una de día, 1 de 2 pausas ignorada, 1 de 2 sesiones completada
+    client.post("/eventos", headers=h, json={"app_numero": 1, "inicio": f"{hoy}T01:00:00", "fin": f"{hoy}T02:00:00"})
+    client.post("/eventos", headers=h, json={"app_numero": 1, "inicio": f"{hoy}T10:00:00", "fin": f"{hoy}T11:00:00"})
+    for ignorada in (True, False):
+        client.post("/pausas", headers=h, json={"app_numero": 1, "tipo": "media", "duracion_seg": 10, "ignorada": ignorada})
+    client.post("/sesiones-foco", headers=h, json={"duracion_min": 25})
+    client.put("/sesiones-foco/1", headers=h, json={"completada": True})
+    client.post("/sesiones-foco", headers=h, json={"duracion_min": 25})
+    client.post("/planes/1/ajustes", headers=h, json={"semana": 1, "uso_meta": 210, "adherencia": 1.0})
+
+    r = client.get("/riesgo", headers=h)
+    assert r.status_code == 200
+    s1 = r.json()
+    assert (s1["plan"], s1["semana"]) == (1, 1)
+    assert s1["variables"] == {
+        "adherencia": 1.0, "tendencia": 0.0, "pct_ignoradas": 0.5, "pct_nocturno": 0.5,
+        "pct_foco_completadas": 0.5, "cambio_pct": s1["variables"]["cambio_pct"], "racha": 1.0,
+    }
+    assert 0 < s1["probabilidad"] < 1 and s1["nivel"] in ("bajo", "medio", "alto")
+    assert len(s1["factores"]) == 7
+
+    # semana 2 sin cumplir: la racha se corta y el riesgo sube
+    client.post("/planes/1/ajustes", headers=h, json={"semana": 2, "uso_meta": 190, "adherencia": 0.4})
+    s2 = client.get("/riesgo", headers=h).json()
+    assert s2["semana"] == 2 and s2["variables"]["racha"] == 0.0
+    assert s2["variables"]["tendencia"] == pytest.approx(-0.6)
+    assert s2["probabilidad"] > s1["probabilidad"]
+
+
 def test_estadisticas(client, u1, u2):
     e = client.get("/estadisticas", headers=u1).json()
     assert e["total_apps"] == 2 and e["total_eventos"] == 1 and e["minutos_uso"] == 30.0
@@ -264,3 +300,48 @@ def test_conteo_de_rutas(client):
     rutas = client.get("/openapi.json").json()["paths"]
     operaciones = sum(len(v) for v in rutas.values())
     assert operaciones >= 12
+
+
+def test_companero_sin_llm_usa_respaldo(client, monkeypatch):
+    from app.utils import llm
+    monkeypatch.setattr(llm, "_obtener_cliente", lambda: None)
+    h = registrar(client, "foqui@focus.app", "Dani Pérez")
+    r = client.post("/companero/mensaje", headers=h, json={})
+    assert r.status_code == 200
+    s = r.json()
+    assert s["fuente"] == "respaldo" and s["estado_foqui"] == "Normal"
+    assert s["contexto"]["nombre"] == "Dani" and "primera semana" in s["mensaje"]
+
+    hoy = ahora().date().isoformat()
+    client.post("/planes", headers=h, json={"fecha_inicio": hoy, "limite_base": 200})
+    client.post("/planes/1/ajustes", headers=h, json={"semana": 1, "uso_meta": 200, "adherencia": 1.0})
+    ctx = client.post("/companero/mensaje", headers=h, json={"mensaje": "¿cómo voy?"}).json()["contexto"]
+    assert ctx["semana"] == 1 and ctx["adherencia"] == 1.0 and ctx["cambio_pct"] == -10.0
+    assert ctx["limite_diario_min"] == 180.0 and ctx["riesgo_nivel"] in ("bajo", "medio", "alto")
+
+    client.post("/sesiones-foco", headers=h, json={"duracion_min": 25})
+    assert client.post("/companero/mensaje", headers=h, json={}).json()["estado_foqui"] == "Enfocado"
+
+
+def test_companero_con_llm(client, monkeypatch):
+    from app.utils import llm
+    recibido = {}
+
+    def falso(sistema, mensajes):
+        recibido.update(sistema=sistema, mensajes=mensajes)
+        return "  **¡Hola, Dani!** Vas muy bien.  "
+
+    monkeypatch.setattr(llm, "responder", falso)
+    h = registrar(client, "foqui2@focus.app", "Dani")
+    r = client.post("/companero/mensaje", headers=h, json={
+        "mensaje": "¿Por qué bajó mi límite?",
+        "historial": [{"rol": "foqui", "texto": "Hola"}, {"rol": "usuario", "texto": "Hola Foqui"},
+                      {"rol": "foqui", "texto": "¿Cómo te fue?"}],
+    })
+    assert r.status_code == 200
+    assert r.json()["fuente"] == "llm" and r.json()["mensaje"] == "¡Hola, Dani! Vas muy bien."
+    # el turno inicial de Foqui se descarta para que el LLM empiece con el usuario
+    assert [m["role"] for m in recibido["mensajes"]] == ["user", "assistant", "user"]
+    assert recibido["mensajes"][-1]["content"] == "¿Por qué bajó mi límite?"
+    assert "DATOS_DEL_USUARIO" in recibido["sistema"]
+    assert client.post("/companero/mensaje", headers=h, json={"historial": [{"rol": "x", "texto": "a"}]}).status_code == 422

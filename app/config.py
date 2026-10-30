@@ -39,5 +39,9 @@ DATABASE_URL = os.getenv("DATABASE_URL") or _url_azure_sql() or "sqlite:///./foc
 AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 AZURE_STORAGE_CONTAINER = os.getenv("AZURE_STORAGE_CONTAINER", "fotos")
 
+# Compañero IA (LLM). Sin llave, Foqui responde con mensajes predefinidos.
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+COMPANERO_MODELO = os.getenv("COMPANERO_MODELO", "claude-haiku-5-5")
+
 # Orígenes permitidos por CORS (separados por coma). "*" = cualquiera.
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]

@@ -1,0 +1,50 @@
+{
+  "variables": [
+    "adherencia",
+    "tendencia",
+    "pct_ignoradas",
+    "pct_nocturno",
+    "pct_foco_completadas",
+    "cambio_pct",
+    "racha"
+  ],
+  "w": [
+    -1.749291,
+    0.424413,
+    0.291217,
+    0.287886,
+    -0.468326,
+    -0.703977,
+    -0.515245
+  ],
+  "b": -0.172248,
+  "media": [
+    0.850784,
+    -0.005209,
+    0.43644,
+    0.258075,
+    0.340174,
+    -4.128776,
+    2.165612
+  ],
+  "desviacion": [
+    0.194867,
+    0.145337,
+    0.170127,
+    0.154544,
+    0.198777,
+    4.17565,
+    3.086232
+  ],
+  "umbral": 0.42,
+  "hiperparametros": {
+    "alfa": 1.0,
+    "lambda": 10.0,
+    "epocas": 5000
+  },
+  "datos": {
+    "origen": "sintético (ia/generador.py)",
+    "semilla": 42,
+    "filas_entrenamiento": 15645
+  }
+}
