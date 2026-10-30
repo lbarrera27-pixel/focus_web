@@ -8,8 +8,13 @@ para la API local que para la de Azure:
   - pausas de fricción de hoy, un plan con 3 ajustes semanales (reglas difusas del servidor),
     un dispositivo, sesiones de foco y dominios bloqueados
 
+Los eventos tienen fechas relativas al día en que se corre. Para que la cuenta no se vea vacía
+semanas después (p. ej. el día de la entrega final), --refrescar rellena la MISMA cuenta desde su
+último evento hasta hoy, agrega las pausas de hoy y avanza el plan con los ajustes de las semanas que pasaron.
+
 Solo usa la biblioteca estándar de Python. Uso:
     python deploy/06_datos_demo.py --api https://focus-api-<sufijo>.azurewebsites.net --email profesora@focus.app
+    python deploy/06_datos_demo.py --api https://focus-api-<sufijo>.azurewebsites.net --email profesora@focus.app --refrescar
 La contraseña se pide en pantalla (o se lee de la variable FOCUS_DEMO_PASSWORD).
 """
 import argparse
@@ -19,8 +24,9 @@ import os
 import random
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 APPS = [
     {"nombre": "Instagram", "paquete": "com.instagram.android", "categoria": "social", "limite_aperturas": 10},
@@ -78,6 +84,14 @@ def iniciar_sesion(api: Api, email: str, nombre: str, password: str) -> None:
     print(f"La cuenta {email} ya existía y está vacía (id {api.usuario_id}); se llenará.")
 
 
+def entrar(api: Api, email: str, password: str) -> None:
+    status, r = api.pedir("POST", "/auth/login", {"email": email, "password": password}, esperado=(200, 401))
+    if status == 401:
+        sys.exit(f"No se pudo entrar con {email}: correo o contraseña incorrectos (o la cuenta no existe).")
+    api.usuario_id = r["usuario_id"]
+    print(f"Sesión iniciada: {email} (id {api.usuario_id})")
+
+
 def generar_eventos(azar: random.Random, dias: int, ahora: datetime):
     eventos = []
     for d in range(dias - 1, -1, -1):
@@ -98,37 +112,15 @@ def generar_eventos(azar: random.Random, dias: int, ahora: datetime):
     return eventos
 
 
-def main():
-    p = argparse.ArgumentParser(description="Crea una cuenta de Focus! con datos de ejemplo")
-    p.add_argument("--api", required=True, help="URL de la API, p. ej. https://focus-api-<sufijo>.azurewebsites.net")
-    p.add_argument("--email", required=True)
-    p.add_argument("--nombre", default="Cuenta Demo")
-    p.add_argument("--dias", type=int, default=14, help="días de eventos de uso (default 14)")
-    p.add_argument("--semilla", type=int, default=42)
-    args = p.parse_args()
-
-    password = os.environ.get("FOCUS_DEMO_PASSWORD") or getpass.getpass("Contraseña para la cuenta demo: ")
-    if len(password) < 6:
-        sys.exit("La contraseña debe tener al menos 6 caracteres.")
-
-    azar = random.Random(args.semilla)
-    api = Api(args.api)
-    print(f"API: {api.base}")
-    api.pedir("GET", "/salud")   # despierta la base serverless antes de empezar
-    iniciar_sesion(api, args.email, args.nombre, password)
-
-    for app in APPS:
-        api.pedir("POST", "/apps", app)
-    print(f"Apps: {len(APPS)}")
-
-    ahora = datetime.now().replace(microsecond=0)
-    eventos = generar_eventos(azar, args.dias, ahora)
+def subir_eventos(api: Api, eventos: list) -> None:
     for i, evento in enumerate(eventos, 1):
         api.pedir("POST", "/eventos", evento)
         if i % 50 == 0 or i == len(eventos):
             print(f"Eventos: {i}/{len(eventos)}")
 
-    # La API pone la fecha de la pausa al registrarla, así que todas quedan con fecha de hoy
+
+def subir_pausas_de_hoy(api: Api, azar: random.Random, eventos: list) -> None:
+    """La API pone la fecha de la pausa al registrarla, así que todas quedan con fecha de hoy."""
     pausas = 0
     for evento in eventos[-60:]:
         if azar.random() < 0.3:
@@ -137,7 +129,74 @@ def main():
             api.pedir("POST", "/pausas", {"app_numero": evento["app_numero"], "tipo": tipo,
                                           "duracion_seg": 5 if tipo == "leve" else 15, "ignorada": ignorada})
             pausas += 1
-    print(f"Pausas: {pausas}")
+    print(f"Pausas de hoy: {pausas}")
+
+
+def refrescar(api: Api, args, password: str, azar: random.Random) -> None:
+    entrar(api, args.email, password)
+    _, apps = api.pedir("GET", "/apps")
+    if not apps:
+        sys.exit("La cuenta no tiene apps; créala primero sin --refrescar.")
+    numeros = {a["numero"] for a in apps}
+
+    # Eventos: del último registrado hasta ahora (máximo --dias hacia atrás para no tardar)
+    ahora = datetime.now().replace(microsecond=0)
+    desde = ahora - timedelta(days=args.dias)
+    _, existentes = api.pedir("GET", "/eventos?" + urllib.parse.urlencode({"desde": desde.isoformat()}))
+    ultimo = max((datetime.fromisoformat(e["inicio"]) for e in existentes), default=desde)
+    dias = (ahora.date() - ultimo.date()).days + 1
+    eventos = [e for e in generar_eventos(azar, dias, ahora)
+               if datetime.fromisoformat(e["inicio"]) > ultimo and e["app_numero"] in numeros]
+    if eventos:
+        subir_eventos(api, eventos)
+    else:
+        print("Eventos: ya estaban al día")
+
+    # Pausas: solo si hoy todavía no hay (el servidor guarda su fecha en UTC)
+    hoy_utc = datetime.now(timezone.utc).date().isoformat()
+    _, pausas = api.pedir("GET", "/pausas")
+    if any(p["fecha"].startswith(hoy_utc) for p in pausas):
+        print("Pausas: ya hay pausas de hoy")
+    else:
+        subir_pausas_de_hoy(api, azar, eventos or existentes)
+
+    # Plan: agrega los ajustes de las semanas que ya pasaron, con una adherencia que sigue mejorando
+    status, plan = api.pedir("GET", "/planes/activo", esperado=(200, 404))
+    if status == 404:
+        print("Plan: la cuenta no tiene plan activo; no se modifica")
+    else:
+        semana_actual = (date.today() - date.fromisoformat(plan["fecha_inicio"])).days // 7 + 1
+        _, ajustes = api.pedir("GET", f"/planes/{plan['numero']}/ajustes")
+        previo = max(ajustes, key=lambda a: a["semana"], default=None)
+        meta = previo["uso_meta"] if previo else plan["limite_base"]
+        adherencia = previo["adherencia"] if previo else 0.6
+        nuevos = 0
+        for semana in range((previo["semana"] if previo else 0) + 1, semana_actual):
+            meta = max(meta - 12, 90)
+            adherencia = min(round(adherencia + azar.uniform(0.02, 0.06), 2), 0.97)
+            api.pedir("POST", f"/planes/{plan['numero']}/ajustes",
+                      {"semana": semana, "uso_meta": meta, "adherencia": adherencia})
+            nuevos += 1
+        if semana_actual > plan["semana_actual"]:
+            api.pedir("PUT", f"/planes/{plan['numero']}", {"semana_actual": semana_actual})
+        print(f"Plan: semana {max(semana_actual, plan['semana_actual'])}, {nuevos} ajuste(s) nuevo(s)")
+
+    # Una sesión de foco completada hoy, para que la actividad reciente no se vea vacía
+    _, sesion = api.pedir("POST", "/sesiones-foco", {"duracion_min": 25})
+    api.pedir("PUT", f"/sesiones-foco/{sesion['numero']}", {"completada": True})
+    print("Sesión de foco de hoy: 1")
+
+
+def crear(api: Api, args, password: str, azar: random.Random) -> None:
+    iniciar_sesion(api, args.email, args.nombre, password)
+
+    for app in APPS:
+        api.pedir("POST", "/apps", app)
+    print(f"Apps: {len(APPS)}")
+
+    eventos = generar_eventos(azar, args.dias, datetime.now().replace(microsecond=0))
+    subir_eventos(api, eventos)
+    subir_pausas_de_hoy(api, azar, eventos)
 
     # Plan de 4 semanas con 3 ajustes; el cambio_pct lo calcula el servidor con sus reglas difusas
     inicio_plan = date.today() - timedelta(days=21)
@@ -157,6 +216,29 @@ def main():
     for dominio in ["tiktok.com", "instagram.com", "youtube.com"]:
         api.pedir("POST", "/dominios", {"dominio": dominio})
     print("Dispositivo, 3 sesiones de foco y 3 dominios bloqueados")
+
+
+def main():
+    p = argparse.ArgumentParser(description="Crea (o refresca) una cuenta de Focus! con datos de ejemplo")
+    p.add_argument("--api", required=True, help="URL de la API, p. ej. https://focus-api-<sufijo>.azurewebsites.net")
+    p.add_argument("--email", required=True)
+    p.add_argument("--nombre", default="Cuenta Demo")
+    p.add_argument("--dias", type=int, default=14, help="días de eventos de uso (default 14)")
+    p.add_argument("--semilla", type=int, default=42)
+    p.add_argument("--refrescar", action="store_true",
+                   help="no crea la cuenta: rellena la existente hasta hoy (eventos, pausas y semanas del plan)")
+    args = p.parse_args()
+
+    password = os.environ.get("FOCUS_DEMO_PASSWORD") or getpass.getpass("Contraseña de la cuenta demo: ")
+    if len(password) < 6:
+        sys.exit("La contraseña debe tener al menos 6 caracteres.")
+
+    # Al refrescar se cambia la semilla para no repetir los mismos eventos de la creación
+    azar = random.Random(args.semilla + (date.today().toordinal() if args.refrescar else 0))
+    api = Api(args.api)
+    print(f"API: {api.base}")
+    api.pedir("GET", "/salud")   # despierta la base serverless antes de empezar
+    (refrescar if args.refrescar else crear)(api, args, password, azar)
 
     print(f"\nListo. Inicia sesión en el portal con {args.email} y la contraseña que escribiste.")
 

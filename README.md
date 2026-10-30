@@ -221,10 +221,14 @@ az login
 | Volver a subir cambios de la API | `02_desplegar_api.ps1` |
 | Volver a subir cambios del portal | `05_desplegar_web.ps1` |
 | Crear una cuenta con datos de ejemplo | `python deploy/06_datos_demo.py --api https://focus-api-<sufijo>.azurewebsites.net --email profesora@focus.app` |
+| Ponerla al día antes de una presentación | el mismo comando con `--refrescar` |
 | Borrar todo al acabar la materia | `04_borrar_todo.ps1` |
 
 La cuenta de ejemplo registra por la API 6 apps, ~2 semanas de eventos, pausas, un plan con ajustes,
 un dispositivo, sesiones de foco y dominios bloqueados; la contraseña se pide en pantalla.
+Las fechas son relativas al día en que se crea, así que con el tiempo "Hoy" y "7D" se quedan vacíos:
+`--refrescar` rellena la **misma cuenta** desde su último evento hasta hoy, agrega las pausas de hoy y
+los ajustes de las semanas que pasaron (sin duplicar nada si ya estaba al día).
 
 > [!WARNING]
 > Las URLs y contraseñas quedan en `deploy\salida.env`. **No lo subas a GitHub** (ya está en `.gitignore`).
