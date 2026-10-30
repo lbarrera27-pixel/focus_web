@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Menu, { SECCIONES_ESTUDIANTE } from './components/Menu.jsx'
 import TopBar from './components/TopBar.jsx'
-import Login from './pages/Login.jsx'
+import Acceso from './pages/acceso/Acceso.jsx'
 import PanelGeneral from './pages/PanelGeneral.jsx'
 import Telemetria from './pages/Telemetria.jsx'
 import Analisis from './pages/Analisis.jsx'
@@ -28,9 +28,10 @@ function leerMenuContraido() {
   }
 }
 
+// "Mantener la sesión iniciada" guarda la sesión en localStorage; si no, solo dura la pestaña (sessionStorage)
 function leerSesion() {
   try {
-    return JSON.parse(localStorage.getItem(CLAVE_SESION))
+    return JSON.parse(localStorage.getItem(CLAVE_SESION) ?? sessionStorage.getItem(CLAVE_SESION))
   } catch {
     return null
   }
@@ -86,12 +87,21 @@ export default function App() {
     })
   }
 
-  const entrar = (u) => {
-    localStorage.setItem(CLAVE_SESION, JSON.stringify(u))
+  const entrar = (u, recordar = true) => {
+    try {
+      ;(recordar ? localStorage : sessionStorage).setItem(CLAVE_SESION, JSON.stringify(u))
+    } catch {
+      // sin almacenamiento: la sesión solo dura mientras la página esté abierta
+    }
     setUsuario(u)
   }
   const salir = useCallback(() => {
-    localStorage.removeItem(CLAVE_SESION)
+    try {
+      localStorage.removeItem(CLAVE_SESION)
+      sessionStorage.removeItem(CLAVE_SESION)
+    } catch {
+      // nada que borrar
+    }
     setUsuario(null)
     setDatos(null)
   }, [])
@@ -124,7 +134,7 @@ export default function App() {
 
   const panel = useMemo(() => (datos ? construirPanel(datos) : null), [datos])
 
-  if (!usuario) return <Login onEntrar={entrar} />
+  if (!usuario) return <Acceso onEntrar={entrar} />
 
   const textoEstado = estado.error
     ? { texto: `Error: ${estado.error}`, error: true }

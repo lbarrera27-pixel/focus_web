@@ -55,6 +55,15 @@ def test_registro_y_login(client, u1):
     assert client.post("/auth/registro", json={"email": "no-es-email", "nombre": "x", "password": "secreto123"}).status_code == 422
 
 
+def test_recuperar_contrasena(client, u1):
+    # misma respuesta exista o no la cuenta, para no revelar qué correos están registrados
+    existe = client.post("/auth/recuperar", json={"email": "UNO@focus.app"})
+    no_existe = client.post("/auth/recuperar", json={"email": "nadie@focus.app"})
+    assert existe.status_code == no_existe.status_code == 202
+    assert existe.json() == no_existe.json()
+    assert client.post("/auth/recuperar", json={"email": "no-es-email"}).status_code == 422
+
+
 def test_header_obligatorio(client):
     assert client.get("/apps").status_code == 422
     assert client.get("/apps", headers={"X-Usuario-Id": "999"}).status_code == 401

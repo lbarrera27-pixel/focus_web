@@ -47,6 +47,8 @@ function consulta(params) {
 export const api = {
   base: BASE,
   login: (email, password) => pedir('/auth/login', { metodo: 'POST', cuerpo: { email, password } }),
+  // Responde 202 exista o no la cuenta
+  recuperar: (email) => pedir('/auth/recuperar', { metodo: 'POST', cuerpo: { email } }),
   usuario: (id) => pedir('/usuarios/me', { usuarioId: id }),
   estadisticas: (id, desde, hasta) => pedir(`/estadisticas${consulta({ desde, hasta })}`, { usuarioId: id }),
   eventos: (id, desde, hasta) => pedir(`/eventos${consulta({ desde, hasta })}`, { usuarioId: id }),
