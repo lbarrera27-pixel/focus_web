@@ -67,6 +67,7 @@ export const api = {
     throw e
   }),
   crearApp: (id, app) => pedir('/apps', { usuarioId: id, metodo: 'POST', cuerpo: app }),
+  crearPlan: (id, plan) => pedir('/planes', { usuarioId: id, metodo: 'POST', cuerpo: plan }),
   actualizarPlan: (id, numero, cambios) => pedir(`/planes/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   eliminarCuenta: (id) => pedir('/usuarios/me', { usuarioId: id, metodo: 'DELETE' }),
   actualizarApp: (id, numero, cambios) => pedir(`/apps/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),

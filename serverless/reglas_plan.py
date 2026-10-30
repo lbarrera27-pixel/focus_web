@@ -98,3 +98,24 @@ def calcular_cambio(adherencia: float, pct_ignoradas: float = 0.0) -> tuple[floa
         den += mu
     cambio = round(num / den, 1) if den else 0.0
     return cambio + 0.0, nivel_adherencia(adh)  # + 0.0 evita devolver -0.0
+
+
+# Sensibilidad que la persona elige en "Editar plan" (se guarda en /configuracion/me, clave "plan").
+# Escala las reducciones: suave baja hasta -5 %, normal hasta -10 %, estricta hasta -15 %.
+SENSIBILIDAD = {"suave": 0.5, "normal": 1.0, "estricta": 1.5}
+
+
+def aplicar_preferencias(cambio: float, sensibilidad: str = "normal", permitir_relajar: bool = True,
+                         semana_anterior_baja: bool = False) -> float:
+    """Ajusta la salida difusa a las preferencias del plan.
+
+    - Reducir: se escala según la sensibilidad.
+    - Relajar (+): no se aplica si la persona lo desactivó; con «estricta» solo se relaja
+      cuando la semana anterior también tuvo adherencia baja (dos semanas seguidas).
+    """
+    if cambio > 0:
+        if not permitir_relajar or (sensibilidad == "estricta" and not semana_anterior_baja):
+            return 0.0
+        return cambio
+    return round(cambio * SENSIBILIDAD.get(sensibilidad, 1.0), 1) + 0.0
+

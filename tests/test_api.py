@@ -181,6 +181,18 @@ def test_planes_y_ajustes(client, u1):
     assert client.get("/planes/activo", headers=u1).status_code == 404
 
 
+def test_ajuste_usa_la_sensibilidad_del_plan(client):
+    h = registrar(client, "sensible@focus.app")
+    client.post("/planes", headers=h, json={"fecha_inicio": "2026-10-19", "limite_base": 240})
+    normal = client.post("/planes/1/ajustes", headers=h, json={"semana": 1, "uso_meta": 240, "adherencia": 1.0}).json()
+    # "Editar plan" guarda la sensibilidad en la configuración del usuario
+    client.put("/configuracion/me", headers=h, json={"plan": {"sensibilidad": "suave", "permitir_relajar": False}})
+    suave = client.post("/planes/1/ajustes", headers=h, json={"semana": 2, "uso_meta": 230, "adherencia": 1.0}).json()
+    assert normal["cambio_pct"] == -10.0 and suave["cambio_pct"] == -5.0
+    relajar = client.post("/planes/1/ajustes", headers=h, json={"semana": 3, "uso_meta": 230, "adherencia": 0.2}).json()
+    assert relajar["cambio_pct"] == 0.0
+
+
 def test_ajuste_considera_pausas_ignoradas(client):
     u3 = registrar(client, "cuatro@focus.app")
     client.post("/apps", headers=u3, json={"nombre": "Instagram", "paquete": "com.instagram.android"})

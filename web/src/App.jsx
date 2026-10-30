@@ -8,6 +8,7 @@ import Analisis from './pages/Analisis.jsx'
 import Clusteres from './pages/Clusteres.jsx'
 import Ajustes from './pages/ajustes/Ajustes.jsx'
 import Riesgo from './pages/riesgo/Riesgo.jsx'
+import MiPlan from './pages/plan/MiPlan.jsx'
 import Pendiente from './pages/Pendiente.jsx'
 import { cargarPanel, construirPanel } from './data/panel.js'
 import { datosDemo } from './data/demo.js'
@@ -177,6 +178,8 @@ export default function App() {
         onRecargar={cargar}
       />
     )
+  } else if (seccion === 'plan') {
+    contenido = <MiPlan usuario={usuario} datos={datos} error={estado.error} onRecargar={cargar} />
   } else if (seccion === 'riesgo') {
     contenido = <Riesgo usuario={usuario} datos={datos} onNavegar={navegar} />
   } else if (seccion === 'apps') {
