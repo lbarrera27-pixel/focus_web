@@ -256,6 +256,10 @@ def test_riesgo_de_recaida(client):
     assert s2["semana"] == 2 and s2["variables"]["racha"] == 0.0
     assert s2["variables"]["tendencia"] == pytest.approx(-0.6)
     assert s2["probabilidad"] > s1["probabilidad"]
+    # historial: lo que se estimó al cierre de cada semana, y métricas del modelo para la interfaz
+    assert s2["historial"] == [{"semana": 1, "probabilidad": s1["probabilidad"]},
+                               {"semana": 2, "probabilidad": s2["probabilidad"]}]
+    assert 0.5 < s2["metricas"]["auc_roc"] <= 1 and 0 < s2["metricas"]["precision"] <= 1
 
 
 def test_estadisticas(client, u1, u2):

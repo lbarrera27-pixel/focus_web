@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import Sidebar, { SECCIONES } from './components/Sidebar.jsx'
+import Menu, { SECCIONES_ESTUDIANTE } from './components/Menu.jsx'
 import TopBar from './components/TopBar.jsx'
 import Login from './pages/Login.jsx'
 import PanelGeneral from './pages/PanelGeneral.jsx'
@@ -7,10 +7,26 @@ import Telemetria from './pages/Telemetria.jsx'
 import Analisis from './pages/Analisis.jsx'
 import Clusteres from './pages/Clusteres.jsx'
 import Ajustes from './pages/ajustes/Ajustes.jsx'
+import Riesgo from './pages/riesgo/Riesgo.jsx'
+import Pendiente from './pages/Pendiente.jsx'
 import { cargarPanel, construirPanel } from './data/panel.js'
 import { datosDemo } from './data/demo.js'
 
 const CLAVE_SESION = 'focus.usuario'
+const CLAVE_MENU = 'focus.menuContraido'
+
+// Secciones del portal de investigación que siguen disponibles por su dirección (#/telemetria…)
+const SECCIONES_INVESTIGACION = ['telemetria', 'analisis', 'clusteres']
+// Direcciones anteriores al menú nuevo
+const ALIAS = { panel: 'inicio' }
+
+function leerMenuContraido() {
+  try {
+    return localStorage.getItem(CLAVE_MENU) === '1'
+  } catch {
+    return false
+  }
+}
 
 function leerSesion() {
   try {
@@ -23,8 +39,9 @@ function leerSesion() {
 // La sección activa vive en el hash (#/panel, #/telemetria…) para poder recargar o compartir
 function useSeccion() {
   const leer = () => {
-    const id = window.location.hash.replace('#/', '')
-    return SECCIONES.some((s) => s.id === id) ? id : 'panel'
+    const crudo = window.location.hash.replace('#/', '')
+    const id = ALIAS[crudo] ?? crudo
+    return SECCIONES_ESTUDIANTE.some((s) => s.id === id) || SECCIONES_INVESTIGACION.includes(id) ? id : 'inicio'
   }
   const [seccion, setSeccion] = useState(leer)
   useEffect(() => {
@@ -56,6 +73,18 @@ export default function App() {
   const [datos, setDatos] = useState(null)
   const [estado, setEstado] = useState({ cargando: false, error: null })
   const [cargadoEn, setCargadoEn] = useState(null)
+  const [menuContraido, setMenuContraido] = useState(leerMenuContraido)
+
+  function alternarMenu() {
+    setMenuContraido((c) => {
+      try {
+        localStorage.setItem(CLAVE_MENU, c ? '0' : '1')
+      } catch {
+        // sin almacenamiento: el estado del menú solo dura esta sesión
+      }
+      return !c
+    })
+  }
 
   const entrar = (u) => {
     localStorage.setItem(CLAVE_SESION, JSON.stringify(u))
@@ -138,7 +167,9 @@ export default function App() {
         onRecargar={cargar}
       />
     )
-  } else if (seccion === 'ajustes') {
+  } else if (seccion === 'riesgo') {
+    contenido = <Riesgo usuario={usuario} datos={datos} onNavegar={navegar} />
+  } else if (seccion === 'apps') {
     contenido = (
       <Ajustes
         key={usuario.id}
@@ -150,6 +181,9 @@ export default function App() {
         onCuentaEliminada={salir}
       />
     )
+  } else if (seccion !== 'inicio') {
+    const s = SECCIONES_ESTUDIANTE.find((x) => x.id === seccion)
+    contenido = <Pendiente titulo={s.titulo} sobretitulo={`MI PANEL · ${s.titulo.toUpperCase()}`} onNavegar={navegar} />
   } else {
     contenido = (
       <>
@@ -184,7 +218,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar activa={seccion} onNavegar={navegar} usuario={usuario} onSalir={salir} />
+      <Menu
+        activa={seccion}
+        onNavegar={navegar}
+        usuario={usuario}
+        contraido={menuContraido}
+        onContraer={alternarMenu}
+        onSalir={salir}
+      />
       <main className="contenido">{contenido}</main>
     </div>
   )

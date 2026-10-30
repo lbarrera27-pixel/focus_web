@@ -59,6 +59,11 @@ export const api = {
     throw e
   }),
   ajustes: (id, numero) => pedir(`/planes/${numero}/ajustes`, { usuarioId: id }),
+  // Regresión logística: probabilidad de pasarse del límite la semana siguiente (404 sin plan o sin ajustes)
+  riesgo: (id) => pedir('/riesgo', { usuarioId: id }).catch((e) => {
+    if (e.status === 404) return null
+    throw e
+  }),
   crearApp: (id, app) => pedir('/apps', { usuarioId: id, metodo: 'POST', cuerpo: app }),
   actualizarPlan: (id, numero, cambios) => pedir(`/planes/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   eliminarCuenta: (id) => pedir('/usuarios/me', { usuarioId: id, metodo: 'DELETE' }),

@@ -24,6 +24,35 @@
   --display: 'Plus Jakarta Sans', system-ui, sans-serif;
   --texto-fuente: 'Inter', system-ui, sans-serif;
   --mono: Consolas, 'SFMono-Regular', Menlo, monospace;
+
+  /* Portal nuevo (Figma "Web nuevo ordenado", variables color/*) */
+  --w-fondo: #f8fafc;
+  --w-superficie: #fff;
+  --w-borde: #e8edf3;
+  --w-borde-input: #e2e8f0;
+  --w-texto: #0f172a;
+  --w-texto-fuerte: #334155;
+  --w-texto-2: #475569;
+  --w-texto-3: #64748b;
+  --w-linea: #64748b;
+  --w-acento: #b45309;
+  --w-acento-fuerte: #92400e;
+  --w-marca: #f59e0b;
+  --w-marca-suave: #ffedc3;
+  --w-marca-sutil: #fff7e6;
+  --w-borde-marca: #fbe3a6;
+  --w-apagado: #f1f5f9;
+  --w-hundido: #eef2f6;
+  --w-exito: #047857;
+  --w-exito-suave: #d1fae5;
+  --w-peligro: #b91c1c;
+  --w-peligro-suave: #fee2e2;
+  --w-info-suave: #e0e7ff;
+  --w-menu: #131c2e;
+  --w-menu-apagado: #1c2638;
+  --w-menu-texto: #f1f5f9;
+  --w-menu-texto-2: #cbd5e1;
+  --w-menu-texto-3: #94a3b8;
 }
 
 * { box-sizing: border-box; }
