@@ -1312,7 +1312,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
-                  "pm.test('cambio_pct calculado', () => pm.expect(pm.response.json().cambio_pct).to.eql(-10));"
+                  "pm.test('cambio_pct calculado con lógica difusa (adherencia 0.92 reduce el límite)', () => pm.expect(pm.response.json().cambio_pct).to.be.within(-15, -0.1));"
                 ]
               }
             }
@@ -2957,7 +2957,7 @@
       ]
     },
     {
-      "name": "14 IA (riesgo y Compañero Foqui)",
+      "name": "15 IA: riesgo y Compañero Foqui",
       "description": "Regresión logística (GET /riesgo) y Compañero IA con LLM (POST /companero/mensaje). Sin ANTHROPIC_API_KEY, Foqui responde con mensajes de respaldo.",
       "item": [
         {
@@ -3114,6 +3114,450 @@
                   "language": "json"
                 }
               }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 IA: las 5 técnicas",
+      "description": "Aprendizaje supervisado, red neuronal, algoritmo genético y búsqueda A* (rutas /ia/*). La lógica difusa está en 06 Planes y ajustes y en 14 Serverless. La primera petición tarda unos segundos: los modelos se entrenan al primer uso.",
+      "item": [
+        {
+          "name": "ML: POST /ia/prob-ignorar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Probabilidad entre 0 y 1', () => pm.expect(pm.response.json().probabilidad_ignorar).to.be.within(0, 1));",
+                  "pm.test('Recomienda un tipo de pausa', () => pm.expect(pm.response.json().tipo_recomendado).to.be.oneOf(['leve','media','alta']));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ia/prob-ignorar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "prob-ignorar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoria\": \"redes\",\n  \"tipo\": \"leve\",\n  \"hora\": 23,\n  \"dia_semana\": 5,\n  \"uso_previo_min\": 60,\n  \"pausas_previas_hoy\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ML: POST /ia/prob-ignorar/app/{numero} (contexto de la BD)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Arma el contexto del usuario', () => pm.expect(pm.response.json().contexto).to.have.property('categoria'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ia/prob-ignorar/app/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "prob-ignorar",
+                "app",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"media\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ML: GET /ia/modelo-pausas (métricas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Indica el modelo elegido', () => pm.expect(pm.response.json().modelo_elegido).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ia/modelo-pausas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "modelo-pausas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Red neuronal: POST /ia/pronostico-uso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Pronóstico en minutos', () => pm.expect(pm.response.json().pronostico_min).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ia/pronostico-uso",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "pronostico-uso"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ultimos_dias\": [\n    200,\n    190,\n    210,\n    180,\n    170,\n    220,\n    205\n  ],\n  \"dia_semana\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Red neuronal: GET /ia/pronostico-uso (datos del usuario)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Trae los 7 días previos', () => pm.expect(pm.response.json().ultimos_dias).to.have.lengthOf(7));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ia/pronostico-uso",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "pronostico-uso"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Red neuronal: GET /ia/modelo-uso (métricas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Arquitectura 32-16', () => pm.expect(pm.response.json().arquitectura.capas_ocultas).to.eql([32, 16]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ia/modelo-uso",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "modelo-uso"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Genético: POST /ia/optimizar-pausas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Horario de 1 a 6 pausas', () => { const h = pm.response.json().horario; pm.expect(h.length).to.be.within(1, 6); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ia/optimizar-pausas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "optimizar-pausas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoria\": \"redes\",\n  \"dia_semana\": 5,\n  \"uso_por_hora\": [\n    8,\n    3,\n    0,\n    0,\n    0,\n    0,\n    2,\n    10,\n    12,\n    10,\n    8,\n    8,\n    15,\n    12,\n    8,\n    8,\n    12,\n    18,\n    22,\n    25,\n    30,\n    30,\n    25,\n    15\n  ],\n  \"max_pausas\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "A*: POST /ia/ruta-plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Llega a la meta', () => { const r = pm.response.json().ruta; pm.expect(r[r.length - 1].limite_min).to.be.at.most(120); });",
+                  "pm.test('A* expande igual o menos que costo uniforme', () => { const j = pm.response.json(); pm.expect(j.expandidos).to.be.at.most(j.expandidos_costo_uniforme); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ia/ruta-plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "ruta-plan"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limite_actual\": 300,\n  \"meta\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "A*: meta inalcanzable en 2 semanas (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422', () => pm.expect(pm.response.code).to.be.oneOf([422]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ia/ruta-plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ia",
+                "ruta-plan"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limite_actual\": 300,\n  \"meta\": 120,\n  \"max_semanas\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Limpieza (correr al final)",
+      "description": "Borra el plan y desactiva la cuenta de prueba. Después de esto el usuario ya no puede usar la API (401).",
+      "item": [
+        {
+          "name": "DELETE /planes/{numero}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204, 409', () => pm.expect(pm.response.code).to.be.oneOf([204,409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/planes/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "planes",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE /usuarios/me (desactiva la cuenta)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.expect(pm.response.code).to.be.oneOf([204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /usuarios/me después de desactivar (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
             }
           }
         }
