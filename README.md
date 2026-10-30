@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white">
-  <img alt="Vite" src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white">
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Python_3.12-009688?logo=fastapi&logoColor=white">
-  <img alt="Azure" src="https://img.shields.io/badge/Microsoft_Azure-nube-0078D4?logo=microsoftazure&logoColor=white">
-  <img alt="Pruebas" src="https://img.shields.io/badge/pytest-65_pruebas-0A9EDC?logo=pytest&logoColor=white">
+  <img alt="React" src="docs/insignias/react.svg">
+  <img alt="Vite" src="docs/insignias/vite.svg">
+  <img alt="FastAPI" src="docs/insignias/fastapi.svg">
+  <img alt="Azure" src="docs/insignias/azure.svg">
+  <img alt="Pruebas" src="docs/insignias/pytest.svg">
 </p>
 
 <p align="center">
@@ -147,7 +147,7 @@ focus_web/
 │   ├── 04_borrar_todo.ps1         elimina el grupo de recursos
 │   ├── 05_desplegar_web.ps1       frontend
 │   └── 06_datos_demo.py           cuenta con datos de ejemplo
-├── docs/                          logo
+├── docs/                          logo e insignias del README
 ├── postman/                       colección Focus_API_v2 con pruebas automáticas
 └── tests/                         pytest: API, riesgo, compañero y reglas del plan
 ```
