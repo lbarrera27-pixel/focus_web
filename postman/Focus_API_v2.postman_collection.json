@@ -1956,6 +1956,215 @@
           }
         },
         {
+          "name": "POST /dominios/{numero}/intentos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Guarda el nombre del sitio y la hora', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r.dominio).to.be.a('string');",
+                  "  pm.expect(r.fecha).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/1/intentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "1",
+                "intentos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /dominios/{numero}/intentos (fecha del teléfono)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/1/intentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "1",
+                "intentos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{$isoTimestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /dominios/intentos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Resumen por sitio y por día', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r.dias).to.eql(7);",
+                  "  pm.expect(r.por_dia).to.have.lengthOf(7);",
+                  "  pm.expect(r.total).to.be.at.least(2);",
+                  "  pm.expect(r.por_dominio[0].intentos).to.be.at.least(2);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/intentos?dias=7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "intentos"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /dominios/intentos (dias=0 → 422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422', () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/intentos?dias=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "intentos"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /dominios/{numero}/intentos (no existe → 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/999999/intentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "999999",
+                "intentos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "DELETE /dominios/{numero}",
           "event": [
             {

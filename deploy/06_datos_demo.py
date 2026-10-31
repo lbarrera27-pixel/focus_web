@@ -181,10 +181,32 @@ def refrescar(api: Api, args, password: str, azar: random.Random) -> None:
             api.pedir("PUT", f"/planes/{plan['numero']}", {"semana_actual": semana_actual})
         print(f"Plan: semana {max(semana_actual, plan['semana_actual'])}, {nuevos} ajuste(s) nuevo(s)")
 
+    _, sitios = api.pedir("GET", "/dominios")
+    if sitios:
+        subir_intentos(api, azar, dias=1)
+
     # Una sesión de foco completada hoy, para que la actividad reciente no se vea vacía
     _, sesion = api.pedir("POST", "/sesiones-foco", {"duracion_min": 25})
     api.pedir("PUT", f"/sesiones-foco/{sesion['numero']}", {"completada": True})
     print("Sesión de foco de hoy: 1")
+
+
+def subir_intentos(api: Api, azar: random.Random, dias: int) -> None:
+    """Intentos de abrir los sitios bloqueados (más de noche), con la hora real de cada uno."""
+    _, sitios = api.pedir("GET", "/dominios")
+    pesos = [5, 3, 2, 1][:len(sitios)]
+    ahora = datetime.now(timezone.utc)
+    total = 0
+    for d in range(dias):
+        for _ in range(azar.randint(1, 6)):
+            hora = azar.choice([8, 13, 17, 21, 22, 23, 23, 0, 1])
+            fecha = (ahora - timedelta(days=d)).replace(hour=0, minute=azar.randint(0, 59)) + timedelta(hours=hora + 6)
+            if fecha > ahora:
+                continue
+            sitio = azar.choices(sitios, weights=pesos)[0]
+            api.pedir("POST", f"/dominios/{sitio['numero']}/intentos", {"fecha": fecha.isoformat()})
+            total += 1
+    print(f"Intentos de abrir sitios bloqueados: {total}")
 
 
 def crear(api: Api, args, password: str, azar: random.Random) -> None:
@@ -216,6 +238,7 @@ def crear(api: Api, args, password: str, azar: random.Random) -> None:
     for dominio in ["tiktok.com", "instagram.com", "youtube.com"]:
         api.pedir("POST", "/dominios", {"dominio": dominio})
     print("Dispositivo, 3 sesiones de foco y 3 dominios bloqueados")
+    subir_intentos(api, azar, dias=7)
 
 
 def main():

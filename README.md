@@ -300,6 +300,8 @@ Cada tabla del usuario tiene `id` (clave primaria global) y `numero` (consecutiv
 | GET / PUT / DELETE | `/pausas/{numero}` | PAUSA |
 | POST / GET | `/dominios` | DOMINIO_BLOQUEADO |
 | GET / PUT / DELETE | `/dominios/{numero}` | DOMINIO_BLOQUEADO |
+| POST | `/dominios/{numero}/intentos` | INTENTO_SITIO (el teléfono registra cada intento de abrir un sitio bloqueado) |
+| GET | `/dominios/intentos?dias=7` | INTENTO_SITIO (intentos por sitio y por día) |
 | POST / GET | `/sesiones-foco` | SESION_FOCO |
 | GET / PUT / DELETE | `/sesiones-foco/{numero}` | SESION_FOCO |
 | POST / GET | `/tokens-dispositivo` | TOKEN_DISPOSITIVO |

@@ -71,6 +71,13 @@ export const api = {
   actualizarPlan: (id, numero, cambios) => pedir(`/planes/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   eliminarCuenta: (id) => pedir('/usuarios/me', { usuarioId: id, metodo: 'DELETE' }),
   actualizarApp: (id, numero, cambios) => pedir(`/apps/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  // Sitios bloqueados en el navegador del teléfono
+  dominios: (id) => pedir('/dominios', { usuarioId: id }),
+  crearDominio: (id, dominio) => pedir('/dominios', { usuarioId: id, metodo: 'POST', cuerpo: { dominio } }),
+  actualizarDominio: (id, numero, cambios) => pedir(`/dominios/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  eliminarDominio: (id, numero) => pedir(`/dominios/${numero}`, { usuarioId: id, metodo: 'DELETE' }),
+  // Intentos de abrir sitios bloqueados: por sitio y por día (los últimos `dias`, incluido hoy)
+  intentosSitios: (id, dias = 7) => pedir(`/dominios/intentos${consulta({ dias })}`, { usuarioId: id }),
   // Ajustes del portal (JSON libre por usuario); {} si nunca se han guardado
   configuracion: (id) => pedir('/configuracion/me', { usuarioId: id }),
   guardarConfiguracion: (id, datos) => pedir('/configuracion/me', { usuarioId: id, metodo: 'PUT', cuerpo: datos }),

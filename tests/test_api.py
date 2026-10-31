@@ -222,6 +222,30 @@ def test_dominios(client, u1):
     assert client.delete("/dominios/1", headers=u1).status_code == 204
 
 
+def test_intentos_de_sitios(client):
+    h = registrar(client, "sitios@focus.app")
+    client.post("/dominios", headers=h, json={"dominio": "youtube.com"})
+    client.post("/dominios", headers=h, json={"dominio": "reddit.com"})
+    for numero in (1, 1, 1, 2):
+        r = client.post(f"/dominios/{numero}/intentos", headers=h)
+        assert r.status_code == 201
+    assert client.post("/dominios/9/intentos", headers=h).status_code == 404
+    resumen = client.get("/dominios/intentos", headers=h).json()
+    assert resumen["total"] == 4 and resumen["dias"] == 7 and len(resumen["por_dia"]) == 7
+    assert resumen["por_dominio"][0] == {"dominio": "youtube.com", "numero": 1, "intentos": 3}
+    assert resumen["por_dia"][-1]["intentos"] == 4      # todos fueron hoy
+    # al quitar un sitio de la lista su historial se conserva (sin número)
+    client.delete("/dominios/1", headers=h)
+    resumen = client.get("/dominios/intentos?dias=30", headers=h).json()
+    assert {"dominio": "youtube.com", "numero": None, "intentos": 3} in resumen["por_dominio"]
+    assert client.get("/dominios/intentos?dias=0", headers=h).status_code == 422
+    # el teléfono puede mandar intentos atrasados con su fecha
+    from datetime import datetime, timedelta, timezone
+    ayer = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    assert client.post("/dominios/2/intentos", headers=h, json={"fecha": ayer}).status_code == 201
+    assert sum(d["intentos"] for d in client.get("/dominios/intentos", headers=h).json()["por_dia"][:-1]) == 1
+
+
 def test_sesiones_foco(client, u1):
     r = client.post("/sesiones-foco", headers=u1, json={"duracion_min": 25})
     assert r.status_code == 201 and r.json()["fin"] is None

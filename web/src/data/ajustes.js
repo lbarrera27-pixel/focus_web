@@ -23,6 +23,8 @@ export const DEFAULTS = {
   anonimizacion: 'seudonimizado',
   retencion: 90,
   consentimientoRetirado: false,
+  // Sitios bloqueados: { 'reddit.com': { horario: 'noche', pausaHasta: ISO } }
+  sitios: {},
 }
 
 const clave = (usuarioId) => `focus.ajustes.${usuarioId}`

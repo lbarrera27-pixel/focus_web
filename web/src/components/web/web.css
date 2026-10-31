@@ -68,3 +68,103 @@
 .w-barra > span { display: block; height: 100%; border-radius: 4px; background: var(--w-acento); }
 
 .w-divisor { height: 1px; width: 100%; background: var(--w-borde); }
+
+/* Web/Aviso */
+.w-avisos { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: flex; flex-direction: column; gap: 10px; width: 400px; max-width: calc(100vw - 32px); pointer-events: none; }
+.w-avisos > div { pointer-events: auto; animation: w-entrar 0.18s ease-out; }
+.w-aviso--atenuado { opacity: 0.6; }
+@keyframes w-entrar { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .w-avisos > div { animation: none; } }
+.w-aviso {
+  position: relative; display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 12px 12px 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff;
+  box-shadow: 0 12px 15px rgba(5, 13, 31, 0.14); font-family: 'Inter', system-ui, sans-serif;
+  --tinta: #0284c7; --suave: #e0f2fe;
+}
+.w-aviso::before { content: ''; align-self: stretch; flex-shrink: 0; width: 4px; border-radius: 2px; background: var(--tinta); }
+.w-aviso--exito { --tinta: #059669; --suave: #d1fae5; }
+.w-aviso--alerta { --tinta: #d97706; --suave: #fef3c7; }
+.w-aviso--error { --tinta: #dc2626; --suave: #fee2e2; }
+.w-aviso__icono { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px; background: var(--suave); }
+.w-aviso__icono img { width: 18px; height: 18px; }
+.w-aviso__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.w-aviso__texto b { font-size: 13px; line-height: 17px; font-weight: 600; color: #0f172a; }
+.w-aviso__texto span { font-size: 12px; line-height: 17px; color: #64748b; }
+.w-aviso__accion { flex-shrink: 0; align-self: center; padding: 4px 2px; font-size: 12px; font-weight: 700; color: var(--tinta); }
+.w-aviso__accion:hover { text-decoration: underline; }
+.w-aviso__cerrar { display: flex; flex-shrink: 0; padding: 2px; border-radius: 6px; }
+.w-aviso__cerrar:hover { background: #f1f5f9; }
+.w-aviso__cerrar img { width: 16px; height: 16px; }
+.w-aviso button:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
+
+/* Diálogo */
+.w-velo { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(5, 13, 31, 0.55); }
+.w-dialogo {
+  display: flex; flex-direction: column; gap: 16px; max-width: 100%; max-height: calc(100vh - 32px); overflow: auto;
+  padding: 28px 28px 24px; border-radius: 20px; background: #fff; box-shadow: 0 30px 70px rgba(5, 13, 31, 0.35);
+  font-family: 'Inter', system-ui, sans-serif; color: #0f172a;
+}
+.w-dialogo__encabezado { display: flex; align-items: flex-start; gap: 16px; }
+.w-dialogo__icono { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 14px; background: #fef3c7; }
+.w-dialogo__icono--peligro { background: #fee2e2; border-radius: 24px; }
+.w-dialogo__icono img { width: 22px; height: 22px; }
+.w-dialogo__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.w-dialogo__texto h2 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 20px; font-weight: 700; line-height: 25px; }
+.w-dialogo__texto p { font-size: 14px; line-height: 21px; color: #64748b; }
+.w-dialogo__cerrar { display: flex; flex-shrink: 0; padding: 2px; border-radius: 6px; }
+.w-dialogo__cerrar:hover { background: #f1f5f9; }
+.w-dialogo__cerrar img { width: 20px; height: 20px; }
+.w-dialogo__acciones { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.w-dialogo__nota { flex: 1; font-size: 12px; color: #94a3b8; }
+.w-dialogo button:focus-visible { outline: 2px solid var(--w-marca); outline-offset: 2px; }
+.w-dlg-boton { padding: 12px 18px; border-radius: 12px; border: 1px solid transparent; font-size: 14px; font-weight: 700; line-height: 17px; color: #334155; }
+.w-dlg-boton:disabled { opacity: 0.55; cursor: default; }
+.w-dlg-boton--fantasma { color: #64748b; }
+.w-dlg-boton--fantasma:hover { background: #f1f5f9; }
+.w-dlg-boton--secundario { background: #fff; border-color: #cbd5e1; }
+.w-dlg-boton--secundario:hover { background: #f8fafc; }
+.w-dlg-boton--primario { background: #f59e0b; color: #0f172a; }
+.w-dlg-boton--primario:hover:not(:disabled) { filter: brightness(1.05); }
+.w-dlg-boton--peligro { background: #b91c1c; color: #fff; }
+.w-dlg-boton--peligro:hover:not(:disabled) { background: #991b1b; }
+
+/* Campos de formulario del portal nuevo */
+.w-campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.w-campo > span { font-size: 13px; font-weight: 600; color: #334155; }
+.w-campo input, .w-campo select {
+  width: 100%; padding: 11px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #f8fafc;
+  font: inherit; font-size: 14px; color: #0f172a;
+}
+.w-campo input:focus, .w-campo select:focus { outline: none; border-color: #f59e0b; background: #fff; }
+.w-campo--error input { border-color: #dc2626; background: #fff; }
+.w-campo__error { font-size: 12px; color: #b91c1c; }
+
+/* Selector segmentado */
+.w-segmentos { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: #f1f5f9; }
+.w-segmentos button { flex: 1; padding: 8px; border-radius: 9px; font-size: 13px; color: #64748b; }
+.w-segmentos button[aria-checked='true'] { background: #fff; font-weight: 600; color: #0f172a; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+
+/* Selector numérico − n + */
+.w-pasos { display: flex; align-items: center; flex-shrink: 0; border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; }
+.w-pasos button { width: 40px; height: 36px; font-size: 18px; font-weight: 600; color: #64748b; }
+.w-pasos button:hover:not(:disabled) { background: #f1f5f9; }
+.w-pasos button:disabled { opacity: 0.4; }
+.w-pasos b { width: 40px; text-align: center; font-size: 15px; }
+
+/* Interruptor 40 × 22 */
+.w-interruptor { position: relative; flex-shrink: 0; width: 40px; height: 22px; border-radius: 11px; background: #cbd5e1; transition: background 0.15s; }
+.w-interruptor::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 0.15s; }
+.w-interruptor[aria-checked='true'] { background: #f59e0b; }
+.w-interruptor[aria-checked='true']::after { transform: translateX(18px); }
+.w-interruptor:focus-visible { outline: 2px solid var(--w-marca); outline-offset: 2px; }
+
+/* Lista de cambios del diálogo "Tienes cambios sin guardar" (Figma e30) */
+.w-cambios { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.w-cambios li { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; background: #f8fafc; }
+.w-cambios span { flex: 1; color: #334155; }
+.w-cambios s, .w-cambios i { font-style: normal; color: #94a3b8; }
+.w-cambios b { color: #b45309; }
+
+/* Botones sin el estilo del navegador dentro de los componentes nuevos (especificidad mínima con :where) */
+:where(.w-dialogo, .w-avisos, .si) button { padding: 0; border: 0; background: none; }
+.w-segmentos button { white-space: nowrap; }

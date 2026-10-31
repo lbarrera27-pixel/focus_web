@@ -11,6 +11,9 @@ import Riesgo from './pages/riesgo/Riesgo.jsx'
 import MiPlan from './pages/plan/MiPlan.jsx'
 import Uso from './pages/uso/Uso.jsx'
 import Pendiente from './pages/Pendiente.jsx'
+import Dialogo from './components/web/Dialogo.jsx'
+import { ProveedorAvisos } from './components/web/Avisos.jsx'
+import iconoAlerta from './assets/icons/w-dlg-alerta.svg'
 import { cargarPanel, construirPanel } from './data/panel.js'
 import { datosDemo } from './data/demo.js'
 
@@ -96,6 +99,28 @@ export default function App() {
   const estrecho = useAnchoEstrecho()
   // En pantallas angostas el menú empieza contraído; el botón lo abre solo mientras dure la visita
   const [abiertoEstrecho, setAbiertoEstrecho] = useState(false)
+  // Cambios sin guardar de la sección activa ({ cambios, guardar }) y sección a la que se quiere ir (Figma e30)
+  const [guardia, setGuardia] = useState(null)
+  const [salida, setSalida] = useState(null)
+  const [guardandoSalida, setGuardandoSalida] = useState(false)
+
+  const intentarNavegar = (id) => {
+    if (guardia && id !== seccion) setSalida(id)
+    else navegar(id)
+  }
+  const salirA = (id) => {
+    setSalida(null)
+    setGuardia(null)
+    navegar(id)
+  }
+  async function guardarYSalir() {
+    setGuardandoSalida(true)
+    const ok = await guardia.guardar()
+    setGuardandoSalida(false)
+    // Si falla se queda en la sección; el aviso de error ofrece reintentar
+    if (ok) salirA(salida)
+    else setSalida(null)
+  }
 
   function alternarMenu() {
     setMenuContraido((c) => {
@@ -224,6 +249,7 @@ export default function App() {
         cargadoEn={cargadoEn}
         onRecargar={cargar}
         onCuentaEliminada={salir}
+        onGuardia={setGuardia}
       />
     )
   } else if (seccion !== 'inicio') {
@@ -262,16 +288,40 @@ export default function App() {
   }
 
   return (
-    <div className={`app${SECCIONES_FLUIDAS.includes(seccion) ? ' app--fluida' : ''}`}>
-      <Menu
-        activa={seccion}
-        onNavegar={navegar}
-        usuario={usuario}
-        contraido={estrecho ? !abiertoEstrecho : menuContraido}
-        onContraer={estrecho ? () => setAbiertoEstrecho((a) => !a) : alternarMenu}
-        onSalir={salir}
-      />
-      <main className="contenido">{contenido}</main>
-    </div>
+    <ProveedorAvisos>
+      <div className={`app${SECCIONES_FLUIDAS.includes(seccion) ? ' app--fluida' : ''}`}>
+        <Menu
+          activa={seccion}
+          onNavegar={intentarNavegar}
+          usuario={usuario}
+          contraido={estrecho ? !abiertoEstrecho : menuContraido}
+          onContraer={estrecho ? () => setAbiertoEstrecho((a) => !a) : alternarMenu}
+          onSalir={salir}
+        />
+        <main className="contenido">{contenido}</main>
+      </div>
+      {salida && guardia && (
+        <Dialogo icono={iconoAlerta} titulo="Tienes cambios sin guardar" ancho={520} onCerrar={() => setSalida(null)}
+          detalle="Si sales ahora se perderán. La app móvil seguirá usando la configuración anterior."
+          acciones={(
+            <>
+              <button type="button" className="w-dlg-boton w-dlg-boton--fantasma" onClick={() => salirA(salida)}>Descartar</button>
+              <button type="button" className="w-dlg-boton w-dlg-boton--secundario" onClick={() => setSalida(null)}>Seguir editando</button>
+              <button type="button" className="w-dlg-boton w-dlg-boton--primario" disabled={guardandoSalida} onClick={guardarYSalir}>
+                {guardandoSalida ? 'Guardando…' : 'Guardar y salir'}
+              </button>
+            </>
+          )}>
+          <ul className="w-cambios">
+            {guardia.cambios.map((c) => (
+              <li key={c.nombre}>
+                <span>{c.nombre}</span>
+                {c.antes != null && <><s>{c.antes}</s><i aria-hidden="true">→</i><b>{c.despues}</b></>}
+              </li>
+            ))}
+          </ul>
+        </Dialogo>
+      )}
+    </ProveedorAvisos>
   )
 }

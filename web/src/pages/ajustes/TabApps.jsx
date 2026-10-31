@@ -13,6 +13,9 @@ import logoClash from '../../assets/icons/logo-clash.png'
 import { Cabecera, Chip, ChipNivel, Interruptor, Nota, Pasos } from './Comunes.jsx'
 import { etiquetaCategoria, pausasDeHoy, resumenApps } from '../../data/ajustes.js'
 import { api } from '../../api.js'
+import Dialogo from '../../components/web/Dialogo.jsx'
+import { useAvisos } from '../../components/web/Avisos.jsx'
+import iconoDialogoApp from '../../assets/icons/w-dlg-app.svg'
 
 // Logos del diseño para los paquetes conocidos; el resto usa la inicial de la app
 const LOGOS = {
@@ -43,53 +46,94 @@ const FILTROS = [
 
 const COLOR_NIVEL = { 1: '#fbbf24', 2: '#38bdf8', 3: '#f87171' }
 
+// Paquetes de Android de las apps más comunes; si el nombre no está aquí se pide el paquete
+const PAQUETES = {
+  instagram: 'com.instagram.android', tiktok: 'com.zhiliaoapp.musically', youtube: 'com.google.android.youtube',
+  x: 'com.twitter.android', twitter: 'com.twitter.android', facebook: 'com.facebook.katana', whatsapp: 'com.whatsapp',
+  snapchat: 'com.snapchat.android', netflix: 'com.netflix.mediaclient', twitch: 'tv.twitch.android.app',
+  reddit: 'com.reddit.frontpage', discord: 'com.discord', telegram: 'org.telegram.messenger', spotify: 'com.spotify.music',
+  pinterest: 'com.pinterest', threads: 'com.instagram.barcelona', 'clash royale': 'com.supercell.clashroyale',
+  'free fire': 'com.dts.freefireth', roblox: 'com.roblox.client', 'candy crush': 'com.king.candycrushsaga',
+}
+const CATEGORIAS = [
+  { id: 'social', texto: 'Redes sociales' },
+  { id: 'video', texto: 'Video' },
+  { id: 'juegos', texto: 'Juegos' },
+  { id: 'otra', texto: 'Otra' },
+]
+
+// Figma e22: diálogo "Agregar app restringida"
 function NuevaApp({ usuario, onCreada, onCancelar }) {
-  const [form, setForm] = useState({ nombre: '', paquete: '', categoria: 'social', limite_aperturas: 10 })
+  const [form, setForm] = useState({ nombre: '', paquete: '', categoria: 'social', limite: 10, friccion: true })
   const [estado, setEstado] = useState({ enviando: false, error: null })
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: k === 'limite_aperturas' ? Number(e.target.value) : e.target.value }))
+  const conocido = PAQUETES[form.nombre.trim().toLowerCase()]
+  const paquete = conocido ?? form.paquete.trim()
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
   async function enviar(e) {
     e.preventDefault()
+    if (!form.nombre.trim()) return setEstado({ enviando: false, error: 'Escribe el nombre de la app.' })
+    if (!paquete) return setEstado({ enviando: false, error: 'Escribe el paquete de Android (aparece en el enlace de Google Play).' })
     setEstado({ enviando: true, error: null })
     try {
-      if (!usuario.demo) await api.crearApp(usuario.id, form)
-      onCreada()
+      const cuerpo = { nombre: form.nombre.trim(), paquete, categoria: form.categoria, limite_aperturas: form.limite }
+      const creada = usuario.demo ? { ...cuerpo, numero: null } : await api.crearApp(usuario.id, cuerpo)
+      onCreada(creada, form.friccion)
     } catch (err) {
       setEstado({ enviando: false, error: err.message || 'Sin conexión' })
     }
   }
 
   return (
-    <form className="aj-nueva" onSubmit={enviar}>
-      <label>
-        <small>NOMBRE</small>
-        <input required maxLength={120} value={form.nombre} onChange={set('nombre')} placeholder="Instagram" />
-      </label>
-      <label>
-        <small>PAQUETE ANDROID</small>
-        <input required maxLength={255} value={form.paquete} onChange={set('paquete')} placeholder="com.instagram.android" />
-      </label>
-      <label>
-        <small>CATEGORÍA</small>
-        <select value={form.categoria} onChange={set('categoria')}>
-          <option value="social">Redes sociales</option>
-          <option value="video">Video</option>
-          <option value="juegos">Juegos</option>
-          <option value="mensajeria">Mensajería</option>
-        </select>
-      </label>
-      <label>
-        <small>APERTURAS / DÍA</small>
-        <input type="number" min="0" max="100" required value={form.limite_aperturas} onChange={set('limite_aperturas')} />
-      </label>
-      <div className="aj-nueva__botones">
-        <button type="button" className="aj-boton-secundario aj-boton-secundario--chico" onClick={onCancelar}>Cancelar</button>
-        <button type="submit" className="boton-primario aj-boton-chico" disabled={estado.enviando}>
-          {estado.enviando ? 'Guardando…' : usuario.demo ? 'Añadir (demo)' : 'Añadir con POST /apps'}
-        </button>
-      </div>
-      {estado.error && <p className="aj-error aj-nueva__error">No se pudo crear: {estado.error}</p>}
-    </form>
+    <Dialogo icono={iconoDialogoApp} titulo="Agregar app restringida" ancho={520} onCerrar={onCancelar}
+      detalle="Focus! aplicará fricción progresiva cuando se supere el límite de aperturas."
+      nota={usuario.demo ? 'Demo: no se envía a la API' : 'Se aplica en tu teléfono al guardar'}
+      acciones={(
+        <>
+          <button type="button" className="w-dlg-boton w-dlg-boton--secundario" onClick={onCancelar}>Cancelar</button>
+          <button type="submit" form="aj-nueva-app" className="w-dlg-boton w-dlg-boton--primario" disabled={estado.enviando}>
+            {estado.enviando ? 'Agregando…' : 'Agregar app'}
+          </button>
+        </>
+      )}>
+      <form id="aj-nueva-app" className="aj-dlg" noValidate onSubmit={enviar}>
+        <label className="w-campo">
+          <span>Nombre de la app</span>
+          <input value={form.nombre} maxLength={120} placeholder="Instagram" onChange={(e) => set('nombre', e.target.value)} />
+        </label>
+        {form.nombre.trim() && !conocido && (
+          <label className="w-campo">
+            <span>Paquete de Android</span>
+            <input value={form.paquete} maxLength={255} placeholder="com.ejemplo.app" spellCheck={false} onChange={(e) => set('paquete', e.target.value)} />
+          </label>
+        )}
+        <div className="w-campo">
+          <span id="aj-dlg-categoria">Categoría</span>
+          <div className="w-segmentos" role="radiogroup" aria-labelledby="aj-dlg-categoria">
+            {CATEGORIAS.map((c) => (
+              <button key={c.id} type="button" role="radio" aria-checked={form.categoria === c.id} onClick={() => set('categoria', c.id)}>{c.texto}</button>
+            ))}
+          </div>
+        </div>
+        <div className="aj-dlg__limite">
+          <div>
+            <b>Límite de aperturas por día</b>
+            <span>Después se muestra la pausa consciente</span>
+          </div>
+          <span className="w-pasos">
+            <button type="button" aria-label="Reducir límite" disabled={form.limite <= 0} onClick={() => set('limite', form.limite - 1)}>−</button>
+            <b aria-live="polite">{form.limite}</b>
+            <button type="button" aria-label="Aumentar límite" disabled={form.limite >= 100} onClick={() => set('limite', form.limite + 1)}>+</button>
+          </span>
+        </div>
+        <div className="aj-dlg__friccion">
+          <span id="aj-dlg-friccion">Activar fricción progresiva (niveles 1 → 3)</span>
+          <button type="button" role="switch" className="w-interruptor" aria-checked={form.friccion} aria-labelledby="aj-dlg-friccion"
+            onClick={() => set('friccion', !form.friccion)} />
+        </div>
+        {estado.error && <p className="w-campo__error" role="alert">{estado.error}</p>}
+      </form>
+    </Dialogo>
   )
 }
 
@@ -98,7 +142,7 @@ export default function TabApps({ usuario, datos, locales, setLocales, borrador,
   const [filtro, setFiltro] = useState(null)
   const [editando, setEditando] = useState(null)
   const [nueva, setNueva] = useState(false)
-  const [aviso, setAviso] = useState(null)
+  const avisar = useAvisos()
 
   const apps = resumenApps(datos)
   const inactivas = new Set(locales.appsInactivas)
@@ -208,25 +252,30 @@ export default function TabApps({ usuario, datos, locales, setLocales, borrador,
           )}
         </div>
 
-        {nueva ? (
+        <button type="button" className="aj-boton-punteado" onClick={() => setNueva(true)}>
+          <Icono src={iconoMas} tam={16} />
+          Añadir nueva app restringida
+        </button>
+        {nueva && (
           <NuevaApp
             usuario={usuario}
             onCancelar={() => setNueva(false)}
-            onCreada={() => {
+            onCreada={(app, friccion) => {
               setNueva(false)
-              setAviso(usuario.demo ? 'En la demo no se crean apps en la API.' : 'App creada en la API.')
+              // Sin fricción la app queda registrada pero desactivada (se guarda con "Guardar")
+              if (!friccion && app.numero != null) alternar(app.numero, false)
+              avisar({
+                tono: usuario.demo ? 'alerta' : 'exito',
+                titulo: usuario.demo ? `${app.nombre} no se agregó (demo)` : `${app.nombre} agregada`,
+                detalle: usuario.demo ? 'En la demo no se crean apps en la API.' : `Límite de ${app.limite_aperturas} aperturas al día.`,
+              })
               if (!usuario.demo) onRecargar()
             }}
           />
-        ) : (
-          <button type="button" className="aj-boton-punteado" onClick={() => setNueva(true)}>
-            <Icono src={iconoMas} tam={16} />
-            Añadir nueva app restringida
-          </button>
         )}
         <div className="aj-pie">
           <Nota>
-            {aviso ?? 'El límite (aperturas por día) y las apps desactivadas se guardan en tu cuenta en la nube.'}
+            El límite (aperturas por día) y las apps desactivadas se guardan en tu cuenta en la nube.
           </Nota>
         </div>
       </section>

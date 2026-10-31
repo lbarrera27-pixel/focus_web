@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Icono from '../../components/Icono.jsx'
 import iconoCandado from '../../assets/icons/aj-candado.svg'
 import iconoRestablecer from '../../assets/icons/aj-restablecer.svg'
@@ -10,14 +10,35 @@ import TabReglas from './TabReglas.jsx'
 import TabApps from './TabApps.jsx'
 import TabLimites from './TabLimites.jsx'
 import TabPrivacidad from './TabPrivacidad.jsx'
+import TabSitios from './TabSitios.jsx'
+import { useAvisos } from '../../components/web/Avisos.jsx'
+import { horas } from '../../data/plan.js'
 import './Ajustes.css'
 
+// Orden de las pestañas de "Apps y sitios" en Figma (e25–e28)
 const PESTANAS = [
-  { id: 'reglas', titulo: 'Reglas de Fricción' },
-  { id: 'apps', titulo: 'Apps Restringidas' },
-  { id: 'limites', titulo: 'Límites Diarios' },
-  { id: 'privacidad', titulo: 'Privacidad Académica' },
+  { id: 'apps', titulo: 'Apps restringidas' },
+  { id: 'sitios', titulo: 'Sitios bloqueados' },
+  { id: 'limites', titulo: 'Límites diarios' },
+  { id: 'reglas', titulo: 'Reglas de fricción' },
+  { id: 'privacidad', titulo: 'Privacidad académica' },
 ]
+
+// Cómo se nombra cada clave de /configuracion/me en el diálogo de cambios sin guardar
+const NOMBRES_AJUSTE = {
+  niveles: 'Niveles de fricción',
+  ejercicio: 'Ejercicio de la pausa',
+  modoFoco: 'Modo foco',
+  appsInactivas: 'Apps con fricción activada',
+  categorias: 'Límites por categoría',
+  reduccionGradual: 'Reducción gradual',
+  descanso: 'Horario de descanso',
+  excepciones: 'Excepciones',
+  privacidad: 'Datos compartidos para investigación',
+  anonimizacion: 'Anonimización',
+  retencion: 'Tiempo de retención',
+  consentimientoRetirado: 'Consentimiento',
+}
 
 function iniciales(nombre = '') {
   return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?'
@@ -31,8 +52,9 @@ function borradorApi(datos) {
   }
 }
 
-export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, onCuentaEliminada }) {
-  const [pestana, setPestana] = useState('reglas')
+export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, onCuentaEliminada, onGuardia, pestanaInicial = 'apps' }) {
+  const avisar = useAvisos()
+  const [pestana, setPestana] = useState(pestanaInicial)
   // Se empieza con la copia del navegador y se reemplaza con lo que devuelva GET /configuracion/me
   const [inicial] = useState(() => leerLocales(usuario.id))
   const [locales, setLocales] = useState(() => structuredClone(inicial))
@@ -89,8 +111,65 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
     return () => window.removeEventListener('beforeunload', avisar)
   }, [pendientes])
 
+  // Lista de cambios para el diálogo "Tienes cambios sin guardar" (Figma e30)
+  const listaCambios = useMemo(() => {
+    const lista = []
+    if (cambiosApi.plan) lista.push({ nombre: 'Límite diario global', antes: horas(original.limiteGlobal), despues: horas(borrador.limiteGlobal) })
+    for (const [n, v] of cambiosApi.apps) {
+      const app = datos?.apps.find((a) => String(a.numero) === String(n))
+      lista.push({ nombre: `${app?.nombre ?? 'App'} · aperturas`, antes: original.limitesApps[n], despues: v })
+    }
+    if (locales.temporizador !== guardadosLocales.temporizador) {
+      lista.push({ nombre: 'Temporizador de la pausa', antes: `${guardadosLocales.temporizador} s`, despues: `${locales.temporizador} s` })
+    }
+    for (const k of Object.keys(locales)) {
+      if (k === 'temporizador' || JSON.stringify(locales[k]) === JSON.stringify(guardadosLocales[k])) continue
+      lista.push({ nombre: NOMBRES_AJUSTE[k] ?? 'Otro ajuste' })
+    }
+    return lista
+  }, [cambiosApi, original, borrador, datos, locales, guardadosLocales])
+
+  // Referencias a lo último guardado y a guardar(), para los botones de los avisos ("Deshacer", "Reintentar")
+  const guardadosRef = useRef(guardadosLocales)
+  const guardarRef = useRef(null)
+  const [reGuardar, setReGuardar] = useState(false)
+  useEffect(() => {
+    guardadosRef.current = guardadosLocales
+    guardarRef.current = guardar
+  })
+  useEffect(() => {
+    if (!reGuardar) return
+    setReGuardar(false)
+    guardarRef.current()
+  }, [reGuardar])
+
+  // Avisa a App si hay cambios pendientes para preguntar antes de cambiar de sección
+  useEffect(() => {
+    onGuardia?.(pendientes ? { cambios: listaCambios, guardar: () => guardarRef.current() } : null)
+  }, [pendientes, listaCambios, onGuardia])
+  useEffect(() => () => onGuardia?.(null), [onGuardia])
+
+  // Sitios bloqueados: se guardan al momento (solo la clave "sitios"), sin pasar por "Guardar"
+  async function guardarSitios(actualizar) {
+    const sitios = actualizar(guardadosRef.current.sitios ?? {})
+    const nuevos = { ...guardadosRef.current, sitios }
+    await guardarLocales(usuario, nuevos)
+    guardadosRef.current = nuevos
+    setGuardadosLocales(nuevos)
+    setLocales((l) => ({ ...l, sitios }))
+    setUltimaSync(Date.now())
+  }
+
+  function deshacer(previo) {
+    setLocales(structuredClone(previo.locales))
+    setBorrador(previo.borrador)
+    setReGuardar(true)
+  }
+
   async function guardar() {
+    const previo = { locales: guardadosLocales, borrador: original }
     setEstado({ guardando: true, mensaje: null, error: false })
+    avisar({ id: 'ajustes-guardar', tono: 'info', titulo: 'Guardando…', detalle: 'Enviando tus cambios a la nube.', fijo: true })
     try {
       if (!usuario.demo) {
         if (cambiosApi.plan && datos.plan) await api.actualizarPlan(usuario.id, datos.plan.numero, { limite_base: borrador.limiteGlobal })
@@ -109,8 +188,26 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
       })
       setUltimaSync(Date.now())
       if ((cambiosApi.plan || cambiosApi.apps.length) && !usuario.demo) onRecargar()
+      // Figma e31: en la demo el aviso es de advertencia porque nada llega al teléfono
+      avisar({
+        id: 'ajustes-guardar',
+        tono: usuario.demo ? 'alerta' : 'exito',
+        titulo: usuario.demo ? 'Solo guardado en este navegador' : 'Guardado y enviado al teléfono',
+        detalle: usuario.demo ? 'Modo demostración: no se envía nada a la API.' : `${enApi} cambio${enApi === 1 ? '' : 's'} · tu teléfono los aplica en segundos.`,
+        accion: { texto: 'Deshacer', alPulsar: () => deshacer(previo) },
+      })
+      return true
     } catch (err) {
       setEstado({ guardando: false, error: true, mensaje: `No se pudo guardar: ${err.message || 'sin conexión'}` })
+      // Figma e32: el error se queda hasta cerrarlo o reintentar
+      avisar({
+        id: 'ajustes-guardar',
+        tono: 'error',
+        titulo: 'No se pudo guardar',
+        detalle: `${err.message || 'Sin conexión'}. Tus cambios siguen aquí; la app móvil usa la configuración anterior.`,
+        accion: { texto: 'Reintentar', alPulsar: () => guardarRef.current() },
+      })
+      return false
     }
   }
 
@@ -125,13 +222,10 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
 
   return (
     <div className="aj">
-      <header className="topbar topbar--seccion">
-        <div className="topbar__titulos">
-          <p className="topbar__ruta">
-            FOCUS! CLOUD <span>/</span> AJUSTES <span>/</span> {actual.titulo.toUpperCase()}
-          </p>
-          <h1 className="topbar__titulo topbar__titulo--grande">Configuración del Sistema y Reglas de Fricción</h1>
-          <p className="topbar__desc">Administra límites, intervenciones progresivas y horarios de concentración.</p>
+      <header className="aj-encabezado">
+        <div className="w-encabezado__titulos">
+          <p className="w-sobretitulo">APPS Y SITIOS · {actual.titulo.toUpperCase()}</p>
+          <h1 className="w-display">Configuración del sistema</h1>
         </div>
         <div className="topbar__acciones aj-acciones">
           <span className="chip aj-chip">
@@ -178,6 +272,8 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
           <TabApps {...props} />
         ) : pestana === 'limites' ? (
           <TabLimites {...props} />
+        ) : pestana === 'sitios' ? (
+          <TabSitios usuario={usuario} locales={locales} guardarSitios={guardarSitios} ultimaSync={ultimaSync} />
         ) : (
           <TabPrivacidad {...props} />
         )}
