@@ -10,7 +10,7 @@ export class ApiError extends Error {
   }
 }
 
-async function pedir(ruta, { usuarioId, metodo = 'GET', cuerpo, reintentos = 2 } = {}) {
+async function pedir(ruta, { usuarioId, metodo = 'GET', cuerpo, reintentos = 2, senal } = {}) {
   const headers = { Accept: 'application/json' }
   if (usuarioId) headers['X-Usuario-Id'] = String(usuarioId)
   if (cuerpo) headers['Content-Type'] = 'application/json'
@@ -19,13 +19,14 @@ async function pedir(ruta, { usuarioId, metodo = 'GET', cuerpo, reintentos = 2 }
     method: metodo,
     headers,
     body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+    signal: senal,
   })
 
   // Azure SQL serverless responde 503 mientras despierta: se reintenta tras Retry-After
   if (resp.status === 503 && reintentos > 0) {
     const espera = Number(resp.headers.get('Retry-After')) || 30
     await new Promise((r) => setTimeout(r, Math.min(espera, 30) * 1000))
-    return pedir(ruta, { usuarioId, metodo, cuerpo, reintentos: reintentos - 1 })
+    return pedir(ruta, { usuarioId, metodo, cuerpo, senal, reintentos: reintentos - 1 })
   }
 
   if (resp.status === 204) return null
@@ -71,6 +72,9 @@ export const api = {
   actualizarPlan: (id, numero, cambios) => pedir(`/planes/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   eliminarCuenta: (id) => pedir('/usuarios/me', { usuarioId: id, metodo: 'DELETE' }),
   actualizarApp: (id, numero, cambios) => pedir(`/apps/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  // Foqui: sin `mensaje` saluda y explica la semana; la API no guarda la conversación
+  foqui: (id, mensaje, historial, senal) =>
+    pedir('/companero/mensaje', { usuarioId: id, metodo: 'POST', cuerpo: { mensaje, historial }, senal, reintentos: 0 }),
   // Sitios bloqueados en el navegador del teléfono
   dominios: (id) => pedir('/dominios', { usuarioId: id }),
   crearDominio: (id, dominio) => pedir('/dominios', { usuarioId: id, metodo: 'POST', cuerpo: { dominio } }),

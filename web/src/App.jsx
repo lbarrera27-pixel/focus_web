@@ -10,6 +10,7 @@ import Ajustes from './pages/ajustes/Ajustes.jsx'
 import Riesgo from './pages/riesgo/Riesgo.jsx'
 import MiPlan from './pages/plan/MiPlan.jsx'
 import Uso from './pages/uso/Uso.jsx'
+import Foqui from './pages/foqui/Foqui.jsx'
 import Pendiente from './pages/Pendiente.jsx'
 import Dialogo from './components/web/Dialogo.jsx'
 import { ProveedorAvisos } from './components/web/Avisos.jsx'
@@ -23,7 +24,7 @@ const CLAVE_MENU = 'focus.menuContraido'
 // Secciones del portal de investigación que siguen disponibles por su dirección (#/telemetria…)
 const SECCIONES_INVESTIGACION = ['telemetria', 'analisis', 'clusteres']
 // Secciones con el diseño nuevo: se adaptan desde 1024 px (las demás siguen fijas a 1440 px)
-const SECCIONES_FLUIDAS = ['riesgo', 'plan', 'uso']
+const SECCIONES_FLUIDAS = ['riesgo', 'plan', 'uso', 'foqui']
 // Debajo de este ancho el menú se muestra contraído (Figma: "Colapsada se usa en 1024 px")
 const ANCHO_MENU_COMPLETO = 1280
 
@@ -237,6 +238,8 @@ export default function App() {
         onRecargar={cargar}
       />
     )
+  } else if (seccion === 'foqui') {
+    contenido = <Foqui key={usuario.id} usuario={usuario} datos={datos} onNavegar={intentarNavegar} />
   } else if (seccion === 'riesgo') {
     contenido = <Riesgo usuario={usuario} datos={datos} onNavegar={navegar} />
   } else if (seccion === 'apps') {
