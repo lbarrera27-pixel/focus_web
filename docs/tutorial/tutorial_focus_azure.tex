@@ -18,8 +18,31 @@
 \usepackage{fancyhdr}
 \usepackage{titlesec}
 \usepackage[most]{tcolorbox}
+\usepackage{tikz}
 
-% ---------- Colores de FOCUS! ----------
+% ---------- Colores de la app (res/values/colors.xml) ----------
+\definecolor{focusnavy}{HTML}{0F172A}
+\definecolor{focusorange}{HTML}{F59E0B}
+\definecolor{focusslate}{HTML}{64748B}
+\definecolor{focusgreen}{HTML}{10B981}
+\definecolor{focusbg}{HTML}{F8FAFC}
+
+% ---------- Logo de Focus! (ic_logo.xml + ic_orbit.xml), igual que en los documentos anteriores ----------
+\newcommand{\logofocus}[1][1]{%
+  \begin{tikzpicture}[x=#1*0.035cm, y=#1*0.035cm, baseline=(c.base)]
+    \coordinate (c) at (0,0);
+    \draw[focusorange!25, line width=#1*0.6pt] (0,0) circle (64);   % órbita
+    \fill[focusorange] (41,52) circle (3);                          % punto superior
+    \fill[focusorange] (-36,-58) circle (2.5);                      % punto inferior
+    \fill[focusnavy] (0,0) circle (38.5);                           % anillo
+    \fill[white]     (0,0) circle (20.125);                         % núcleo
+    \fill[focusnavy] (0,0) circle (5.25);                           % centro
+  \end{tikzpicture}%
+}
+\newcommand{\marcafocus}[1]{{\sffamily\bfseries\fontsize{#1}{#1}\selectfont
+  \color{focusnavy}FOCUS\textcolor{focusorange}{!}}}
+
+% ---------- Colores del portal web ----------
 \definecolor{ambar}{HTML}{F59E0B}
 \definecolor{ambaroscuro}{HTML}{B45309}
 \definecolor{marino}{HTML}{131C2E}
@@ -62,26 +85,30 @@
 \begin{document}
 
 % =====================================================================
+% PORTADA (la misma de los documentos anteriores de Focus!)
 \begin{titlepage}
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[focusbg] (current page.south west) rectangle (current page.north east);
+    \fill[focusorange!10] ([xshift=-1.5cm,yshift=-2.5cm]current page.north east) circle (4.5cm);
+    \fill[focusgreen!7] ([xshift=2cm,yshift=2.5cm]current page.south west) circle (5.5cm);
+  \end{tikzpicture}
   \centering
-  \vspace*{2.5cm}
-  {\fontsize{40}{44}\selectfont\bfseries\color{marino}FOCUS\textcolor{ambar}{!}\par}
-  \vspace{0.3cm}
-  {\large\color{gris}Menos pantalla, más enfoque\par}
-  \vspace{2cm}
-  {\LARGE\bfseries Tutorial del portal web y de Azure\par}
-  \vspace{0.6cm}
-  {\large Cómo abrir la web, cómo usar la API y cómo revisar\\ cada servicio en Microsoft Azure (incluida la base de datos)\par}
-  \vfill
+  {\large\sffamily\color{focusnavy}Universidad Autónoma de Querétaro}\\[0.2cm]
+  {\sffamily\color{focusslate}Facultad de Informática \textperiodcentered{} Ingeniería de Software}\\[1.8cm]
+  \logofocus[1]\\[0.5cm]
+  \marcafocus{40}\\[0.3cm]
+  {\large\color{focusslate}Menos pantalla, \textcolor{focusnavy}{\textbf{más enfoque.}}}\\[1.8cm]
+  {\sffamily\bfseries\LARGE\color{focusnavy}Tutorial del portal web}\\[0.15cm]
+  {\sffamily\bfseries\LARGE\color{focusnavy}y de Microsoft Azure}\\[0.35cm]
+  {\large\sffamily\color{focusslate}Abrir la web, usar la API y revisar cada servicio}\\[2cm]
   \begin{tabular}{rl}
+    \textbf{Alumno:} & Luis Angel Barrera Barrera \\
+    \textbf{Profesor:} & Gonzalez Gutierrez Fidel \\
+    \textbf{Grupo:} & 31 \textperiodcentered{} Clave 2075 \\
     \textbf{Portal web:} & \url{https://green-moss-07816e210.4.azurestaticapps.net} \\
-    \textbf{API (Swagger):} & \url{https://focus-api-luisbb27.azurewebsites.net/docs} \\
     \textbf{Repositorio:} & \url{https://github.com/lbarrera27-pixel/focus_web} \\
-    \textbf{Grupo de recursos:} & \texttt{rg-focus} (región \texttt{centralus}) \\
-  \end{tabular}
-  \vspace{1.5cm}
-
-  {\small\color{gris}Universidad Autónoma de Querétaro \textperiodcentered{} Facultad de Informática\par}
+  \end{tabular}\\[1.5cm]
+  {\sffamily\color{focusslate}Noviembre de 2026}
 \end{titlepage}
 
 \tableofcontents
@@ -369,7 +396,7 @@ Conviene correrlo el día de la presentación.
         intentos de abrir sitios bloqueados (\ruta{/dominios/\{n\}/intentos}), estado del teléfono
         (\ruta{/tokens-dispositivo/\{n\}/estado}), subida de fotos desde el portal y la corrección
         para que los ajustes del plan se guarden en Azure SQL.
-  \item \textbf{Portal}: preferencias de formato de hora (24/12 h) e inicio de semana (lunes o domingo),
+  \item \textbf{Portal}: preferencias de zona horaria, formato de hora (24/12 h) e inicio de semana (lunes o domingo),
         sin desplazamiento lateral desde 1024 px.
   \item \textbf{Datos de ejemplo} en la cuenta \texttt{demo2@focus.app} (usuario 8): 6 apps,
         unos 280 eventos, pausas, plan en la semana 4 con 3 ajustes, teléfono vinculado y 3 sitios bloqueados.
@@ -377,7 +404,6 @@ Conviene correrlo el día de la presentación.
 
 \subsection{Pendiente}
 \begin{itemize}[leftmargin=*]
-  \item \textbf{Zona horaria} de Preferencias: se guarda y se está terminando de aplicar a todas las fechas.
   \item \textbf{Cambiar la clave de Anthropic} (se mostró en un chat): crear una nueva en Claude Console,
         borrar la anterior y guardarla en la variable \texttt{ANTHROPIC\_API\_KEY} del App Service.
   \item \textbf{App Android} (repositorio \texttt{focus\_app}): enviar su modelo, versión y batería con
