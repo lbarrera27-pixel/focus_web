@@ -204,12 +204,11 @@ function CambiarContrasena({ onCerrar, onGuardar }) {
   )
 }
 
-function TabCuenta({ usuario, perfil, cuenta, datos, onPerfil, onCuenta, onSalir, avisar }) {
+function TabCuenta({ usuario, perfil, cuenta, datos, onPerfil, onCuenta, onDialogo, avisar }) {
   const [nombre, setNombre] = useState(perfil.nombre)
   const [guardandoNombre, setGuardandoNombre] = useState(false)
   const [subiendo, setSubiendo] = useState(false)
   const [dialogo, setDialogo] = useState(null)
-  const [desactivando, setDesactivando] = useState(false)
   const archivo = useRef(null)
   const telefono = telefonoVinculado(datos)
   const nombreLimpio = nombre.trim()
@@ -262,22 +261,6 @@ function TabCuenta({ usuario, perfil, cuenta, datos, onPerfil, onCuenta, onSalir
       return null
     } catch (err) {
       return err.message || 'Sin conexión con la nube.'
-    }
-  }
-
-  async function desactivar() {
-    if (usuario.demo) {
-      setDialogo(null)
-      avisar({ tono: 'info', titulo: 'En la demo no hay cuenta que desactivar' })
-      return
-    }
-    setDesactivando(true)
-    try {
-      await api.eliminarCuenta(usuario.id)
-      onSalir()
-    } catch (err) {
-      setDesactivando(false)
-      avisar({ tono: 'error', titulo: 'No se pudo desactivar tu cuenta', detalle: err.message || 'Sin conexión con la nube.' })
     }
   }
 
@@ -373,8 +356,8 @@ function TabCuenta({ usuario, perfil, cuenta, datos, onPerfil, onCuenta, onSalir
 
         <Tarjeta titulo="Zona de cuidado" desc="Estas acciones afectan tu cuenta.">
           <div className="cu-botones">
-            <button type="button" className="w-boton w-boton--secundario" onClick={onSalir}>Cerrar sesión</button>
-            <button type="button" className="w-boton cu-boton-peligro" onClick={() => setDialogo('desactivar')}>Desactivar cuenta</button>
+            <button type="button" className="w-boton w-boton--secundario" onClick={() => onDialogo('salir')}>Cerrar sesión</button>
+            <button type="button" className="w-boton w-boton--peligro" onClick={() => onDialogo('desactivar')}>Desactivar cuenta</button>
           </div>
         </Tarjeta>
 
@@ -388,18 +371,6 @@ function TabCuenta({ usuario, perfil, cuenta, datos, onPerfil, onCuenta, onSalir
       </div>
 
       {dialogo === 'contrasena' && <CambiarContrasena onCerrar={() => setDialogo(null)} onGuardar={guardarContrasena} />}
-      {dialogo === 'desactivar' && (
-        <Dialogo icono={iconoAlerta} tono="peligro" titulo="¿Desactivar tu cuenta?" ancho={500} onCerrar={() => setDialogo(null)}
-          detalle="Se cerrará tu sesión aquí y en el teléfono, y Focus! dejará de aplicar tus límites. Tus registros se conservan para el estudio."
-          acciones={(
-            <>
-              <button type="button" className="w-dlg-boton w-dlg-boton--secundario" onClick={() => setDialogo(null)}>Cancelar</button>
-              <button type="button" className="w-dlg-boton w-dlg-boton--peligro" disabled={desactivando} onClick={desactivar}>
-                {desactivando ? 'Desactivando…' : 'Desactivar cuenta'}
-              </button>
-            </>
-          )} />
-      )}
     </div>
   )
 }
@@ -539,7 +510,7 @@ function TabPrivacidad({ usuario, perfil, config, cuenta, datos, onGuardar, avis
         <Tarjeta titulo="Tus datos" desc="Puedes llevártelos o borrarlos cuando quieras.">
           <div className="cu-botones">
             <button type="button" className="w-boton w-boton--secundario" disabled={!datos} onClick={descargarDatos}>Descargar mis datos</button>
-            <button type="button" className="w-boton cu-boton-peligro" disabled={Boolean(cuenta.solicitudBorrado)} onClick={() => setBorrando(true)}>
+            <button type="button" className="w-boton w-boton--peligro" disabled={Boolean(cuenta.solicitudBorrado)} onClick={() => setBorrando(true)}>
               {cuenta.solicitudBorrado ? `Borrado pedido el ${fechaCorta(cuenta.solicitudBorrado)}` : 'Borrar mis datos'}
             </button>
           </div>
@@ -644,7 +615,7 @@ function TabDispositivo({ usuario, config, datos, onRecargar, avisar }) {
           <FilaDato icono={iconoReloj} titulo="Vinculado desde" valor={token ? fechaLarga(telefono.desde) : '—'} />
           <div className="cu-botones cu-botones--fila">
             <button type="button" className="w-boton w-boton--secundario" onClick={actualizar}>Actualizar ahora</button>
-            {token && <button type="button" className="w-boton cu-boton-peligro" onClick={() => setDialogo('desvincular')}>Desvincular</button>}
+            {token && <button type="button" className="w-boton w-boton--peligro" onClick={() => setDialogo('desvincular')}>Desvincular</button>}
           </div>
         </Tarjeta>
 
@@ -714,7 +685,7 @@ function TabDispositivo({ usuario, config, datos, onRecargar, avisar }) {
 
 // ---------- Página ----------
 
-export default function AjustesCuenta({ usuario, datos, onRecargar, onPerfil, onSalir }) {
+export default function AjustesCuenta({ usuario, datos, onRecargar, onPerfil, onDialogo, onExpirada }) {
   const avisar = useAvisos()
   const [pestana, setPestana] = useState('cuenta')
   const [estado, setEstado] = useState({ cargando: true, error: null, perfil: null, config: {}, cuenta: null })
@@ -725,10 +696,10 @@ export default function AjustesCuenta({ usuario, datos, onRecargar, onPerfil, on
       const r = await cargarCuenta(usuario)
       setEstado({ cargando: false, error: null, ...r })
     } catch (err) {
-      if (err.status === 401) return onSalir()
+      if (err.status === 401) return onExpirada()
       setEstado((e) => ({ ...e, cargando: false, error: err.message || 'Sin conexión con la nube' }))
     }
-  }, [usuario, onSalir])
+  }, [usuario, onExpirada])
 
   useEffect(() => {
     cargar()
@@ -773,7 +744,7 @@ export default function AjustesCuenta({ usuario, datos, onRecargar, onPerfil, on
       </div>
     )
   } else if (pestana === 'cuenta') {
-    cuerpo = <TabCuenta {...comun} onPerfil={cambiarPerfil} onCuenta={guardarCuenta} onSalir={onSalir} />
+    cuerpo = <TabCuenta {...comun} onPerfil={cambiarPerfil} onCuenta={guardarCuenta} onDialogo={onDialogo} />
   } else if (pestana === 'avisos') {
     cuerpo = <TabAvisos {...comun} onCuenta={guardarCuenta} />
   } else if (pestana === 'privacidad') {

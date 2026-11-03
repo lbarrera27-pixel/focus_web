@@ -32,7 +32,8 @@ export function iniciales(nombre = '') {
   return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?'
 }
 
-export default function Menu({ activa, onNavegar, usuario, contraido, onContraer, onSalir }) {
+// children: el menú de la cuenta (Figma e42), que se abre desde la tarjeta de usuario
+export default function Menu({ activa, onNavegar, usuario, contraido, onContraer, onUsuario, usuarioAbierto, children }) {
   return (
     <aside className={`menu${contraido ? ' menu--contraido' : ''}`}>
       <div className="menu__marca">
@@ -76,7 +77,8 @@ export default function Menu({ activa, onNavegar, usuario, contraido, onContraer
         {!contraido && <span>Contraer menú</span>}
       </button>
 
-      <button type="button" className="menu__usuario" onClick={onSalir} title="Cerrar sesión">
+      <button type="button" className="menu__usuario" onClick={onUsuario} aria-haspopup="menu" aria-expanded={usuarioAbierto}
+        title={contraido ? usuario.nombre : undefined}>
         <span className="menu__avatar">{iniciales(usuario.nombre)}</span>
         {!contraido && (
           <span className="menu__usuario-texto">
@@ -85,6 +87,7 @@ export default function Menu({ activa, onNavegar, usuario, contraido, onContraer
           </span>
         )}
       </button>
+      {children}
     </aside>
   )
 }

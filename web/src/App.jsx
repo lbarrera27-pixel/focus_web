@@ -13,12 +13,15 @@ import Uso from './pages/uso/Uso.jsx'
 import Foqui from './pages/foqui/Foqui.jsx'
 import Reportes from './pages/reportes/Reportes.jsx'
 import AjustesCuenta from './pages/cuenta/AjustesCuenta.jsx'
+import { CapaCuenta, MenuUsuario, PaginaNoEncontrada } from './pages/cuenta/DialogosCuenta.jsx'
 import Pendiente from './pages/Pendiente.jsx'
 import Dialogo from './components/web/Dialogo.jsx'
 import { ProveedorAvisos } from './components/web/Avisos.jsx'
 import iconoAlerta from './assets/icons/w-dlg-alerta.svg'
 import { cargarPanel, construirPanel } from './data/panel.js'
 import { datosDemo } from './data/demo.js'
+import { csvDeDatos } from './data/ajustes.js'
+import { api } from './api.js'
 
 const CLAVE_SESION = 'focus.usuario'
 const CLAVE_MENU = 'focus.menuContraido'
@@ -26,9 +29,11 @@ const CLAVE_MENU = 'focus.menuContraido'
 // Secciones del portal de investigación que siguen disponibles por su dirección (#/telemetria…)
 const SECCIONES_INVESTIGACION = ['telemetria', 'analisis', 'clusteres']
 // Secciones con el diseño nuevo: se adaptan desde 1024 px (las demás siguen fijas a 1440 px)
-const SECCIONES_FLUIDAS = ['riesgo', 'plan', 'uso', 'foqui', 'reportes', 'ajustes']
+const SECCIONES_FLUIDAS = ['riesgo', 'plan', 'uso', 'foqui', 'reportes', 'ajustes', 'no-encontrada']
 // Debajo de este ancho el menú se muestra contraído (Figma: "Colapsada se usa en 1024 px")
 const ANCHO_MENU_COMPLETO = 1280
+// Sin "Mantener la sesión iniciada", la sesión termina tras este tiempo sin actividad (Figma e46)
+const INACTIVIDAD_MS = 30 * 60_000
 
 function useAnchoEstrecho() {
   const medir = () => window.innerWidth < ANCHO_MENU_COMPLETO
@@ -66,7 +71,9 @@ function useSeccion() {
   const leer = () => {
     const crudo = window.location.hash.replace('#/', '')
     const id = ALIAS[crudo] ?? crudo
-    return SECCIONES_ESTUDIANTE.some((s) => s.id === id) || SECCIONES_INVESTIGACION.includes(id) ? id : 'inicio'
+    if (!id) return 'inicio'
+    // Dirección desconocida: página "No encontramos esta página" (Figma e47)
+    return SECCIONES_ESTUDIANTE.some((s) => s.id === id) || SECCIONES_INVESTIGACION.includes(id) ? id : 'no-encontrada'
   }
   const [seccion, setSeccion] = useState(leer)
   useEffect(() => {
@@ -106,6 +113,10 @@ export default function App() {
   const [guardia, setGuardia] = useState(null)
   const [salida, setSalida] = useState(null)
   const [guardandoSalida, setGuardandoSalida] = useState(false)
+  // Menú de la cuenta (e42) y diálogo abierto: perfil, desactivar, salir, expirada o ayuda
+  const [menuCuenta, setMenuCuenta] = useState(false)
+  const [perfilMenu, setPerfilMenu] = useState(null)
+  const [dialogoCuenta, setDialogoCuenta] = useState(null)
 
   const intentarNavegar = (id) => {
     if (guardia && id !== seccion) setSalida(id)
@@ -162,7 +173,41 @@ export default function App() {
     }
     setUsuario(null)
     setDatos(null)
+    setMenuCuenta(false)
+    setPerfilMenu(null)
+    setDialogoCuenta(null)
   }, [])
+  const expirar = useCallback(() => setDialogoCuenta('expirada'), [])
+
+  // Sesión solo de esta pestaña: se cierra tras un rato sin actividad
+  useEffect(() => {
+    if (!usuario || usuario.demo || localStorage.getItem(CLAVE_SESION)) return
+    let ultima = Date.now()
+    const activo = () => (ultima = Date.now())
+    const eventos = ['pointerdown', 'keydown', 'wheel']
+    eventos.forEach((e) => window.addEventListener(e, activo, { passive: true }))
+    const reloj = setInterval(() => Date.now() - ultima > INACTIVIDAD_MS && expirar(), 60_000)
+    return () => {
+      eventos.forEach((e) => window.removeEventListener(e, activo))
+      clearInterval(reloj)
+    }
+  }, [usuario, expirar])
+
+  // El correo y la foto del menú se piden al abrirlo por primera vez
+  useEffect(() => {
+    if (!menuCuenta || perfilMenu || !usuario || usuario.demo) return
+    api.usuario(usuario.id).then(setPerfilMenu).catch(() => {})
+  }, [menuCuenta, perfilMenu, usuario])
+
+  function elegirMenu(id) {
+    setMenuCuenta(false)
+    if (id === 'ajustes') return intentarNavegar('ajustes')
+    if (id === 'exportar') {
+      if (datos) descargar(`focus-mis-datos_${usuario.demo ? 'demo' : usuario.id}.csv`, csvDeDatos(datos), 'text/csv')
+      return
+    }
+    setDialogoCuenta(id)
+  }
 
   const cargar = useCallback(async () => {
     if (!usuario) return
@@ -174,10 +219,10 @@ export default function App() {
       setEstado({ cargando: false, error: null })
     } catch (err) {
       // 401: el usuario ya no existe o está inactivo
-      if (err.status === 401) return salir()
+      if (err.status === 401) return expirar()
       setEstado({ cargando: false, error: err.status ? err.message : 'No se pudo conectar con la API' })
     }
-  }, [usuario, periodo, salir])
+  }, [usuario, periodo, expirar])
 
   // Todas las secciones comparten los mismos datos salvo Telemetría, que carga los suyos
   const usaDatos = seccion !== 'telemetria'
@@ -254,7 +299,12 @@ export default function App() {
   } else if (seccion === 'foqui') {
     contenido = <Foqui key={usuario.id} usuario={usuario} datos={datos} onNavegar={intentarNavegar} />
   } else if (seccion === 'ajustes') {
-    contenido = <AjustesCuenta key={usuario.id} usuario={usuario} datos={datos} onRecargar={cargar} onPerfil={actualizarUsuario} onSalir={salir} />
+    contenido = (
+      <AjustesCuenta key={usuario.id} usuario={usuario} datos={datos} onRecargar={cargar} onPerfil={actualizarUsuario}
+        onDialogo={setDialogoCuenta} onExpirada={expirar} />
+    )
+  } else if (seccion === 'no-encontrada') {
+    contenido = <PaginaNoEncontrada onNavegar={navegar} />
   } else if (seccion === 'riesgo') {
     contenido = <Riesgo usuario={usuario} datos={datos} onNavegar={navegar} />
   } else if (seccion === 'apps') {
@@ -314,8 +364,11 @@ export default function App() {
           usuario={usuario}
           contraido={estrecho ? !abiertoEstrecho : menuContraido}
           onContraer={estrecho ? () => setAbiertoEstrecho((a) => !a) : alternarMenu}
-          onSalir={salir}
-        />
+          onUsuario={() => setMenuCuenta((a) => !a)}
+          usuarioAbierto={menuCuenta}
+        >
+          {menuCuenta && <MenuUsuario usuario={usuario} perfil={perfilMenu} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
+        </Menu>
         <main className="contenido">{contenido}</main>
       </div>
       {salida && guardia && (
@@ -340,6 +393,9 @@ export default function App() {
           </ul>
         </Dialogo>
       )}
+      <CapaCuenta dialogo={dialogoCuenta} onDialogo={setDialogoCuenta} usuario={usuario} datos={datos}
+        onPerfil={(p) => { setPerfilMenu(p); if (p.nombre !== usuario.nombre) actualizarUsuario({ ...usuario, nombre: p.nombre }) }}
+        onSalir={salir} onNavegar={intentarNavegar} />
     </ProveedorAvisos>
   )
 }

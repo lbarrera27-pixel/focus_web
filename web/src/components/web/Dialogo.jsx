@@ -3,7 +3,8 @@ import { useEffect, useRef } from 'react'
 import iconoCerrar from '../../assets/icons/w-dlg-cerrar.svg'
 import './web.css'
 
-export default function Dialogo({ icono, tono = 'marca', titulo, detalle, onCerrar, children, acciones, nota, ancho = 520, className = '' }) {
+// apilado (Figma e45, e46): ícono arriba del título, sin botón de cerrar ni divisor antes de las acciones
+export default function Dialogo({ icono, tono = 'marca', titulo, detalle, onCerrar, children, acciones, nota, ancho = 520, className = '', apilado = false }) {
   const caja = useRef(null)
   // En un ref para no reenfocar el primer campo cada vez que el padre vuelve a renderizar
   const cerrar = useRef(onCerrar)
@@ -40,21 +41,23 @@ export default function Dialogo({ icono, tono = 'marca', titulo, detalle, onCerr
 
   return (
     <div className="w-velo" onMouseDown={(e) => e.target === e.currentTarget && onCerrar()}>
-      <div ref={caja} className={`w-dialogo ${className}`} style={{ width: ancho }} role="dialog" aria-modal="true" aria-labelledby="w-dialogo-titulo">
+      <div ref={caja} className={`w-dialogo${apilado ? ' w-dialogo--apilado' : ''} ${className}`} style={{ width: ancho }} role="dialog" aria-modal="true" aria-labelledby="w-dialogo-titulo">
         <div className="w-dialogo__encabezado">
           {icono && <span className={`w-dialogo__icono w-dialogo__icono--${tono}`}><img src={icono} alt="" /></span>}
           <div className="w-dialogo__texto">
             <h2 id="w-dialogo-titulo">{titulo}</h2>
             {detalle && <p>{detalle}</p>}
           </div>
-          <button type="button" className="w-dialogo__cerrar" aria-label="Cerrar" onClick={onCerrar}>
-            <img src={iconoCerrar} alt="" />
-          </button>
+          {!apilado && (
+            <button type="button" className="w-dialogo__cerrar" aria-label="Cerrar" onClick={onCerrar}>
+              <img src={iconoCerrar} alt="" />
+            </button>
+          )}
         </div>
         {children}
         {acciones && (
           <>
-            <div className="w-divisor" />
+            {!apilado && <div className="w-divisor" />}
             <div className="w-dialogo__acciones">
               {nota && <p className="w-dialogo__nota">{nota}</p>}
               {acciones}

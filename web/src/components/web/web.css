@@ -62,6 +62,8 @@
 .w-boton--primario:hover { filter: brightness(1.05); }
 .w-boton--secundario { background: var(--w-superficie); border-color: var(--w-borde-input); }
 .w-boton--secundario:hover { background: var(--w-apagado); }
+.w-boton--peligro { background: var(--w-peligro); color: #fff; }
+.w-boton--peligro:hover:not(:disabled) { background: #991b1b; }
 
 /* Barra de progreso (color/data/*) */
 .w-barra { display: block; width: 100%; height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
@@ -114,6 +116,14 @@
 .w-dialogo__cerrar { display: flex; flex-shrink: 0; padding: 2px; border-radius: 6px; }
 .w-dialogo__cerrar:hover { background: #f1f5f9; }
 .w-dialogo__cerrar img { width: 20px; height: 20px; }
+.w-dialogo--apilado { padding: 28px; box-shadow: 0 16px 40px rgba(15, 23, 41, 0.2); }
+.w-dialogo--apilado .w-dialogo__encabezado { flex-direction: column; gap: 16px; }
+.w-dialogo--apilado .w-dialogo__icono { border-radius: 24px; }
+.w-dialogo--apilado .w-dialogo__icono img { width: 24px; height: 24px; }
+.w-dialogo--apilado .w-dialogo__texto { gap: 16px; }
+.w-dialogo--apilado .w-dialogo__texto h2 { font-family: 'Inter', system-ui, sans-serif; letter-spacing: -0.4px; }
+.w-dialogo--apilado .w-dialogo__texto p { font-size: 13px; line-height: 18px; color: #475569; }
+.w-dialogo__icono--suave { background: var(--w-marca-sutil); }
 .w-dialogo__acciones { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 .w-dialogo__nota { flex: 1; font-size: 12px; color: #94a3b8; }
 .w-dialogo button:focus-visible { outline: 2px solid var(--w-marca); outline-offset: 2px; }

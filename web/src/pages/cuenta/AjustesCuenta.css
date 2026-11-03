@@ -73,8 +73,6 @@
 .cu-botones .w-boton { width: 100%; }
 .cu-botones--fila { flex-direction: row; }
 .cu-botones--fila .w-boton { width: auto; }
-.cu-boton-peligro { background: var(--w-peligro); color: #fff; }
-.cu-boton-peligro:hover:not(:disabled) { background: #991b1b; }
 
 /* Opciones con interruptor (Avisos, Estudio) */
 .cu-opciones { display: flex; flex-direction: column; gap: 16px; }
