@@ -76,7 +76,10 @@ def iniciar_sesion(api: Api, email: str, nombre: str, password: str) -> None:
         print(f"Cuenta creada: {email} (id {api.usuario_id})")
         return
     # Ya existía: solo se continúa si la contraseña es correcta y la cuenta está vacía
-    _, r = api.pedir("POST", "/auth/login", {"email": email, "password": password})
+    status, r = api.pedir("POST", "/auth/login", {"email": email, "password": password}, esperado=(200, 401))
+    if status == 401:
+        sys.exit(f"La cuenta {email} ya existe y la contraseña no coincide. Escribe la contraseña de esa cuenta "
+                 "o usa otro --email para crear una cuenta nueva.")
     api.usuario_id = r["usuario_id"]
     _, apps = api.pedir("GET", "/apps")
     if apps:
