@@ -193,10 +193,13 @@ def refrescar(api: Api, args, password: str, azar: random.Random) -> None:
 
     # Lo que pudo faltar si la creación se cortó a la mitad: teléfono y sitios bloqueados
     _, tokens = api.pedir("GET", "/tokens-dispositivo")
-    if not any(t["activo"] for t in tokens):
-        api.pedir("POST", "/tokens-dispositivo",
-                  {"token": f"fcm-demo-{args.email}-{azar.randrange(16**12):012x}", "plataforma": "android"})
+    activos = [t for t in tokens if t["activo"]]
+    if not activos:
+        _, token = api.pedir("POST", "/tokens-dispositivo",
+                             {"token": f"fcm-demo-{args.email}-{azar.randrange(16**12):012x}", "plataforma": "android"})
+        activos = [token]
         print("Dispositivo: vinculado")
+    reportar_estado(api, azar, activos[-1]["numero"])
     _, sitios = api.pedir("GET", "/dominios")
     if sitios:
         subir_intentos(api, azar, dias=1)
@@ -210,6 +213,14 @@ def refrescar(api: Api, args, password: str, azar: random.Random) -> None:
     _, sesion = api.pedir("POST", "/sesiones-foco", {"duracion_min": 25})
     api.pedir("PUT", f"/sesiones-foco/{sesion['numero']}", {"completada": True})
     print("Sesión de foco de hoy: 1")
+
+
+def reportar_estado(api: Api, azar: random.Random, numero: int) -> None:
+    """Lo que la app del teléfono reporta al abrirse: modelo, versión y batería."""
+    bateria = azar.randint(35, 95)
+    api.pedir("PUT", f"/tokens-dispositivo/{numero}/estado",
+              {"modelo": "Pixel 7 Pro", "version_app": "1.8", "bateria": bateria, "cargando": False})
+    print(f"Estado del teléfono: Pixel 7 Pro, batería {bateria} %")
 
 
 def subir_intentos(api: Api, azar: random.Random, dias: int) -> None:
@@ -250,8 +261,9 @@ def crear(api: Api, args, password: str, azar: random.Random) -> None:
     api.pedir("PUT", f"/planes/{plan['numero']}", {"semana_actual": 4})
     print("Plan: 240 min/día, semana 4, 3 ajustes")
 
-    api.pedir("POST", "/tokens-dispositivo",
-              {"token": f"fcm-demo-{args.email}-{azar.randrange(16**12):012x}", "plataforma": "android"})
+    _, token = api.pedir("POST", "/tokens-dispositivo",
+                         {"token": f"fcm-demo-{args.email}-{azar.randrange(16**12):012x}", "plataforma": "android"})
+    reportar_estado(api, azar, token["numero"])
     for duracion, completada in [(25, True), (50, True), (25, False)]:
         _, sesion = api.pedir("POST", "/sesiones-foco", {"duracion_min": duracion})
         if completada:

@@ -92,7 +92,8 @@ export function datosDemo(periodoId) {
     eventos,
     apps: APPS,
     pausas,
-    tokens: [{ numero: 1, token: 'fcm-demo-0123456789', plataforma: 'android', fecha_registro: new Date(hoy.getTime() - 20 * 86_400_000).toISOString(), activo: true }],
+    tokens: [{ numero: 1, token: 'fcm-demo-0123456789', plataforma: 'android', fecha_registro: new Date(hoy.getTime() - 20 * 86_400_000).toISOString(), activo: true,
+      estado: { modelo: 'Pixel 7 Pro', version_app: '1.8', bateria: 78, cargando: false, fecha: new Date(hoy.getTime() - 2 * 60_000).toISOString() } }],
     plan,
     ajustes: [
       { semana: 2, uso_meta: 225, adherencia: 0.82, cambio_pct: -6, fecha: desde },

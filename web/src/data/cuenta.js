@@ -103,16 +103,27 @@ export function esteNavegador(ua = navigator.userAgent) {
   return sistema ? `${navegador} en ${sistema}` : navegador
 }
 
-// Teléfono vinculado: el token Android activo más reciente y la hora del último evento que envió
+// Teléfono vinculado: el token Android activo más reciente, la hora del último evento que envió y,
+// si la app ya lo reporta (PUT /tokens-dispositivo/{n}/estado), su modelo, versión y batería
 export function telefonoVinculado(datos, ahora = Date.now()) {
   if (!datos) return null
   const activos = datos.tokens.filter((t) => t.activo)
   const token = activos.filter((t) => t.plataforma === 'android').at(-1) ?? activos.at(-1) ?? null
-  const ultimo = datos.eventos.reduce((max, e) => (!max || e.fin > max ? e.fin : max), null)
+  const finEvento = datos.eventos.reduce((max, e) => (!max || e.fin > max ? e.fin : max), null)
+  let ultimo = finEvento ? new Date(finEvento) : null
   if (!token) return { token: null, ultimo }
-  // "Conectado" si envió uso en los últimos 30 minutos
-  const conectado = Boolean(ultimo) && ahora - new Date(ultimo).getTime() < 30 * MIN_MS
-  return { token, ultimo, conectado, desde: fechaServidor(token.fecha_registro) }
+  const estado = token.estado ?? null
+  const reporte = estado ? fechaServidor(estado.fecha) : null
+  if (reporte && (!ultimo || reporte > ultimo)) ultimo = reporte
+  // "Conectado" si envió uso o su estado en los últimos 30 minutos
+  const conectado = Boolean(ultimo) && ahora - ultimo.getTime() < 30 * MIN_MS
+  return {
+    token, ultimo, conectado, desde: fechaServidor(token.fecha_registro),
+    nombre: estado?.modelo || 'Teléfono Android',
+    app: estado?.version_app ? `App Focus! ${estado.version_app}` : 'App Focus!',
+    bateria: estado?.bateria ?? null,
+    cargando: Boolean(estado?.cargando),
+  }
 }
 
 // Los permisos se deducen de lo que llega: hay eventos → "Uso de apps"; hay pausas → accesibilidad y superposición

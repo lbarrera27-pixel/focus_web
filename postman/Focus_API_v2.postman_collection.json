@@ -2550,6 +2550,79 @@
           }
         },
         {
+          "name": "PUT /tokens-dispositivo/{numero}/estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/1/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "1",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modelo\": \"Pixel 7 Pro\",\n  \"version_app\": \"1.8\",\n  \"bateria\": 78,\n  \"cargando\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Lo manda la app del teléfono con su modelo, versión y batería. Los campos que no se envían se conservan."
+          }
+        },
+        {
+          "name": "GET /tokens-dispositivo/{numero}/estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/1/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "1",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
           "name": "POST /tokens-dispositivo (segundo)",
           "event": [
             {

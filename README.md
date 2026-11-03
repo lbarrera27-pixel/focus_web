@@ -306,6 +306,7 @@ Cada tabla del usuario tiene `id` (clave primaria global) y `numero` (consecutiv
 | GET / PUT / DELETE | `/sesiones-foco/{numero}` | SESION_FOCO |
 | POST / GET | `/tokens-dispositivo` | TOKEN_DISPOSITIVO |
 | GET / PUT / DELETE | `/tokens-dispositivo/{numero}` | TOKEN_DISPOSITIVO |
+| PUT / GET | `/tokens-dispositivo/{numero}/estado` | ESTADO_DISPOSITIVO (modelo, versión de la app y batería que reporta el teléfono) |
 | GET | `/estadisticas?desde=&hasta=` | Indicadores del usuario |
 | GET / PUT | `/configuracion/me` | CONFIGURACION_USUARIO (ajustes del portal web, JSON de máx. ~20 KB) |
 | GET | `/riesgo` | **IA:** riesgo de recaída (regresión logística) |

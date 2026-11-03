@@ -206,7 +206,7 @@ export function MiPerfil({ usuario, datos, onCerrar, onPerfil, avisar }) {
         <div className="dc-datos">
           <span><small>Miembro desde</small><b>{perfil ? fechaServidor(perfil.fecha_registro).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '…'}</b></span>
           <span><small>Plan activo</small><b>{datos?.plan ? `Semana ${datos.plan.semana_actual}` : 'Sin plan'}</b></span>
-          <span><small>Dispositivo</small><b>{telefono?.token ? 'Teléfono Android' : 'Sin vincular'}</b></span>
+          <span><small>Dispositivo</small><b>{telefono?.token ? telefono.nombre : 'Sin vincular'}</b></span>
         </div>
         {estado.error && <p className="w-campo__error" role="alert">{estado.error}</p>}
       </form>

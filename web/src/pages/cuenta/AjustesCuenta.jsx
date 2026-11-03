@@ -366,7 +366,7 @@ function TabCuenta({ usuario, perfil, cuenta, datos, onPerfil, onCuenta, onDialo
         <Tarjeta titulo="Sesiones abiertas" desc="Dónde está abierta tu cuenta ahora.">
           <FilaGris icono={iconoGlobo} titulo="Este navegador" detalle={esteNavegador()} valor="Activa ahora" tono="exito" />
           {telefono?.token && (
-            <FilaGris icono={iconoNube} titulo="Teléfono Android" detalle={`App Focus! · vinculado el ${fechaCorta(telefono.desde)}`}
+            <FilaGris icono={iconoNube} titulo={telefono.nombre} detalle={`${telefono.app} · vinculado el ${fechaCorta(telefono.desde)}`}
               valor={telefono.ultimo ? haceTexto(telefono.ultimo) : 'sin datos'} />
           )}
         </Tarjeta>
@@ -601,9 +601,9 @@ function TabDispositivo({ usuario, config, datos, onRecargar, avisar }) {
           <div className="cu-telefono">
             <span className="cu-telefono__icono"><Icono src={iconoNubeGrande} tam={28} /></span>
             <span className="cu-telefono__texto">
-              <b className="w-titulo-2">{token ? 'Teléfono Android' : 'Sin teléfono vinculado'}</b>
+              <b className="w-titulo-2">{token ? telefono.nombre : 'Sin teléfono vinculado'}</b>
               <span className="w-cuerpo w-texto--2">
-                {token ? `App Focus! · vinculado el ${fechaLarga(telefono.desde)}` : 'Instala Focus! en tu teléfono y entra con esta cuenta.'}
+                {token ? `${telefono.app} · vinculado el ${fechaLarga(telefono.desde)}` : 'Instala Focus! en tu teléfono y entra con esta cuenta.'}
               </span>
             </span>
             {token && (
@@ -614,7 +614,11 @@ function TabDispositivo({ usuario, config, datos, onRecargar, avisar }) {
           </div>
           <div className="w-divisor" />
           <FilaDato icono={iconoActualizar} titulo="Última actualización" valor={telefono?.ultimo ? haceTexto(telefono.ultimo) : 'sin datos'} />
-          <FilaDato icono={iconoReloj} titulo="Vinculado desde" valor={token ? fechaLarga(telefono.desde) : '—'} />
+          {telefono?.bateria != null ? (
+            <FilaDato icono={iconoReloj} titulo="Batería" valor={`${telefono.bateria} %${telefono.cargando ? ' · cargando' : ''}`} />
+          ) : (
+            <FilaDato icono={iconoReloj} titulo="Vinculado desde" valor={token ? fechaLarga(telefono.desde) : '—'} />
+          )}
           <div className="cu-botones cu-botones--fila">
             <button type="button" className="w-boton w-boton--secundario" onClick={actualizar}>Actualizar ahora</button>
             {token && <button type="button" className="w-boton w-boton--peligro" onClick={() => setDialogo('desvincular')}>Desvincular</button>}

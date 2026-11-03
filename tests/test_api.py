@@ -267,6 +267,23 @@ def test_tokens_dispositivo(client, u1, u2):
     assert client.delete("/tokens-dispositivo/1", headers=u1).status_code == 204
 
 
+def test_estado_del_dispositivo(client):
+    h = registrar(client, "estado@focus.app")
+    client.post("/tokens-dispositivo", headers=h, json={"token": "fcm-token-estado-0001"})
+    assert client.get("/tokens-dispositivo/1", headers=h).json()["estado"] is None
+    assert client.get("/tokens-dispositivo/1/estado", headers=h).status_code == 404  # todavía no reporta
+    r = client.put("/tokens-dispositivo/1/estado", headers=h, json={"modelo": "Pixel 7 Pro", "version_app": "1.8", "bateria": 78})
+    assert r.status_code == 200 and r.json()["bateria"] == 78 and r.json()["cargando"] is None
+    # Un reporte parcial conserva lo demás
+    r = client.put("/tokens-dispositivo/1/estado", headers=h, json={"bateria": 64, "cargando": True})
+    assert r.json()["modelo"] == "Pixel 7 Pro" and r.json()["bateria"] == 64 and r.json()["cargando"] is True
+    assert client.get("/tokens-dispositivo", headers=h).json()[0]["estado"]["version_app"] == "1.8"
+    assert client.put("/tokens-dispositivo/1/estado", headers=h, json={"bateria": 120}).status_code == 422
+    assert client.put("/tokens-dispositivo/9/estado", headers=h, json={"bateria": 50}).status_code == 404
+    # Al borrar el token se borra su estado
+    assert client.delete("/tokens-dispositivo/1", headers=h).status_code == 204
+
+
 def test_riesgo_de_recaida(client):
     h = registrar(client, "riesgo@focus.app")
     assert client.get("/riesgo", headers=h).status_code == 404  # sin plan
