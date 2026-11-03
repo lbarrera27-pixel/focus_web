@@ -72,7 +72,8 @@ ul { padding: 0; list-style: none; }
 
 /* ---------- Estructura ---------- */
 .app { display: flex; min-height: calc(100vh / var(--zoom, 1)); min-width: 1440px; }
-.app--fluida { min-width: 1024px; }
+/* 1024 px de pantalla menos la barra de desplazamiento vertical */
+.app--fluida { min-width: 1000px; }
 .contenido { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--fondo); }
 
 /* ---------- Barra lateral ---------- */

@@ -5,14 +5,17 @@ import App from './App.jsx'
 
 // El diseño mide 1440 px de ancho: en pantallas más anchas se amplía para ocupar todo el ancho
 const ANCHO_DISENO = 1440
+// Se mide sin la barra de desplazamiento (clientWidth): con innerWidth el contenido se salía unos 15 px
 function ajustarZoom() {
-  const zoom = Math.max(1, window.innerWidth / ANCHO_DISENO)
+  const zoom = Math.max(1, document.documentElement.clientWidth / ANCHO_DISENO)
   const raiz = document.getElementById('root')
+  if (raiz.style.zoom === String(zoom)) return
   raiz.style.zoom = zoom
   document.documentElement.style.setProperty('--zoom', zoom)
 }
 ajustarZoom()
-window.addEventListener('resize', ajustarZoom)
+// También cambia el ancho útil cuando aparece o desaparece la barra de desplazamiento
+new ResizeObserver(ajustarZoom).observe(document.documentElement)
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
