@@ -1,5 +1,6 @@
 // Convierte los datos crudos de la API en lo que muestra cada tarjeta del Panel General.
 import { api } from '../api.js'
+import { aPantalla, ahoraEnZona, enZona } from './preferencias.js'
 
 export const PERIODOS = [
   { id: 'hoy', etiqueta: 'Hoy', dias: 1 },
@@ -14,7 +15,7 @@ const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 export const fechaISO = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-function rango(periodoId, hoy = new Date()) {
+function rango(periodoId, hoy = ahoraEnZona()) {
   const { dias } = PERIODOS.find((p) => p.id === periodoId) ?? PERIODOS[1]
   const desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (dias - 1))
   return { desde: fechaISO(desde), hasta: fechaISO(hoy) }
@@ -47,8 +48,10 @@ const enRango = (fecha, desde, hasta) => {
 }
 
 // Las fechas que pone el servidor (pausa.fecha, token.fecha_registro) se guardan en UTC sin zona
-// (ver app/models/_comun.py), así que se interpretan como UTC.
-export const fechaServidor = (iso) => new Date(/([zZ]|[+-]\d\d:\d\d)$/.test(iso) ? iso : `${iso}Z`)
+// (ver app/models/_comun.py), así que se interpretan como UTC: instanteServidor da el instante real
+// y fechaServidor la hora de reloj en la zona elegida (la que se muestra y se agrupa por día).
+export const instanteServidor = (iso) => new Date(/([zZ]|[+-]\d\d:\d\d)$/.test(iso) ? iso : `${iso}Z`)
+export const fechaServidor = (iso) => enZona(instanteServidor(iso))
 
 export function formatoDuracion(min) {
   const h = Math.floor(min / 60)
@@ -56,9 +59,9 @@ export function formatoDuracion(min) {
   return h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`
 }
 
-export function haceCuanto(fecha, ahora = Date.now()) {
+export function haceCuanto(fecha, ahora = ahoraEnZona().getTime()) {
   if (!fecha) return 'Sin datos'
-  const min = Math.round((ahora - new Date(fecha).getTime()) / 60000)
+  const min = Math.round((ahora - aPantalla(fecha).getTime()) / 60000)
   if (min < 1) return 'Ahora'
   if (min < 60) return `Hace ${min} min`
   const h = Math.round(min / 60)
@@ -70,7 +73,7 @@ function telemetria({ tokens, eventos, estadisticas }) {
   const activos = tokens.filter((t) => t.activo)
   const android = activos.find((t) => t.plataforma === 'android') ?? activos[0] ?? null
   const ultimo = eventos.reduce((max, e) => (!max || e.fin > max ? e.fin : max), null)
-  const recienteMs = ultimo ? Date.now() - new Date(ultimo).getTime() : Infinity
+  const recienteMs = ultimo ? ahoraEnZona().getTime() - new Date(ultimo).getTime() : Infinity
   return {
     vinculado: Boolean(android),
     dispositivo: android ? `Dispositivo ${android.plataforma === 'android' ? 'Android' : 'Web'} #${android.numero}` : 'Sin dispositivo',
@@ -207,7 +210,7 @@ function uso({ eventos, apps, desde, hasta }) {
     }))
 
   // Sesiones (eventos) por hora en las 12 horas que terminan en el último evento
-  const ultimo = delPeriodo.reduce((max, e) => Math.max(max, new Date(e.inicio).getTime()), 0) || Date.now()
+  const ultimo = delPeriodo.reduce((max, e) => Math.max(max, new Date(e.inicio).getTime()), 0) || ahoraEnZona().getTime()
   const finVentana = new Date(ultimo)
   finVentana.setMinutes(0, 0, 0)
   const inicioVentana = finVentana.getTime() - 11 * 3_600_000

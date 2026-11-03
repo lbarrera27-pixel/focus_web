@@ -1,6 +1,7 @@
 // "PDF" de los reportes: una página HTML sencilla que se manda a imprimir (el navegador ofrece "Guardar como PDF")
 import { horas } from '../../data/plan.js'
 import { escritoTexto, kpisSemana, subtitulo } from '../../data/reportes.js'
+import { ahoraEnZona } from '../../data/preferencias.js'
 
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
@@ -36,7 +37,7 @@ function seccion(s, parrafos) {
 export function imprimirReporte(titulo, semanas) {
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(titulo)}</title><style>${ESTILO}</style></head><body>
     <h1>${esc(titulo)}</h1>
-    <p class="sub">Focus! · generado el ${esc(new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }))} · sin tu nombre ni tu correo</p>
+    <p class="sub">Focus! · generado el ${esc(ahoraEnZona().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }))} · sin tu nombre ni tu correo</p>
     ${semanas.map(({ semana, parrafos }) => seccion(semana, parrafos)).join('')}
     <p class="nota">Foqui recibió solo totales, adherencia, cambio del plan y nivel de riesgo. Nunca nombres de apps ni horarios individuales.</p>
   </body></html>`

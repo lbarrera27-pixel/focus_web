@@ -2,11 +2,12 @@
 import { api } from '../api.js'
 import { datosDemo } from './demo.js'
 import { fechaISO, fechaServidor, haceCuanto } from './panel.js'
+import { ahoraEnZona } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 
 export async function cargarTelemetria(usuario) {
-  const hoy = new Date()
+  const hoy = ahoraEnZona()
   const desde = fechaISO(new Date(hoy.getTime() - 6 * DIA_MS))
   if (usuario.demo) {
     const d = datosDemo('7d')
@@ -33,7 +34,7 @@ function formatoSeg(seg) {
   return m ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`
 }
 
-export function construirTelemetria(datos, ahora = Date.now()) {
+export function construirTelemetria(datos, ahora = ahoraEnZona().getTime()) {
   const { eventos, apps, pausas, tokens, plan, salud } = datos
   const hoy = fechaISO(new Date(ahora))
   const app = (n) => apps.find((a) => a.numero === n)

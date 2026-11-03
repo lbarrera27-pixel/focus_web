@@ -2,6 +2,7 @@
 // Usa los mismos datos crudos que el Panel General (cargarPanel / datosDemo).
 import { fechaISO, fechaServidor } from './panel.js'
 import { inferir } from './difuso.js'
+import { ahoraEnZona } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const hh = (h) => `${String(((h % 24) + 24) % 24).padStart(2, '0')}:00`
@@ -30,7 +31,7 @@ function pearson(a, b) {
 
 const exito = (lista) => (lista.length ? Math.round((lista.filter((p) => !p.ignorada).length / lista.length) * 100) : null)
 
-export function construirAnalisis(datos, ahora = new Date()) {
+export function construirAnalisis(datos, ahora = ahoraEnZona()) {
   const { eventos, pausas, plan, ajustes, desde, hasta } = datos
   const hoy = fechaISO(ahora)
   const hace7 = fechaISO(new Date(ahora.getTime() - 6 * DIA_MS))

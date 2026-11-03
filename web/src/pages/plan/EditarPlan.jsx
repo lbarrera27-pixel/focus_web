@@ -10,6 +10,7 @@ import {
 import iconoInfo from '../../assets/icons/w-info-18.svg'
 import iconoInfoVerde from '../../assets/icons/w-info-verde.svg'
 import { hora } from '../../data/preferencias.js'
+import { ahoraEnZona } from '../../data/preferencias.js'
 
 const METAS = Array.from({ length: 17 }, (_, i) => 60 + i * 15)          // 1 h a 5 h
 const SEMANAS = Array.from({ length: 9 }, (_, i) => 4 + i)                // 4 a 12
@@ -60,7 +61,7 @@ export default function EditarPlan({ usuario, plan, ajustes, pausas, prefs, onCa
     try {
       if (!usuario.demo) {
         if (!plan) {
-          await api.crearPlan(usuario.id, { fecha_inicio: fechaISO(new Date()), limite_base: Number(limite) })
+          await api.crearPlan(usuario.id, { fecha_inicio: fechaISO(ahoraEnZona()), limite_base: Number(limite) })
         } else if (Number(limite) !== limiteInicial) {
           // El límite actual es limite_base × los cambios de cada semana: se corrige el punto de partida
           const factor = limiteInicial / plan.limite_base

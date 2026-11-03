@@ -14,6 +14,7 @@ import iconoInfo from '../../assets/icons/w-info.svg'
 import iconoInfoAzul from '../../assets/icons/w-info-azul.svg'
 import iconoReloj from '../../assets/icons/w-reloj.svg'
 import iconoBurbuja from '../../assets/icons/w-riesgo-burbuja.svg'
+import { ahoraEnZona } from '../../data/preferencias.js'
 import './Riesgo.css'
 
 const ICONOS_CONSEJO = { luna: iconoLuna, check: iconoCheck }
@@ -162,7 +163,7 @@ function ConDatos({ r }) {
 function SinDatos({ datos, onNavegar }) {
   const medir = useRef(null)
   const plan = datos?.plan
-  const hoy = new Date()
+  const hoy = ahoraEnZona()
   const inicio = plan ? new Date(`${plan.fecha_inicio}T00:00:00`) : null
   const diasPlan = inicio ? Math.max(0, Math.floor((hoy - inicio) / DIA_MS) + 1) : 0
   const conEventos = new Set((datos?.eventos ?? []).map((e) => fechaISO(new Date(e.inicio)))).size

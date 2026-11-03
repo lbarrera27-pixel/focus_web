@@ -241,9 +241,10 @@ export default function App() {
 
   // Todas las secciones comparten los mismos datos salvo Telemetría, que carga los suyos
   const usaDatos = seccion !== 'telemetria'
+  // También al cambiar las preferencias: con otra zona horaria cambia el "hoy" de los periodos
   useEffect(() => {
     if (usaDatos) cargar()
-  }, [cargar, usaDatos])
+  }, [cargar, usaDatos, versionPrefs])
 
   // Análisis no tiene la opción "Semestre Piloto"
   useEffect(() => {

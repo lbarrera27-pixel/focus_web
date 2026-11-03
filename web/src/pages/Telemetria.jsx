@@ -16,6 +16,7 @@ import iconoWifi from '../assets/icons/red-wifi.svg'
 import iconoSync from '../assets/icons/red-sync.svg'
 import { cargarTelemetria, construirTelemetria } from '../data/telemetria.js'
 import { haceCuanto } from '../data/panel.js'
+import { ahoraEnZona } from '../data/preferencias.js'
 import './Telemetria.css'
 
 const INTERVALOS = [
@@ -337,7 +338,7 @@ export default function Telemetria({ usuario, onSesionInvalida }) {
   const [cargando, setCargando] = useState(false)
   const [autoActualizar, setAuto] = useState(true)
   const [intervalo, setIntervalo] = useState(INTERVALOS[0].ms)
-  const [ahora, setAhora] = useState(Date.now())
+  const [ahora, setAhora] = useState(() => ahoraEnZona().getTime())
 
   const cargar = useCallback(async () => {
     setCargando(true)
@@ -349,7 +350,7 @@ export default function Telemetria({ usuario, onSesionInvalida }) {
       setError(err.status ? err.message : 'No se pudo conectar con la API')
     } finally {
       setCargando(false)
-      setAhora(Date.now())
+      setAhora(ahoraEnZona().getTime())
     }
   }, [usuario, onSesionInvalida])
 
@@ -366,7 +367,7 @@ export default function Telemetria({ usuario, onSesionInvalida }) {
 
   // Reloj para "Última sync: hace X"
   useEffect(() => {
-    const id = setInterval(() => setAhora(Date.now()), 15_000)
+    const id = setInterval(() => setAhora(ahoraEnZona().getTime()), 15_000)
     return () => clearInterval(id)
   }, [])
 

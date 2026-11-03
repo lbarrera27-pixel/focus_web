@@ -7,6 +7,7 @@ import { fechaISO } from './panel.js'
 import { horas } from './plan.js'
 import { cargarRiesgo } from './riesgo.js'
 import { inicioDeSemana } from './preferencias.js'
+import { ahoraEnZona } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -16,11 +17,11 @@ export const NIVEL_TEXTO = { bajo: 'Bajo', medio: 'Medio', alto: 'Alto' }
 export const SUGERENCIAS = ['Dame un consejo para la noche', '¿Por qué subió mi riesgo?', 'Resúmeme mi semana']
 
 // Primer día de la semana actual (lunes o domingo, según las preferencias)
-export function lunes(ahora = new Date()) {
+export function lunes(ahora = ahoraEnZona()) {
   return inicioDeSemana(ahora)
 }
 
-export function textoSemana(ahora = new Date()) {
+export function textoSemana(ahora = ahoraEnZona()) {
   const a = lunes(ahora)
   const b = new Date(a.getTime() + 6 * DIA_MS)
   const mes = (d) => MESES[d.getMonth()]
@@ -30,7 +31,7 @@ export function textoSemana(ahora = new Date()) {
 }
 
 // Eventos desde el lunes de la semana pasada hasta ahora
-export async function cargarSemanas(usuario, ahora = new Date()) {
+export async function cargarSemanas(usuario, ahora = ahoraEnZona()) {
   const desde = new Date(lunes(ahora).getTime() - 7 * DIA_MS)
   const riesgo = cargarRiesgo(usuario).catch(() => null)
   if (usuario.demo) {
@@ -42,7 +43,7 @@ export async function cargarSemanas(usuario, ahora = new Date()) {
 }
 
 // Promedio diario de esta semana (días transcurridos), comparación con la anterior y minutos por día
-export function resumenSemana({ eventos, riesgo }, datos, ahora = new Date()) {
+export function resumenSemana({ eventos, riesgo }, datos, ahora = ahoraEnZona()) {
   const inicio = lunes(ahora)
   const minutos = Array(14).fill(0)
   for (const e of eventos) {

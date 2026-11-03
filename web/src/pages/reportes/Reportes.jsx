@@ -17,6 +17,7 @@ import iconoDescargar from '../../assets/icons/w-descargar.svg'
 import iconoDescargarGrande from '../../assets/icons/w-descargar-22.svg'
 import iconoInfo from '../../assets/icons/w-info-azul.svg'
 import iconoPlan from '../../assets/icons/w-reportes.svg'
+import { ahoraEnZona } from '../../data/preferencias.js'
 import './Reportes.css'
 
 const SEMANA_MS = 7 * 86_400_000
@@ -48,7 +49,7 @@ function Grafica({ dias }) {
 // Figma e37: diálogo "Exportar métricas"
 function Exportar({ r, semanas, nombre, onCerrar, onDescargado }) {
   const [periodo, setPeriodo] = useState('4s')
-  const [personalizado, setPersonalizado] = useState({ desde: fechaISO(new Date(Date.now() - 27 * 86_400_000)), hasta: fechaISO(new Date()) })
+  const [personalizado, setPersonalizado] = useState({ desde: fechaISO(new Date(ahoraEnZona().getTime() - 27 * 86_400_000)), hasta: fechaISO(ahoraEnZona()) })
   const [formato, setFormato] = useState('tabla')
   const [incluir, setIncluir] = useState({ uso: true, pausas: true, plan: true, riesgo: true, foqui: false })
 
@@ -96,7 +97,7 @@ function Exportar({ r, semanas, nombre, onCerrar, onDescargado }) {
             <input type="date" value={personalizado.desde} max={personalizado.hasta} onChange={(e) => setPersonalizado((p) => ({ ...p, desde: e.target.value }))} />
           </label>
           <label className="w-campo"><span>Hasta</span>
-            <input type="date" value={personalizado.hasta} max={fechaISO(new Date())} onChange={(e) => setPersonalizado((p) => ({ ...p, hasta: e.target.value }))} />
+            <input type="date" value={personalizado.hasta} max={fechaISO(ahoraEnZona())} onChange={(e) => setPersonalizado((p) => ({ ...p, hasta: e.target.value }))} />
           </label>
         </div>
       )}
@@ -193,7 +194,7 @@ export default function Reportes({ usuario, datos, onNavegar }) {
       </section>
     )
   } else {
-    const nuevo = Date.now() - semanas[0].escrito.getTime() < SEMANA_MS
+    const nuevo = ahoraEnZona().getTime() - semanas[0].escrito.getTime() < SEMANA_MS
     cuerpo = (
       <div className="rp-fila">
         <section className="w-tarjeta rp-lista">
@@ -218,7 +219,7 @@ export default function Reportes({ usuario, datos, onNavegar }) {
                 {descargas.map((d) => (
                   <li key={d.fecha}>
                     <Icono src={iconoDescargar} tam={14} />
-                    <span><b>{d.titulo}</b><small>{fechaCorta(new Date(d.fecha))}</small></span>
+                    <span><b>{d.titulo}</b><small>{fechaCorta(d.fecha)}</small></span>
                   </li>
                 ))}
               </ul>

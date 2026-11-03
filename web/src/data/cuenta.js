@@ -4,13 +4,14 @@
 //   "Participar en el estudio" es la misma clave consentimientoRetirado que usa Apps y sitios.
 // - En la demo todo se guarda en el navegador.
 import { api } from '../api.js'
-import { fechaISO, fechaServidor } from './panel.js'
+import { fechaISO, fechaServidor, instanteServidor } from './panel.js'
+import { ZONA_NAVEGADOR, aPantalla, ahoraEnZona } from './preferencias.js'
 
 const CLAVE_DEMO = 'focus.cuenta.demo'
 const MIN_MS = 60_000
 
 export const CUENTA_DEFECTO = {
-  preferencias: { zona: 'America/Mexico_City', semana: 'lunes', hora: '24' },
+  preferencias: { zona: ZONA_NAVEGADOR, semana: 'lunes', hora: '24' },
   avisos: { limite: true, cercaLimite: true, modoFoco: true, resumen: true, riesgo: true, correo: false },
   silencio: { desde: '23:00', hasta: '07:00', finesDeSemana: true },
   compartirFoqui: false,
@@ -26,6 +27,8 @@ export const ZONAS = [
   { id: 'America/Mazatlan', titulo: 'Mazatlán (GMT−7)' },
   { id: 'America/Tijuana', titulo: 'Tijuana (GMT−8)' },
 ]
+// La zona del navegador siempre aparece en la lista, aunque no sea una de las de México
+if (!ZONAS.some((z) => z.id === ZONA_NAVEGADOR)) ZONAS.push({ id: ZONA_NAVEGADOR, titulo: `${ZONA_NAVEGADOR.replace(/_/g, ' ')} (tu navegador)` })
 
 const conDefecto = (c = {}) => ({
   ...structuredClone(CUENTA_DEFECTO),
@@ -76,16 +79,16 @@ export const conHistorial = (cuenta, texto, fecha = new Date()) => ({
 
 // Lo que se muestra en "Historial de permisos": cambios guardados y, al final, el registro (consentimiento inicial)
 export function historialPermisos(cuenta, perfil) {
-  const inicial = perfil ? [{ texto: 'Aceptaste participar en el estudio', fecha: fechaServidor(perfil.fecha_registro).toISOString() }] : []
+  const inicial = perfil ? [{ texto: 'Aceptaste participar en el estudio', fecha: instanteServidor(perfil.fecha_registro).toISOString() }] : []
   return [...cuenta.historial, ...inicial]
 }
 
-export const fechaCorta = (iso) => new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }).replace('.', '')
-export const fechaLarga = (iso) => new Date(iso).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })
+export const fechaCorta = (f) => aPantalla(f).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }).replace('.', '')
+export const fechaLarga = (f) => aPantalla(f).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })
 
-export function haceTexto(fecha, ahora = Date.now()) {
+export function haceTexto(fecha, ahora = ahoraEnZona().getTime()) {
   if (!fecha) return 'sin datos'
-  const min = Math.round((ahora - new Date(fecha).getTime()) / MIN_MS)
+  const min = Math.round((ahora - aPantalla(fecha).getTime()) / MIN_MS)
   if (min < 1) return 'ahora'
   if (min < 60) return `hace ${min} min`
   const h = Math.round(min / 60)
@@ -105,7 +108,7 @@ export function esteNavegador(ua = navigator.userAgent) {
 
 // Teléfono vinculado: el token Android activo más reciente, la hora del último evento que envió y,
 // si la app ya lo reporta (PUT /tokens-dispositivo/{n}/estado), su modelo, versión y batería
-export function telefonoVinculado(datos, ahora = Date.now()) {
+export function telefonoVinculado(datos, ahora = ahoraEnZona().getTime()) {
   if (!datos) return null
   const activos = datos.tokens.filter((t) => t.activo)
   const token = activos.filter((t) => t.plataforma === 'android').at(-1) ?? activos.at(-1) ?? null
@@ -138,7 +141,7 @@ export function permisos(datos) {
 }
 
 // Eventos por hora de hoy (24 barras)
-export function actividadHoy(datos, ahora = new Date()) {
+export function actividadHoy(datos, ahora = ahoraEnZona()) {
   const horas = Array(24).fill(0)
   const hoy = fechaISO(ahora)
   for (const e of datos?.eventos ?? []) {

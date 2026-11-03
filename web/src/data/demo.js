@@ -1,6 +1,7 @@
 // Datos de demostración con la misma forma que las respuestas de la API.
 // Permiten ver el portal sin servidor (botón "Ver demo" en el inicio de sesión).
 import { PERIODOS, fechaISO } from './panel.js'
+import { ahoraEnZona } from './preferencias.js'
 
 // Generador pseudoaleatorio determinista para que la demo siempre se vea igual
 function aleatorio(semilla) {
@@ -25,9 +26,15 @@ const APPS = [
 const PESO_HORA = [0.9, 0.5, 0.3, 0.1, 0.05, 0.05, 0.1, 0.25, 0.3, 0.35, 0.4, 0.4,
   0.45, 0.5, 0.5, 0.55, 0.55, 0.5, 0.45, 0.55, 0.65, 0.75, 0.95, 1]
 
+// Igual que la API: los eventos llegan con la hora de reloj del teléfono (sin zona) y las fechas que pone
+// el servidor (pausas, token, estado) son instantes UTC
+const horaLocal = (d) => `${fechaISO(d)}T${[d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':')}`
+
 export function datosDemo(periodoId) {
   const r = aleatorio(42)
-  const hoy = new Date()
+  const hoy = ahoraEnZona()
+  // Instante real que corresponde a una hora de reloj de la zona elegida
+  const instante = (d) => new Date(Date.now() - (hoy.getTime() - d.getTime())).toISOString()
   const { dias } = PERIODOS.find((p) => p.id === periodoId) ?? PERIODOS[1]
   const desde = fechaISO(new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (dias - 1)))
   const hasta = fechaISO(hoy)
@@ -49,8 +56,8 @@ export function datosDemo(periodoId) {
           numero: eventos.length + 1,
           app_numero: app.numero,
           franja_id: null,
-          inicio: inicio.toISOString(),
-          fin: new Date(inicio.getTime() + largo * 1000).toISOString(),
+          inicio: horaLocal(inicio),
+          fin: horaLocal(new Date(inicio.getTime() + largo * 1000)),
           duracion_seg: Math.round(largo),
         })
         if (r() < 0.25) {
@@ -62,7 +69,7 @@ export function datosDemo(periodoId) {
             tipo,
             duracion_seg: tipo === 'leve' ? 5 : 15,
             ignorada: r() < ignoradaProb,
-            fecha: inicio.toISOString(),
+            fecha: instante(inicio),
           })
         }
       }
@@ -92,8 +99,8 @@ export function datosDemo(periodoId) {
     eventos,
     apps: APPS,
     pausas,
-    tokens: [{ numero: 1, token: 'fcm-demo-0123456789', plataforma: 'android', fecha_registro: new Date(hoy.getTime() - 20 * 86_400_000).toISOString(), activo: true,
-      estado: { modelo: 'Pixel 7 Pro', version_app: '1.8', bateria: 78, cargando: false, fecha: new Date(hoy.getTime() - 2 * 60_000).toISOString() } }],
+    tokens: [{ numero: 1, token: 'fcm-demo-0123456789', plataforma: 'android', fecha_registro: instante(new Date(hoy.getTime() - 20 * 86_400_000)), activo: true,
+      estado: { modelo: 'Pixel 7 Pro', version_app: '1.8', bateria: 78, cargando: false, fecha: instante(new Date(hoy.getTime() - 2 * 60_000)) } }],
     plan,
     ajustes: [
       { semana: 2, uso_meta: 225, adherencia: 0.82, cambio_pct: -6, fecha: desde },

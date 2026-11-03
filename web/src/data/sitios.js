@@ -6,6 +6,7 @@
 import { api } from '../api.js'
 import { fechaISO } from './panel.js'
 import { hora } from './preferencias.js'
+import { ahoraEnZona } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -33,7 +34,7 @@ export function validar(texto, lista) {
   return { dominio }
 }
 
-export function mananaISO(ahora = new Date()) {
+export function mananaISO(ahora = ahoraEnZona()) {
   return new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1).toISOString()
 }
 
@@ -42,7 +43,7 @@ export function mananaISO(ahora = new Date()) {
 let demo = null
 function datosDemo() {
   if (demo) return demo
-  const hoy = new Date()
+  const hoy = ahoraEnZona()
   const porDia = [4, 3, 5, 8, 7, 2, 2]
   demo = {
     siguiente: 5,
@@ -101,7 +102,7 @@ export async function eliminarSitio(usuario, numero) {
 
 // ---------- Vista ----------
 
-export function resumenSitios({ dominios, intentos }, config = {}, ahora = new Date()) {
+export function resumenSitios({ dominios, intentos }, config = {}, ahora = ahoraEnZona()) {
   const porDominio = Object.fromEntries(intentos.por_dominio.map((x) => [x.dominio, x.intentos]))
   const filas = dominios.map((s) => {
     const c = config[s.dominio] ?? {}
@@ -122,5 +123,5 @@ export function resumenSitios({ dominios, intentos }, config = {}, ahora = new D
 }
 
 // Sitios cuya pausa ya terminó: hay que volver a activarlos
-export const pausasVencidas = (dominios, config, ahora = new Date()) =>
+export const pausasVencidas = (dominios, config, ahora = ahoraEnZona()) =>
   dominios.filter((s) => !s.activo && config[s.dominio]?.pausaHasta && new Date(config[s.dominio].pausaHasta) <= ahora)

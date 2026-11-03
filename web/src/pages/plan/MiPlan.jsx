@@ -18,6 +18,7 @@ import iconoLuna from '../../assets/icons/w-luna.svg'
 import iconoMeta from '../../assets/icons/w-meta.svg'
 import iconoCheck from '../../assets/icons/w-check.svg'
 import { hora } from '../../data/preferencias.js'
+import { ahoraEnZona } from '../../data/preferencias.js'
 import './MiPlan.css'
 
 const NOMBRE = { baja: 'Baja', regular: 'Regular', buena: 'Buena', excelente: 'Excelente', pocas: 'Pocas', muchas: 'Muchas' }
@@ -169,7 +170,7 @@ function ConAjustes({ plan, ajustes, pausas, prefs }) {
 // ---------- e11 ----------
 function PrimeraSemana({ plan, eventos, onEditar }) {
   const inicio = inicioSemana(plan, 1)
-  const hoy = new Date()
+  const hoy = ahoraEnZona()
   const limite = plan.limite_base
   const dias = DIAS.map((_, i) => {
     const fecha = new Date(inicio.getTime() + i * DIA_MS_PLAN)

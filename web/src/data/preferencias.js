@@ -92,3 +92,10 @@ export const enZona = (instante) => new Date(instante.getTime() + desfaseMs(inst
 
 // "Ahora" en la zona elegida: úsese en lugar de new Date() al comparar con fechas de pantalla
 export const ahoraEnZona = () => enZona(new Date())
+
+// Cualquier fecha a hora de pantalla: un Date ya lo es; un texto con zona ("…Z", "+00:00") es un instante
+// real y se convierte; un texto sin zona (eventos del teléfono) ya es hora de reloj
+export function aPantalla(f) {
+  if (f instanceof Date) return f
+  return typeof f === 'string' && /([zZ]|[+-]\d\d:\d\d)$/.test(f) ? enZona(new Date(f)) : new Date(f)
+}

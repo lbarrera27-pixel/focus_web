@@ -4,6 +4,7 @@
 // Ambas variables se estandarizan (z-score) y se escalan a ±50 como en el diseño.
 import { fechaISO } from './panel.js'
 import { construirAnalisis } from './analisis.js'
+import { ahoraEnZona } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const ES_NOCHE = (h) => h >= 20 || h < 2
@@ -67,7 +68,7 @@ function silhouette(puntos, asign, k) {
   return s.reduce((t, x) => t + x, 0) / s.length
 }
 
-export function construirClusteres(datos, ahora = new Date()) {
+export function construirClusteres(datos, ahora = ahoraEnZona()) {
   const { eventos, apps, plan, ajustes, pausas } = datos
 
   // ---------- Un punto por día con actividad ----------

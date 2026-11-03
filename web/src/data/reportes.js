@@ -7,6 +7,7 @@ import { horas, ordenar } from './plan.js'
 import { FACTORES, MODELO, ALTO, cargarRiesgo } from './riesgo.js'
 import { construirUso, rangoDias } from './uso.js'
 import { hora, inicioDeSemana } from './preferencias.js'
+import { ahoraEnZona } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const SEMANA_MS = 7 * DIA_MS
@@ -32,7 +33,7 @@ const fechaConDia = (d) => `${DIAS_LARGOS[d.getDay()]} ${fechaCorta(d)}`
 // Plan de demostración de 6 semanas; la adherencia se calcula con los eventos de la demo
 function demo() {
   const base = datosDemo('semestre')
-  const hoy = new Date()
+  const hoy = ahoraEnZona()
   const lunes = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - ((hoy.getDay() + 6) % 7))
   const inicio = new Date(lunes.getTime() - 6 * SEMANA_MS)
   const plan = { numero: 1, fecha_inicio: fechaISO(inicio), limite_base: 210, semana_actual: 7, activo: true }
@@ -87,7 +88,7 @@ function enSemana(lista, desde, campo) {
 }
 
 // Semanas cerradas del plan (la más reciente primero) más la semana anterior al plan si tiene uso
-export function construirSemanas(r, ahora = new Date()) {
+export function construirSemanas(r, ahora = ahoraEnZona()) {
   const inicio = new Date(`${r.plan.fecha_inicio}T00:00:00`)
   const cerradas = Math.max(0, Math.floor((ahora - inicio) / SEMANA_MS))
   const ajustes = ordenar(r.ajustes)
@@ -188,7 +189,7 @@ export const PERIODOS_EXPORTAR = [
   { id: 'personalizado', titulo: 'Personalizado' },
 ]
 
-export function rangoExportar(periodo, r, personalizado, ahora = new Date()) {
+export function rangoExportar(periodo, r, personalizado, ahora = ahoraEnZona()) {
   const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
   if (periodo === 'semana') return { desde: inicioDeSemana(hoy), hasta: hoy }
   if (periodo === '4s') return { desde: new Date(hoy.getTime() - 27 * DIA_MS), hasta: hoy }

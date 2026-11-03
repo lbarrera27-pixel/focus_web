@@ -7,6 +7,7 @@
 import { api } from '../api.js'
 import { fechaISO, fechaServidor } from './panel.js'
 import { inicioDeSemana, ordenDias } from './preferencias.js'
+import { ahoraEnZona } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 
@@ -88,7 +89,7 @@ export const etiquetaCategoria = (cat) => NOMBRE_CATEGORIA[GRUPO_CATEGORIA(cat)]
 
 const NIVEL_TIPO = { leve: 1, media: 2, alta: 3 }
 
-export function resumenApps(datos, ahora = new Date()) {
+export function resumenApps(datos, ahora = ahoraEnZona()) {
   const hoy = fechaISO(ahora)
   const hace7 = fechaISO(new Date(ahora.getTime() - 6 * DIA_MS))
   return datos.apps.map((app) => {
@@ -109,13 +110,13 @@ export function resumenApps(datos, ahora = new Date()) {
   })
 }
 
-export function pausasDeHoy(datos, ahora = new Date()) {
+export function pausasDeHoy(datos, ahora = ahoraEnZona()) {
   const hoy = fechaISO(ahora)
   const lista = datos.pausas.filter((p) => fechaISO(fechaServidor(p.fecha)) === hoy)
   return { total: lista.length, abandonaron: lista.filter((p) => !p.ignorada).length, continuaron: lista.filter((p) => p.ignorada).length }
 }
 
-export function usoPorDiaSemana(datos, ahora = new Date()) {
+export function usoPorDiaSemana(datos, ahora = ahoraEnZona()) {
   // Semana que contiene hoy, empezando en lunes o domingo según las preferencias
   const inicio = inicioDeSemana(ahora)
   const nombres = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -127,7 +128,7 @@ export function usoPorDiaSemana(datos, ahora = new Date()) {
   })
 }
 
-export function usoHoyPorGrupo(datos, ahora = new Date()) {
+export function usoHoyPorGrupo(datos, ahora = ahoraEnZona()) {
   const hoy = fechaISO(ahora)
   const uso = { social: 0, video: 0, juegos: 0, mensajeria: 0 }
   for (const e of datos.eventos) {
@@ -149,7 +150,7 @@ export function progresionSemanal(ajustes = []) {
   }))
 }
 
-export function proximoAjuste(plan, ahora = new Date()) {
+export function proximoAjuste(plan, ahora = ahoraEnZona()) {
   if (!plan) return null
   const inicio = new Date(`${plan.fecha_inicio}T00:00:00`)
   const semanas = Math.floor((ahora - inicio) / (7 * DIA_MS)) + 1
