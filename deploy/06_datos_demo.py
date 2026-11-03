@@ -23,6 +23,7 @@ import json
 import os
 import random
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -57,12 +58,18 @@ class Api:
         if cuerpo is not None:
             headers["Content-Type"] = "application/json"
             datos = json.dumps(cuerpo, default=str).encode("utf-8")
-        peticion = urllib.request.Request(self.base + ruta, data=datos, headers=headers, method=metodo)
-        try:
-            with urllib.request.urlopen(peticion, timeout=90) as r:
-                status, texto = r.status, r.read().decode("utf-8")
-        except urllib.error.HTTPError as e:
-            status, texto = e.code, e.read().decode("utf-8")
+        # Azure SQL serverless responde 503 mientras despierta: se espera y se reintenta
+        for intento in range(5):
+            peticion = urllib.request.Request(self.base + ruta, data=datos, headers=headers, method=metodo)
+            try:
+                with urllib.request.urlopen(peticion, timeout=90) as r:
+                    status, texto = r.status, r.read().decode("utf-8")
+            except urllib.error.HTTPError as e:
+                status, texto = e.code, e.read().decode("utf-8")
+            if status != 503 or 503 in esperado or intento == 4:
+                break
+            print("La base de datos se está iniciando; reintento en 30 s…")
+            time.sleep(30)
         if status not in esperado:
             raise RuntimeError(f"{metodo} {ruta} -> {status}: {texto[:300]}")
         return status, (json.loads(texto) if texto else None)
@@ -184,9 +191,20 @@ def refrescar(api: Api, args, password: str, azar: random.Random) -> None:
             api.pedir("PUT", f"/planes/{plan['numero']}", {"semana_actual": semana_actual})
         print(f"Plan: semana {max(semana_actual, plan['semana_actual'])}, {nuevos} ajuste(s) nuevo(s)")
 
+    # Lo que pudo faltar si la creación se cortó a la mitad: teléfono y sitios bloqueados
+    _, tokens = api.pedir("GET", "/tokens-dispositivo")
+    if not any(t["activo"] for t in tokens):
+        api.pedir("POST", "/tokens-dispositivo",
+                  {"token": f"fcm-demo-{args.email}-{azar.randrange(16**12):012x}", "plataforma": "android"})
+        print("Dispositivo: vinculado")
     _, sitios = api.pedir("GET", "/dominios")
     if sitios:
         subir_intentos(api, azar, dias=1)
+    else:
+        for dominio in ["tiktok.com", "instagram.com", "youtube.com"]:
+            api.pedir("POST", "/dominios", {"dominio": dominio})
+        print("Dominios bloqueados: 3")
+        subir_intentos(api, azar, dias=7)
 
     # Una sesión de foco completada hoy, para que la actividad reciente no se vea vacía
     _, sesion = api.pedir("POST", "/sesiones-foco", {"duracion_min": 25})
