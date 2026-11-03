@@ -2,6 +2,7 @@
 import { api } from '../api.js'
 import { GRUPO_CATEGORIA, NOMBRE_CATEGORIA, etiquetaCategoria } from './ajustes.js'
 import { PERIODOS, fechaISO } from './panel.js'
+import { hora } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 export const DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -97,7 +98,6 @@ export function construirUso(datos, anteriores) {
   const porMagnitud = [...porDiaFranja].sort((a, b) => b.min - a.min).filter((x) => x.min > 0).map((x) => x.d)
   const diasFranja = porMagnitud.slice(0, 3).sort((a, b) => a - b)
   const diasTop2 = porMagnitud.slice(0, 2).sort((a, b) => a - b)
-  const hora = (h) => `${String(h).padStart(2, '0')}:00`
 
   return {
     dias,

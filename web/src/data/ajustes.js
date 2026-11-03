@@ -6,6 +6,7 @@
 //   es el único almacenamiento en el modo demo.
 import { api } from '../api.js'
 import { fechaISO, fechaServidor } from './panel.js'
+import { inicioDeSemana, ordenDias } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 
@@ -115,10 +116,12 @@ export function pausasDeHoy(datos, ahora = new Date()) {
 }
 
 export function usoPorDiaSemana(datos, ahora = new Date()) {
-  // Semana de lunes a domingo que contiene hoy
-  const lunes = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() - ((ahora.getDay() + 6) % 7))
-  return ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((dia, i) => {
-    const d = fechaISO(new Date(lunes.getTime() + i * DIA_MS))
+  // Semana que contiene hoy, empezando en lunes o domingo según las preferencias
+  const inicio = inicioDeSemana(ahora)
+  const nombres = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+  return ordenDias().map((n, i) => {
+    const dia = nombres[n]
+    const d = fechaISO(new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i))
     const min = datos.eventos.filter((e) => fechaISO(new Date(e.inicio)) === d).reduce((s, e) => s + e.duracion_seg, 0) / 60
     return { dia, fecha: d, minutos: Math.round(min), esHoy: d === fechaISO(ahora), futuro: d > fechaISO(ahora) }
   })

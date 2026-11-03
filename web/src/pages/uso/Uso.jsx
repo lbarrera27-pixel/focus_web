@@ -4,6 +4,7 @@ import Icono from '../../components/Icono.jsx'
 import { Banner, Encabezado, EstadoVacio, Esqueleto, Kpi } from '../../components/web/Comunes.jsx'
 import { horas, limiteActual } from '../../data/plan.js'
 import { DIAS_CORTOS, PERIODOS_USO, cargarAnterior, construirUso, listaDias, rangoDias, rangoTexto } from '../../data/uso.js'
+import { hora, ordenDias } from '../../data/preferencias.js'
 import iconoLuna from '../../assets/icons/w-luna.svg'
 import iconoReloj from '../../assets/icons/w-reloj-pico.svg'
 import iconoBurbuja from '../../assets/icons/w-uso.svg'
@@ -27,12 +28,12 @@ function MapaCalor({ uso }) {
           <span key={h} role="columnheader">{HORAS_EJE.includes(h) ? String(h).padStart(2, '0') : ''}</span>
         ))}
       </div>
-      {uso.celdas.map((fila, d) => (
+      {ordenDias().map((d) => [d, uso.celdas[d]]).map(([d, fila]) => (
         <div key={d} className="us-mapa__fila" role="row">
           <b role="rowheader">{DIAS_CORTOS[d]}</b>
           {fila.map((c, h) => (
             <i key={h} role="cell" className={`us-nivel-${c.nivel}`}
-              title={`${DIAS_CORTOS[d]} ${h}:00 · ${Math.round(c.min)} min`} aria-label={`${DIAS_CORTOS[d]} ${h}:00, ${Math.round(c.min)} minutos`} />
+              title={`${DIAS_CORTOS[d]} ${hora(h)} · ${Math.round(c.min)} min`} aria-label={`${DIAS_CORTOS[d]} ${hora(h)}, ${Math.round(c.min)} minutos`} />
           ))}
         </div>
       ))}
@@ -162,7 +163,7 @@ export default function Uso({ usuario, datos, error, periodo, onPeriodo, onExpor
                   </p>
                 </div>
                 {uso.pico && (
-                  <b className="us-pico">Pico: {DIAS_CORTOS[uso.pico.d].toLowerCase()} {String(uso.pico.h).padStart(2, '0')}:00 · {Math.round(uso.pico.min)} min</b>
+                  <b className="us-pico">Pico: {DIAS_CORTOS[uso.pico.d].toLowerCase()} {hora(uso.pico.h)} · {Math.round(uso.pico.min)} min</b>
                 )}
               </div>
               <MapaCalor uso={uso} />

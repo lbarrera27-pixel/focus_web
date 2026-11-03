@@ -17,6 +17,7 @@ import iconoInfo from '../../assets/icons/w-info-azul.svg'
 import iconoLuna from '../../assets/icons/w-luna.svg'
 import iconoMeta from '../../assets/icons/w-meta.svg'
 import iconoMas from '../../assets/icons/aj-mas.svg'
+import { hora } from '../../data/preferencias.js'
 import './Sitios.css'
 
 const plural = (n, palabra) => `${n} ${palabra}${n === 1 ? '' : 's'}`
@@ -307,7 +308,7 @@ export default function TabSitios({ usuario, locales, guardarSitios, ultimaSync 
         <ul className="si-ideas">
           <li>
             <span><Icono src={iconoLuna} tam={16} /></span>
-            <div><b>Bloquea de noche</b><small>De 22:00 a 06:00 es cuando más te cuesta.</small></div>
+            <div><b>Bloquea de noche</b><small>De {hora(22)} a {hora(6)} es cuando más te cuesta.</small></div>
           </li>
           <li>
             <span><Icono src={iconoMeta} tam={16} /></span>

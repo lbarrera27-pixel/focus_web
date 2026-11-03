@@ -17,6 +17,7 @@ import iconoBurbuja from '../../assets/icons/w-plan-burbuja.svg'
 import iconoLuna from '../../assets/icons/w-luna.svg'
 import iconoMeta from '../../assets/icons/w-meta.svg'
 import iconoCheck from '../../assets/icons/w-check.svg'
+import { hora } from '../../data/preferencias.js'
 import './MiPlan.css'
 
 const NOMBRE = { baja: 'Baja', regular: 'Regular', buena: 'Buena', excelente: 'Excelente', pocas: 'Pocas', muchas: 'Muchas' }
@@ -92,7 +93,7 @@ function Historial({ ajustes, proximo }) {
       <div className="mp-aviso mp-aviso--exito">
         <Icono src={iconoInfoVerde} tam={16} />
         <span>
-          <b className="w-cuerpo">Próximo ajuste: {proximo.fecha} · 00:00</b>
+          <b className="w-cuerpo">Próximo ajuste: {proximo.fecha} · {hora(0)}</b>
           <span className="w-texto w-texto--2">{proximo.detalle}</span>
         </span>
       </div>
@@ -187,7 +188,7 @@ function PrimeraSemana({ plan, eventos, onEditar }) {
   return (
     <>
       <Banner titulo="Tu primera semana está en curso"
-        detalle={`El primer ajuste se calcula el ${fechaLarga(corte)} a las 00:00. Faltan ${faltan} día${faltan === 1 ? '' : 's'}.`} />
+        detalle={`El primer ajuste se calcula el ${fechaLarga(corte)} a las ${hora(0)}. Faltan ${faltan} día${faltan === 1 ? '' : 's'}.`} />
       <div className="w-fila mp-cuerpo">
         <section className="w-tarjeta mp-vacio">
           <EstadoVacio icono={iconoBurbuja} titulo="Aún no hay ajustes"

@@ -6,6 +6,7 @@ import { datosDemo } from './demo.js'
 import { fechaISO } from './panel.js'
 import { horas } from './plan.js'
 import { cargarRiesgo } from './riesgo.js'
+import { inicioDeSemana } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -14,9 +15,9 @@ export const NIVEL_TEXTO = { bajo: 'Bajo', medio: 'Medio', alto: 'Alto' }
 
 export const SUGERENCIAS = ['Dame un consejo para la noche', '¿Por qué subió mi riesgo?', 'Resúmeme mi semana']
 
+// Primer día de la semana actual (lunes o domingo, según las preferencias)
 export function lunes(ahora = new Date()) {
-  const d = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
-  return new Date(d.getTime() - ((d.getDay() + 6) % 7) * DIA_MS)
+  return inicioDeSemana(ahora)
 }
 
 export function textoSemana(ahora = new Date()) {

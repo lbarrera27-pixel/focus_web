@@ -5,6 +5,7 @@
 // - Los intentos los registra el teléfono (POST /dominios/{n}/intentos) y aquí se leen resumidos.
 import { api } from '../api.js'
 import { fechaISO } from './panel.js'
+import { hora } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -15,8 +16,8 @@ export const SUGERENCIAS = ['youtube.com', 'instagram.com', 'tiktok.com', 'twitc
 export function horarios(modoFoco) {
   return [
     { id: 'siempre', texto: 'Siempre' },
-    { id: 'noche', texto: '22:00 – 06:00' },
-    { id: 'estudio', texto: `Estudio · ${modoFoco.inicio} – ${modoFoco.fin}` },
+    { id: 'noche', texto: `${hora(22)} – ${hora(6)}` },
+    { id: 'estudio', texto: `Estudio · ${hora(modoFoco.inicio)} – ${hora(modoFoco.fin)}` },
   ]
 }
 

@@ -9,6 +9,7 @@ import {
 } from '../../data/plan.js'
 import iconoInfo from '../../assets/icons/w-info-18.svg'
 import iconoInfoVerde from '../../assets/icons/w-info-verde.svg'
+import { hora } from '../../data/preferencias.js'
 
 const METAS = Array.from({ length: 17 }, (_, i) => 60 + i * 15)          // 1 h a 5 h
 const SEMANAS = Array.from({ length: 9 }, (_, i) => 4 + i)                // 4 a 12
@@ -105,7 +106,7 @@ export default function EditarPlan({ usuario, plan, ajustes, pausas, prefs, onCa
             </Campo>
             <Campo id="ep-corte" etiqueta="Día de corte" ayuda="Ese día se calcula el ajuste.">
               <select id="ep-corte" className="ep-caja" value={form.dia_corte} onChange={cambiar('dia_corte')}>
-                {DIAS_CORTE.map((d) => <option key={d} value={d}>{d[0].toUpperCase() + d.slice(1)} · 00:00</option>)}
+                {DIAS_CORTE.map((d) => <option key={d} value={d}>{d[0].toUpperCase() + d.slice(1)} · {hora(0)}</option>)}
               </select>
             </Campo>
           </div>

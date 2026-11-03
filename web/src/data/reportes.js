@@ -6,6 +6,7 @@ import { fechaISO } from './panel.js'
 import { horas, ordenar } from './plan.js'
 import { FACTORES, MODELO, ALTO, cargarRiesgo } from './riesgo.js'
 import { construirUso, rangoDias } from './uso.js'
+import { hora, inicioDeSemana } from './preferencias.js'
 
 const DIA_MS = 86_400_000
 const SEMANA_MS = 7 * DIA_MS
@@ -169,7 +170,7 @@ export function textoResumen(s, r, nombre, esUltima) {
   return parrafos
 }
 
-export const escritoTexto = (s) => `Escrito por Foqui el ${fechaConDia(s.escrito)} a las 08:00 · con los números de abajo`
+export const escritoTexto = (s) => `Escrito por Foqui el ${fechaConDia(s.escrito)} a las ${hora(8)} · con los números de abajo`
 
 export const kpisSemana = (s) => [
   { etiqueta: 'PROMEDIO DIARIO', valor: horas(s.promedio), detalle: s.cambioUso == null ? 'sin semana anterior' : `${signo(s.cambioUso)} %` },
@@ -189,7 +190,7 @@ export const PERIODOS_EXPORTAR = [
 
 export function rangoExportar(periodo, r, personalizado, ahora = new Date()) {
   const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate())
-  if (periodo === 'semana') return { desde: new Date(hoy.getTime() - ((hoy.getDay() + 6) % 7) * DIA_MS), hasta: hoy }
+  if (periodo === 'semana') return { desde: inicioDeSemana(hoy), hasta: hoy }
   if (periodo === '4s') return { desde: new Date(hoy.getTime() - 27 * DIA_MS), hasta: hoy }
   if (periodo === 'plan') return { desde: new Date(`${r.plan.fecha_inicio}T00:00:00`), hasta: hoy }
   const desde = personalizado.desde ? new Date(`${personalizado.desde}T00:00:00`) : hoy

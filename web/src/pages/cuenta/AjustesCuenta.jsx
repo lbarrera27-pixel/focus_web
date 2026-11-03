@@ -11,6 +11,7 @@ import {
   historialPermisos, permisos, telefonoVinculado,
 } from '../../data/cuenta.js'
 import { horas, limiteActual } from '../../data/plan.js'
+import { hora } from '../../data/preferencias.js'
 import { fechaServidor } from '../../data/panel.js'
 import { api } from '../../api.js'
 import iconoUsuarios from '../../assets/icons/cu-usuarios.svg'
@@ -44,11 +45,12 @@ const PESTANAS = [
   { id: 'dispositivo', titulo: 'Dispositivo', desc: 'El teléfono donde Focus! aplica tus límites.' },
 ]
 
-const AVISOS = [
+// Función para que las horas sigan el formato elegido en Preferencias
+const avisos = () => [
   { id: 'limite', titulo: 'Cuando cambie mi límite', desc: 'El lunes, con el nuevo límite y por qué cambió.' },
   { id: 'cercaLimite', titulo: 'Cuando me acerque a mi límite', desc: 'Al llegar al 80 % de tu tiempo del día.' },
-  { id: 'modoFoco', titulo: 'Recordatorio de Modo Foco', desc: 'Todos los días a las 23:30.' },
-  { id: 'resumen', titulo: 'Resumen semanal de Foqui', desc: 'Los lunes a las 08:00.' },
+  { id: 'modoFoco', titulo: 'Recordatorio de Modo Foco', desc: `Todos los días a las ${hora('23:30')}.` },
+  { id: 'resumen', titulo: 'Resumen semanal de Foqui', desc: `Los lunes a las ${hora(8)}.` },
   { id: 'riesgo', titulo: 'Riesgo alto', desc: 'Si tu riesgo de la próxima semana pasa de 60 %.' },
   { id: 'correo', titulo: 'Correo con el resumen', desc: 'Una copia del resumen semanal a tu correo.' },
 ]
@@ -386,7 +388,7 @@ function TabAvisos({ cuenta, datos, onCuenta }) {
     <div className="cu-columnas">
       <Tarjeta titulo="Avisos" desc="Llegan a tu teléfono y, si quieres, a tu correo." className="cu-tarjeta--alta">
         <div className="cu-opciones">
-          {AVISOS.map((a) => (
+          {avisos().map((a) => (
             <FilaInterruptor key={a.id} titulo={a.titulo} desc={a.desc} activo={cuenta.avisos[a.id]} onCambio={(v) => cambiarAviso(a.id, v)} />
           ))}
         </div>
@@ -417,22 +419,22 @@ function TabAvisos({ cuenta, datos, onCuenta }) {
             <div className="cu-vista">
               <span className="cu-vista__icono"><Icono src={iconoMetaMarca} tam={16} /></span>
               <span className="cu-vista__texto">
-                <span><b>Focus! · Tu límite cambió</b><small>Lun 08:00</small></span>
+                <span><b>Focus! · Tu límite cambió</b><small>Lun {hora(8)}</small></span>
                 <small>Desde hoy tu límite es de {horas(limite)}. ¡Buen trabajo!</small>
               </span>
             </div>
             <div className="cu-vista">
               <span className="cu-vista__icono"><Icono src={iconoRelojMarca} tam={16} /></span>
               <span className="cu-vista__texto">
-                <span><b>Focus! · Llevas el 80 % de tu tiempo</b><small>Jue 19:40</small></span>
+                <span><b>Focus! · Llevas el 80 % de tu tiempo</b><small>Jue {hora(19, 40)}</small></span>
                 <small>Te quedan {horas(Math.round(limite * 0.2))} para hoy.</small>
               </span>
             </div>
             <div className="cu-vista">
               <span className="cu-vista__icono"><Icono src={iconoLunaMarca} tam={16} /></span>
               <span className="cu-vista__texto">
-                <span><b>Focus! · ¿Activamos el Modo Foco?</b><small>Jue 23:30</small></span>
-                <small>Son las 23:30. Deja el celular fuera del cuarto.</small>
+                <span><b>Focus! · ¿Activamos el Modo Foco?</b><small>Jue {hora('23:30')}</small></span>
+                <small>Son las {hora('23:30')}: deja el celular fuera del cuarto.</small>
               </span>
             </div>
           </div>
@@ -650,7 +652,7 @@ function TabDispositivo({ usuario, config, datos, onRecargar, avisar }) {
           <div className="cu-lista">
             <FilaGris icono={iconoGlobo} titulo="Bloqueo de sitios" valor={`${sitios} ${sitios === 1 ? 'activo' : 'activos'}`} tono={sitios ? 'exito' : 'suave'} />
             <FilaGris icono={iconoMeta} titulo="Pausas antes de abrir apps" valor={`${appsConPausa} ${appsConPausa === 1 ? 'app' : 'apps'}`} tono={appsConPausa ? 'exito' : 'suave'} />
-            <FilaGris icono={iconoLuna} titulo="Modo Foco programado" valor={modoFoco.activo ? modoFoco.inicio : 'Apagado'} tono={modoFoco.activo ? 'exito' : 'suave'} />
+            <FilaGris icono={iconoLuna} titulo="Modo Foco programado" valor={modoFoco.activo ? hora(modoFoco.inicio) : 'Apagado'} tono={modoFoco.activo ? 'exito' : 'suave'} />
           </div>
         </Tarjeta>
 
@@ -685,7 +687,7 @@ function TabDispositivo({ usuario, config, datos, onRecargar, avisar }) {
 
 // ---------- Página ----------
 
-export default function AjustesCuenta({ usuario, datos, onRecargar, onPerfil, onDialogo, onExpirada }) {
+export default function AjustesCuenta({ usuario, datos, onRecargar, onPerfil, onDialogo, onExpirada, onPreferencias }) {
   const avisar = useAvisos()
   const [pestana, setPestana] = useState('cuenta')
   const [estado, setEstado] = useState({ cargando: true, error: null, perfil: null, config: {}, cuenta: null })
@@ -719,7 +721,13 @@ export default function AjustesCuenta({ usuario, datos, onRecargar, onPerfil, on
       return false
     }
   }
-  const guardarCuenta = (cuenta) => guardar({ cuenta })
+  const guardarCuenta = (cuenta) => {
+    const previas = estado.cuenta.preferencias
+    if (cuenta.preferencias === previas) return guardar({ cuenta })
+    onPreferencias(cuenta.preferencias)
+    // Si no se pudo guardar, las pantallas vuelven a las preferencias anteriores
+    return guardar({ cuenta }).then((ok) => (ok || onPreferencias(previas), ok))
+  }
 
   function cambiarPerfil(perfil) {
     setEstado((e) => ({ ...e, perfil }))

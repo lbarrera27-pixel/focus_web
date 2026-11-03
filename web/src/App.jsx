@@ -21,6 +21,7 @@ import iconoAlerta from './assets/icons/w-dlg-alerta.svg'
 import { cargarPanel, construirPanel } from './data/panel.js'
 import { datosDemo } from './data/demo.js'
 import { csvDeDatos } from './data/ajustes.js'
+import { cargarPreferencias, establecerPreferencias } from './data/preferencias.js'
 import { api } from './api.js'
 
 const CLAVE_SESION = 'focus.usuario'
@@ -117,6 +118,11 @@ export default function App() {
   const [menuCuenta, setMenuCuenta] = useState(false)
   const [perfilMenu, setPerfilMenu] = useState(null)
   const [dialogoCuenta, setDialogoCuenta] = useState(null)
+  // Formato de hora e inicio de semana (Ajustes › Cuenta): al cambiar se vuelven a pintar las secciones
+  const [versionPrefs, setVersionPrefs] = useState(0)
+  const aplicarPreferencias = useCallback((p) => {
+    if (establecerPreferencias(p)) setVersionPrefs((v) => v + 1)
+  }, [])
 
   const intentarNavegar = (id) => {
     if (guardia && id !== seccion) setSalida(id)
@@ -192,6 +198,15 @@ export default function App() {
       clearInterval(reloj)
     }
   }, [usuario, expirar])
+
+  useEffect(() => {
+    if (!usuario) return
+    let vivo = true
+    cargarPreferencias(usuario).then((p) => vivo && aplicarPreferencias(p))
+    return () => {
+      vivo = false
+    }
+  }, [usuario, aplicarPreferencias])
 
   // El correo y la foto del menú se piden al abrirlo por primera vez
   useEffect(() => {
@@ -301,7 +316,7 @@ export default function App() {
   } else if (seccion === 'ajustes') {
     contenido = (
       <AjustesCuenta key={usuario.id} usuario={usuario} datos={datos} onRecargar={cargar} onPerfil={actualizarUsuario}
-        onDialogo={setDialogoCuenta} onExpirada={expirar} />
+        onDialogo={setDialogoCuenta} onExpirada={expirar} onPreferencias={aplicarPreferencias} />
     )
   } else if (seccion === 'no-encontrada') {
     contenido = <PaginaNoEncontrada onNavegar={navegar} />
@@ -369,7 +384,8 @@ export default function App() {
         >
           {menuCuenta && <MenuUsuario usuario={usuario} perfil={perfilMenu} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
         </Menu>
-        <main className="contenido">{contenido}</main>
+        {/* Ajustes no se reinicia al cambiar las preferencias: es donde se cambian */}
+        <main className="contenido" key={seccion === 'ajustes' ? 'ajustes' : `v${versionPrefs}`}>{contenido}</main>
       </div>
       {salida && guardia && (
         <Dialogo icono={iconoAlerta} titulo="Tienes cambios sin guardar" ancho={520} onCerrar={() => setSalida(null)}
