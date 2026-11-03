@@ -234,17 +234,136 @@ Invoke-RestMethod "$api/estadisticas?desde=2026-10-28&hasta=2026-11-03" -Headers
 \end{lstlisting}
 
 \subsection{Con Postman}
+Postman tiene su propia sección, paso a paso: la \ref{sec:postman}.
+
+% =====================================================================
+\section{Probar las APIs con Postman}\label{sec:postman}
+
+\begin{nota}[Postman no ``levanta'' la API]
+Postman solo \textbf{hace peticiones}; no enciende el servidor. La API ya está encendida en Azure
+(\url{https://focus-api-luisbb27.azurewebsites.net}), así que normalmente solo hay que apuntar Postman ahí.
+Si quieres probar la API en tu computadora, primero la enciendes con los comandos de la sección
+\ref{sec:local} y después apuntas Postman a \texttt{http://127.0.0.1:8000}.
+\end{nota}
+
+\subsection{Las dos colecciones}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{>{\ttfamily\raggedright\arraybackslash}p{5.2cm} X}
+\toprule
+\normalfont\bfseries Archivo & \textbf{Qué trae} \\
+\midrule
+Focus\_API\_v2\newline .postman\_collection.json & Todas las rutas de la API (más de 70 operaciones), la función serverless, las técnicas de IA y los casos de error. \\
+Focus\_API\_nuevas\newline .postman\_collection.json & Solo las rutas nuevas y las que usa el portal nuevo: 25 peticiones y 33 pruebas. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+Las dos están en la carpeta \texttt{postman/} del repositorio y en el ZIP de la API.
+
+\subsection{Paso a paso}
+\begin{paso}{1 \textperiodcentered{} Instalar e importar}
 \begin{enumerate}[leftmargin=*]
-  \item Importa \texttt{postman/Focus\_API\_v2.postman\_collection.json} (está en el repositorio y en el ZIP de la API).
-  \item En \menu{Variables} pon \texttt{baseUrl} = \url{https://focus-api-luisbb27.azurewebsites.net}
-        y \texttt{funcUrl} = \url{https://focus-func-luisbb27.azurewebsites.net}.
-  \item \menu{Run collection}: crea un usuario de prueba, recorre todas las rutas (incluidos los casos
-        de error 401, 404, 409 y 422) y al final borra lo que creó.
+  \item Instala Postman de escritorio desde \url{https://www.postman.com/downloads/} (la versión web
+        no puede llamar a \texttt{127.0.0.1} sin instalar el \emph{Postman Agent}).
+  \item \menu{Import} (arriba a la izquierda) \textrightarrow{} arrastra el archivo \texttt{.json} de la colección.
 \end{enumerate}
-También se puede correr desde la terminal:
+\end{paso}
+
+\begin{paso}{2 \textperiodcentered{} Elegir a qué API apuntar}
+\begin{enumerate}[leftmargin=*]
+  \item Abre la colección \textrightarrow{} pestaña \menu{Variables}.
+  \item En \texttt{baseUrl} pon una de estas dos y guarda con \menu{Ctrl+S}:
+    \begin{itemize}
+      \item Azure: \texttt{https://focus-api-luisbb27.azurewebsites.net}
+      \item Tu computadora: \texttt{http://127.0.0.1:8000}
+    \end{itemize}
+  \item En la colección completa, \texttt{funcUrl} es la función serverless:
+        \texttt{https://focus-func-luisbb27.azurewebsites.net}.
+\end{enumerate}
+\end{paso}
+
+\begin{paso}{3 \textperiodcentered{} Correr todo de una vez (Runner)}
+\begin{enumerate}[leftmargin=*]
+  \item Clic derecho en la colección \textrightarrow{} \menu{Run collection} \textrightarrow{} \menu{Run}.
+  \item La colección hace sola el registro de un usuario de prueba, guarda su número en la variable
+        \texttt{usuarioId} y agrega el header \texttt{X-Usuario-Id} a cada petición.
+  \item Si la base de Azure estaba dormida, \texttt{GET /salud} espera 30 segundos y reintenta solo.
+  \item Al final, la carpeta \emph{Limpieza} borra lo que se creó y desactiva el usuario de prueba.
+  \item Resultado esperado de la colección de rutas nuevas: \textbf{25 peticiones, 33 pruebas en verde} y una
+        \emph{omitida} (la de la foto, que necesita que elijas una imagen).
+\end{enumerate}
+\end{paso}
+
+\begin{paso}{4 \textperiodcentered{} Mandar una petición a mano}
+\begin{enumerate}[leftmargin=*]
+  \item Abre \texttt{GET /salud} \textrightarrow{} \menu{Send}. Debe responder \texttt{\{"status":"ok","base\_datos":"ok"\}}.
+  \item Para ver los datos de una cuenta que ya existe, entra con \texttt{POST /auth/login}
+        (Body \textrightarrow{} raw \textrightarrow{} JSON con \texttt{email} y \texttt{password}). La respuesta trae \texttt{usuario\_id}.
+  \item Copia ese número en la variable \texttt{usuarioId} de la colección. Desde ahí todas las
+        peticiones son de ese usuario. La cuenta de ejemplo \texttt{demo2@focus.app} es el usuario \textbf{8}.
+  \item Para subir una foto: \texttt{POST /usuarios/me/foto/archivo} \textrightarrow{} \menu{Body}
+        \textrightarrow{} \menu{form-data} \textrightarrow{} en la llave \texttt{archivo} elige \menu{File} y una imagen
+        JPG, PNG o WEBP de hasta 5 MB \textrightarrow{} \menu{Send}. Se guarda en Blob Storage.
+\end{enumerate}
+\end{paso}
+
+\subsection{Las rutas nuevas}
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{l >{\ttfamily\raggedright\arraybackslash}p{5.7cm} X}
+\toprule
+\textbf{Método} & \normalfont\bfseries Ruta & \textbf{Para qué} \\
+\midrule
+PUT & /tokens-dispositivo/\{n\}/estado & El teléfono reporta modelo, versión y batería. Cuerpo: \texttt{\{"modelo":"Pixel 7 Pro", "version\_app":"1.8", "bateria":78, "cargando":false\}}. Lo que no se manda se conserva. \\
+GET & /tokens-dispositivo/\{n\}/estado & Último estado que reportó (404 si todavía no reporta). \\
+GET & /tokens-dispositivo & Ahora incluye \texttt{estado} en cada teléfono. \\
+POST & /dominios/\{n\}/intentos & El teléfono avisa que detuvo un sitio bloqueado. Cuerpo opcional: \texttt{\{"fecha": "...UTC"\}}. \\
+GET & /dominios/intentos?dias=7 & Intentos por sitio y por día (de 1 a 90 días). \\
+POST & /usuarios/me/foto/archivo & Sube la foto de perfil a Blob Storage (form-data, campo \texttt{archivo}). \\
+GET / PUT & /configuracion/me & Ajustes del portal (preferencias, avisos, privacidad) como JSON. \\
+POST & /companero/mensaje & Foqui responde con IA; \texttt{fuente} dice si usó Claude (\texttt{llm}) o el respaldo. \\
+GET & /riesgo & Probabilidad de pasarse del límite la próxima semana (404 sin plan con ajustes). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Desde la terminal (newman)}
+Corre la misma colección sin abrir Postman (necesita Node.js):
 \begin{lstlisting}[language=texto]
-npx newman@6.2.1 run postman/Focus_API_v2.postman_collection.json
+# Contra Azure (usa la baseUrl guardada en la colección)
+npx newman@6.2.1 run postman/Focus_API_nuevas.postman_collection.json
+
+# Contra tu computadora
+npx newman@6.2.1 run postman/Focus_API_nuevas.postman_collection.json --env-var baseUrl=http://127.0.0.1:8000
 \end{lstlisting}
+
+\subsection{Encender la API en tu computadora}\label{sec:local}
+Desde la carpeta del repositorio (o del ZIP descomprimido), en PowerShell:
+\begin{lstlisting}[language=texto]
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload          # queda escuchando en http://127.0.0.1:8000
+\end{lstlisting}
+Sin configurar nada usa una base SQLite local (\texttt{focus.db}); Swagger queda en
+\url{http://127.0.0.1:8000/docs}. Deja esa ventana abierta mientras pruebas y ciérrala con \menu{Ctrl+C}.
+
+\subsection{Si algo sale mal}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.6cm} X}
+\toprule
+Respuesta & Qué significa \\
+\midrule
+\texttt{503} & La base de Azure está despertando. Espera 30 s y vuelve a enviar. \\
+\texttt{401} & El \texttt{usuarioId} no existe o el usuario está desactivado. Vuelve a correr \texttt{POST /auth/registro} o usa otro número. \\
+\texttt{422} & Falta un dato o tiene un formato inválido (por ejemplo, batería mayor a 100). \\
+\texttt{404} & Ese número no existe para ese usuario (los números son por usuario). \\
+\emph{Could not send request} & Con \texttt{127.0.0.1} la API local no está encendida; con Azure, revisa tu internet. \\
+\bottomrule
+\end{tabularx}
+\end{center}
 
 % =====================================================================
 \section{Revisar todo en el portal de Azure}
