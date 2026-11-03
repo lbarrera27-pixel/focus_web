@@ -12,6 +12,7 @@ import MiPlan from './pages/plan/MiPlan.jsx'
 import Uso from './pages/uso/Uso.jsx'
 import Foqui from './pages/foqui/Foqui.jsx'
 import Reportes from './pages/reportes/Reportes.jsx'
+import AjustesCuenta from './pages/cuenta/AjustesCuenta.jsx'
 import Pendiente from './pages/Pendiente.jsx'
 import Dialogo from './components/web/Dialogo.jsx'
 import { ProveedorAvisos } from './components/web/Avisos.jsx'
@@ -25,7 +26,7 @@ const CLAVE_MENU = 'focus.menuContraido'
 // Secciones del portal de investigación que siguen disponibles por su dirección (#/telemetria…)
 const SECCIONES_INVESTIGACION = ['telemetria', 'analisis', 'clusteres']
 // Secciones con el diseño nuevo: se adaptan desde 1024 px (las demás siguen fijas a 1440 px)
-const SECCIONES_FLUIDAS = ['riesgo', 'plan', 'uso', 'foqui', 'reportes']
+const SECCIONES_FLUIDAS = ['riesgo', 'plan', 'uso', 'foqui', 'reportes', 'ajustes']
 // Debajo de este ancho el menú se muestra contraído (Figma: "Colapsada se usa en 1024 px")
 const ANCHO_MENU_COMPLETO = 1280
 
@@ -143,6 +144,15 @@ export default function App() {
     }
     setUsuario(u)
   }
+  // Cambio de nombre desde Ajustes: se guarda donde ya estaba la sesión
+  const actualizarUsuario = (u) => {
+    try {
+      ;(localStorage.getItem(CLAVE_SESION) ? localStorage : sessionStorage).setItem(CLAVE_SESION, JSON.stringify(u))
+    } catch {
+      // sin almacenamiento: el nombre nuevo se ve hasta recargar
+    }
+    setUsuario(u)
+  }
   const salir = useCallback(() => {
     try {
       localStorage.removeItem(CLAVE_SESION)
@@ -243,6 +253,8 @@ export default function App() {
     contenido = <Reportes key={usuario.id} usuario={usuario} datos={datos} onNavegar={intentarNavegar} />
   } else if (seccion === 'foqui') {
     contenido = <Foqui key={usuario.id} usuario={usuario} datos={datos} onNavegar={intentarNavegar} />
+  } else if (seccion === 'ajustes') {
+    contenido = <AjustesCuenta key={usuario.id} usuario={usuario} datos={datos} onRecargar={cargar} onPerfil={actualizarUsuario} onSalir={salir} />
   } else if (seccion === 'riesgo') {
     contenido = <Riesgo usuario={usuario} datos={datos} onNavegar={navegar} />
   } else if (seccion === 'apps') {

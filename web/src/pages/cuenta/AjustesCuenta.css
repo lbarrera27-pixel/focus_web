@@ -1,0 +1,155 @@
+/* Ajustes de la cuenta (Figma e38–e41) */
+.cu button:focus-visible, .cu select:focus-visible { outline: 2px solid var(--w-marca); outline-offset: 2px; }
+.cu .w-boton:disabled { opacity: 0.55; cursor: default; box-shadow: none; }
+
+/* Pestañas */
+.cu-pestanas { display: flex; gap: 4px; border-bottom: 1px solid var(--w-borde); overflow-x: auto; }
+.cu-pestana {
+  padding: 8px 14px 8px; border: 0; border-bottom: 2px solid transparent; background: none; white-space: nowrap;
+  font-size: 13px; line-height: 18px; color: #475569;
+}
+.cu-pestana:hover { color: var(--w-texto); }
+.cu-pestana--activa, .cu-pestana--activa:hover { border-bottom-color: var(--w-marca); font-weight: 700; color: var(--w-acento); }
+
+/* Columnas */
+.cu-columnas { display: flex; align-items: flex-start; gap: 16px; }
+.cu-columnas > .cu-tarjeta, .cu-columna { flex: 1; min-width: 0; }
+.cu-columna { display: flex; flex-direction: column; gap: 16px; }
+.cu-columna--lateral { flex: 0 0 400px; }
+
+/* Tarjetas */
+.cu-tarjeta { display: flex; flex-direction: column; gap: 16px; padding: 24px; }
+.cu-tarjeta__titulos { display: flex; flex-direction: column; gap: 4px; }
+.cu-tarjeta > .w-boton { width: 100%; }
+
+/* Perfil */
+.cu-perfil { display: flex; align-items: center; gap: 16px; }
+.cu-perfil__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cu-avatar {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%;
+  background: var(--w-marca); object-fit: cover; font-size: 20px; line-height: 25px; font-weight: 700; letter-spacing: -0.4px; color: var(--w-texto);
+}
+.cu-campos { display: flex; gap: 16px; }
+.cu-campos > * { flex: 1; min-width: 0; }
+.cu-campo { display: flex; flex-direction: column; gap: 6px; }
+.cu-campo b { font-size: 13px; line-height: 18px; }
+.cu-campo input {
+  width: 100%; padding: 11px 14px; border: 1px solid var(--w-borde-input); border-radius: 12px; background: var(--w-superficie);
+  font: inherit; font-size: 13px; line-height: 18px; color: var(--w-texto);
+}
+.cu-campo input:focus { outline: none; border-color: var(--w-marca); }
+.cu-campo input[readonly] { background: var(--w-fondo); color: var(--w-texto-2); }
+.cu-campo small { font-size: 11px; line-height: 15px; color: var(--w-texto-2); }
+.cu-campo--error input { border-color: var(--w-peligro); }
+.cu-campo--error small { color: var(--w-peligro); }
+.cu-guardar { display: flex; justify-content: flex-end; gap: 10px; }
+.cu-formulario { display: flex; flex-direction: column; gap: 14px; }
+
+/* Filas grises con ícono */
+.cu-preferencias { display: flex; flex-wrap: wrap; gap: 12px; }
+.cu-preferencias > * { flex: 1 1 280px; }
+.cu-lista { display: flex; flex-direction: column; gap: 12px; }
+.cu-tarjeta > .cu-gris + .cu-gris { margin-top: -2px; }
+.cu-gris { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 12px; border-radius: 12px; background: var(--w-apagado); }
+.cu-gris__icono { display: flex; padding: 6px; border-radius: 10px; background: var(--w-superficie); }
+.cu-gris__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cu-gris__texto b, .cu-gris__valor { font-size: 13px; line-height: 18px; font-weight: 700; }
+.cu-gris__texto small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 15px; color: var(--w-texto-2); }
+.cu-gris__valor { white-space: nowrap; }
+.cu-gris__valor--exito { color: var(--w-exito); }
+.cu-gris__valor--suave { color: #475569; }
+.cu-selector {
+  max-width: 60%; padding: 0 18px 0 0; border: 0; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2364748b' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right center;
+  appearance: none; font: inherit; font-size: 13px; line-height: 18px; font-weight: 700; color: var(--w-texto); text-align: right; cursor: pointer;
+}
+
+/* Datos con ícono (Tu cuenta, teléfono) */
+.cu-dato { display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; }
+.cu-dato span { flex: 1; color: #475569; }
+.cu-dato b { white-space: nowrap; }
+
+/* Botones */
+.cu-botones { display: flex; flex-direction: column; gap: 10px; }
+.cu-botones .w-boton { width: 100%; }
+.cu-botones--fila { flex-direction: row; }
+.cu-botones--fila .w-boton { width: auto; }
+.cu-boton-peligro { background: var(--w-peligro); color: #fff; }
+.cu-boton-peligro:hover:not(:disabled) { background: #991b1b; }
+
+/* Opciones con interruptor (Avisos, Estudio) */
+.cu-opciones { display: flex; flex-direction: column; gap: 16px; }
+.cu-opcion { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+.cu-opcion + .cu-opcion { padding-top: 20px; border-top: 1px solid var(--w-borde); }
+.cu-tarjeta--alta .cu-opciones::after { content: ''; height: 1px; background: var(--w-borde); }
+.cu-opcion > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cu-opcion b { font-size: 13px; line-height: 18px; }
+.cu-opcion small { font-size: 11px; line-height: 15px; color: var(--w-texto-2); }
+
+/* Notas de color */
+.cu-nota { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; }
+.cu-nota--exito { background: var(--w-exito-suave); }
+.cu-nota--info { background: var(--w-info-suave); }
+.cu-nota > span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.cu-nota b { font-size: 13px; line-height: 18px; }
+.cu-nota small { font-size: 11px; line-height: 15px; color: #475569; }
+
+/* Vista previa de avisos */
+.cu-vistas { display: flex; flex-direction: column; gap: 14px; }
+.cu-vista { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--w-apagado); }
+.cu-vista__icono { display: flex; padding: 6px; border-radius: 10px; background: var(--w-marca-suave); }
+.cu-vista__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cu-vista__texto > span { display: flex; justify-content: space-between; gap: 8px; }
+.cu-vista__texto b { font-size: 13px; line-height: 18px; }
+.cu-vista__texto small { font-size: 11px; line-height: 15px; color: #475569; }
+.cu-vista__texto > span small { flex-shrink: 0; color: var(--w-texto-2); }
+
+/* Lo que recibe Foqui y permisos */
+.cu-recibe, .cu-permisos { display: flex; flex-direction: column; gap: 16px; }
+.cu-recibe li { display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; }
+.cu-recibe__marca { display: flex; flex-shrink: 0; padding: 3px; border-radius: 10px; }
+.cu-recibe__marca--si { background: var(--w-exito-suave); }
+.cu-recibe__marca--no { background: var(--w-peligro-suave); }
+.cu-permisos { gap: 16px; }
+.cu-permisos li { display: flex; align-items: center; gap: 10px; }
+.cu-permisos li > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cu-permisos b { font-size: 13px; line-height: 18px; }
+.cu-permisos small { font-size: 11px; line-height: 15px; color: var(--w-texto-2); }
+.cu-permisos .cu-ok, .cu-permisos .cu-falta { font-size: 11px; line-height: 15px; white-space: nowrap; }
+.cu-ok { color: var(--w-exito); }
+.cu-falta { color: var(--w-acento); }
+
+/* Teléfono vinculado */
+.cu-telefono { display: flex; align-items: center; gap: 16px; }
+.cu-telefono__icono { display: flex; padding: 14px; border-radius: 14px; background: var(--w-marca-sutil); }
+.cu-telefono__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.cu-estado {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--w-exito-suave);
+  font-size: 11px; line-height: 15px; font-weight: 700; color: var(--w-exito); white-space: nowrap;
+}
+.cu-estado i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.cu-estado--apagado { background: var(--w-apagado); color: var(--w-texto-2); }
+
+/* Ayuda */
+.cu-ayuda { display: flex; align-items: center; gap: 16px; padding: 20px 24px; }
+.cu-ayuda__icono { display: flex; padding: 10px; border-radius: 12px; background: var(--w-info-suave); }
+.cu-pasos { display: flex; flex-direction: column; gap: 10px; }
+.cu-pasos li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 20px; color: #334155; }
+.cu-pasos b {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--w-marca-suave); font-size: 12px; color: var(--w-acento-fuerte);
+}
+
+/* Actividad de hoy */
+.cu-actividad { display: flex; align-items: flex-end; gap: 6px; height: 66px; }
+.cu-actividad > div { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; }
+.cu-actividad i { width: 100%; border-radius: 3px; background: var(--w-acento); }
+.cu-actividad i.cu-actividad__vacia { height: 3px; background: #e2e8f0; }
+.cu-actividad small { min-height: 15px; font-size: 11px; line-height: 15px; color: var(--w-texto-2); white-space: nowrap; }
+
+@media (max-width: 1180px) {
+  .cu-columnas { flex-direction: column; align-items: stretch; }
+  .cu-columna--lateral { flex-basis: auto; }
+}
+@media (max-width: 720px) {
+  .cu-campos, .cu-perfil, .cu-ayuda { flex-wrap: wrap; }
+}

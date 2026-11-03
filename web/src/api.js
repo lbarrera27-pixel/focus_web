@@ -13,12 +13,14 @@ export class ApiError extends Error {
 async function pedir(ruta, { usuarioId, metodo = 'GET', cuerpo, reintentos = 2, senal } = {}) {
   const headers = { Accept: 'application/json' }
   if (usuarioId) headers['X-Usuario-Id'] = String(usuarioId)
-  if (cuerpo) headers['Content-Type'] = 'application/json'
+  // Con FormData (archivos) el navegador pone el Content-Type con su separador
+  const esArchivo = cuerpo instanceof FormData
+  if (cuerpo && !esArchivo) headers['Content-Type'] = 'application/json'
 
   const resp = await fetch(BASE + ruta, {
     method: metodo,
     headers,
-    body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+    body: cuerpo ? (esArchivo ? cuerpo : JSON.stringify(cuerpo)) : undefined,
     signal: senal,
   })
 
@@ -71,6 +73,16 @@ export const api = {
   crearPlan: (id, plan) => pedir('/planes', { usuarioId: id, metodo: 'POST', cuerpo: plan }),
   actualizarPlan: (id, numero, cambios) => pedir(`/planes/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   eliminarCuenta: (id) => pedir('/usuarios/me', { usuarioId: id, metodo: 'DELETE' }),
+  // Nombre, seudónimo o contraseña (el correo no se puede cambiar)
+  actualizarPerfil: (id, cambios) => pedir('/usuarios/me', { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  // Foto de perfil a Azure Blob Storage (JPG, PNG o WEBP de hasta 5 MB; 503 si el servidor no tiene almacenamiento)
+  subirFoto: (id, archivo) => {
+    const datos = new FormData()
+    datos.append('archivo', archivo)
+    return pedir('/usuarios/me/foto/archivo', { usuarioId: id, metodo: 'POST', cuerpo: datos, reintentos: 0 })
+  },
+  // Desvincular un teléfono: el token deja de estar activo
+  actualizarToken: (id, numero, cambios) => pedir(`/tokens-dispositivo/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   actualizarApp: (id, numero, cambios) => pedir(`/apps/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
   // Foqui: sin `mensaje` saluda y explica la semana; la API no guarda la conversación
   foqui: (id, mensaje, historial, senal) =>
