@@ -1,0 +1,405 @@
+% =====================================================================
+%  FOCUS! - Tutorial: abrir el portal web y revisar todo en Azure
+%  Compilar en Overleaf con pdfLaTeX (Menu > Compiler > pdfLaTeX).
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[most]{tcolorbox}
+
+% ---------- Colores de FOCUS! ----------
+\definecolor{ambar}{HTML}{F59E0B}
+\definecolor{ambaroscuro}{HTML}{B45309}
+\definecolor{marino}{HTML}{131C2E}
+\definecolor{gris}{HTML}{64748B}
+\definecolor{fondo}{HTML}{F8FAFC}
+\definecolor{verde}{HTML}{047857}
+\definecolor{rojo}{HTML}{B91C1C}
+
+\hypersetup{colorlinks=true, linkcolor=ambaroscuro, urlcolor=ambaroscuro, pdftitle={FOCUS! - Tutorial del portal y Azure}}
+
+\titleformat{\section}{\Large\bfseries\color{marino}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{ambaroscuro}}{\thesubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small\color{gris}FOCUS! \textperiodcentered{} Tutorial del portal y de Azure}
+\rhead{\small\color{gris}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ---------- Código (acentos permitidos dentro de los listados) ----------
+\lstset{
+  basicstyle=\ttfamily\small, backgroundcolor=\color{fondo}, frame=single, rulecolor=\color{gris!40},
+  breaklines=true, columns=fullflexible, keepspaces=true, showstringspaces=false,
+  keywordstyle=\color{ambaroscuro}\bfseries, commentstyle=\color{gris}\itshape, stringstyle=\color{verde},
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1 {Ñ}{{\~N}}1
+           {¿}{{?`}}1 {¡}{{!`}}1 {·}{{\textperiodcentered}}1 {—}{{---}}1 {–}{{--}}1 {›}{{>}}1
+}
+\lstdefinelanguage{texto}{}
+
+% ---------- Cajas ----------
+\newtcolorbox{nota}[1][Nota]{colback=ambar!8, colframe=ambar, fonttitle=\bfseries, title=#1, boxrule=0.6pt, arc=2mm}
+\newtcolorbox{alerta}[1][Importante]{colback=rojo!6, colframe=rojo, fonttitle=\bfseries, title=#1, boxrule=0.6pt, arc=2mm}
+\newtcolorbox{paso}[1]{colback=white, colframe=marino, fonttitle=\bfseries, title=#1, boxrule=0.6pt, arc=2mm}
+
+\newcommand{\ruta}[1]{\texttt{\color{marino}#1}}
+\setlength{\emergencystretch}{3em}  % evita líneas que se salen del margen
+\newcommand{\menu}[1]{\textsf{\textbf{#1}}}
+
+\begin{document}
+
+% =====================================================================
+\begin{titlepage}
+  \centering
+  \vspace*{2.5cm}
+  {\fontsize{40}{44}\selectfont\bfseries\color{marino}FOCUS\textcolor{ambar}{!}\par}
+  \vspace{0.3cm}
+  {\large\color{gris}Menos pantalla, más enfoque\par}
+  \vspace{2cm}
+  {\LARGE\bfseries Tutorial del portal web y de Azure\par}
+  \vspace{0.6cm}
+  {\large Cómo abrir la web, cómo usar la API y cómo revisar\\ cada servicio en Microsoft Azure (incluida la base de datos)\par}
+  \vfill
+  \begin{tabular}{rl}
+    \textbf{Portal web:} & \url{https://green-moss-07816e210.4.azurestaticapps.net} \\
+    \textbf{API (Swagger):} & \url{https://focus-api-luisbb27.azurewebsites.net/docs} \\
+    \textbf{Repositorio:} & \url{https://github.com/lbarrera27-pixel/focus_web} \\
+    \textbf{Grupo de recursos:} & \texttt{rg-focus} (región \texttt{centralus}) \\
+  \end{tabular}
+  \vspace{1.5cm}
+
+  {\small\color{gris}Universidad Autónoma de Querétaro \textperiodcentered{} Facultad de Informática\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Cómo está armado el proyecto}
+
+FOCUS! ayuda a reducir el tiempo de pantalla. La app Android mide el uso del teléfono y muestra pausas
+antes de abrir apps; el \textbf{portal web} muestra el plan, el riesgo de recaída, los reportes y los
+ajustes de la cuenta. Todo vive en Microsoft Azure, dentro del grupo de recursos \texttt{rg-focus}.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{>{\bfseries}l l X}
+\toprule
+Parte & Servicio de Azure & Nombre del recurso \\
+\midrule
+Portal web (frontend) & Static Web Apps & \texttt{focus-web-luisbb27} \\
+API (backend FastAPI) & App Service (Linux, Python 3.12) & \texttt{focus-api-luisbb27} (plan \texttt{plan-focus}, B1) \\
+Base de datos & Azure SQL Database (serverless) & servidor \texttt{focus-sql-luisbb27}, base \texttt{focusdb} \\
+Fotos de perfil & Blob Storage & cuenta \texttt{focusstluisbb27}, contenedor \texttt{fotos} \\
+Función serverless & Azure Functions & \texttt{focus-func-luisbb27} (\ruta{/api/ajuste-semanal}) \\
+IA conversacional & Claude (Anthropic) & la usa la API para el Compañero Foqui \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\noindent El flujo es: \textbf{navegador o teléfono} $\rightarrow$ \textbf{API} (con el header
+\texttt{X-Usuario-Id}) $\rightarrow$ \textbf{Azure SQL} y \textbf{Blob Storage}. La API también llama a
+Claude para las respuestas de Foqui.
+
+\begin{nota}[La base de datos se duerme]
+Azure SQL está en modo \emph{serverless}: se pausa tras una hora sin uso para ahorrar créditos.
+La primera petición después de una pausa tarda unos 30--60 segundos; mientras despierta, la API
+responde \texttt{503} y el portal reintenta solo. Si algo tarda al principio, espera y recarga.
+\end{nota}
+
+% =====================================================================
+\section{Abrir el portal web}
+
+\begin{paso}{Paso 1 \textperiodcentered{} Entrar}
+\begin{enumerate}[leftmargin=*]
+  \item Abre \url{https://green-moss-07816e210.4.azurestaticapps.net} en Chrome, Edge o Firefox.
+  \item Escribe el \textbf{correo} y la \textbf{contraseña} de la cuenta. Para la presentación se usa la cuenta
+        con datos de ejemplo \texttt{demo2@focus.app} (la contraseña la tiene el equipo).
+  \item Marca \menu{Mantener la sesión iniciada} si no quieres volver a escribirla al cerrar la pestaña.
+  \item Pulsa \menu{Iniciar sesión}.
+\end{enumerate}
+\end{paso}
+
+\begin{nota}[Sin cuenta]
+El botón \menu{Ver demo sin cuenta} abre el portal con datos de demostración que viven solo en el
+navegador. Sirve para enseñar las pantallas, pero \textbf{no} lee ni escribe nada en Azure.
+\end{nota}
+
+\subsection{Qué hay en cada sección}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X l}
+\toprule
+Sección & Qué muestra & Rutas de la API \\
+\midrule
+Inicio & Panel general: uso por día, apps, pausas, plan y dispositivo & \ruta{/estadisticas}, \ruta{/eventos} \\
+Mi plan & Límite diario, semana actual, próximo ajuste y simulador & \ruta{/planes}, \ruta{/planes/\{n\}/ajustes} \\
+Riesgo de recaída & Probabilidad de pasarse del límite la próxima semana & \ruta{/riesgo} \\
+Uso por app & Tiempo por app, categorías y mapa de calor día $\times$ hora & \ruta{/eventos}, \ruta{/apps} \\
+Apps y sitios & Apps restringidas, sitios bloqueados, límites y reglas & \ruta{/apps}, \ruta{/dominios} \\
+Foqui & Chat con el compañero de IA sobre tu semana & \ruta{/companero/mensaje} \\
+Reportes & Resúmenes semanales, PDF y exportar CSV & \ruta{/eventos}, \ruta{/planes} \\
+Ajustes & Cuenta, notificaciones, privacidad y dispositivo & \ruta{/usuarios/me}, \ruta{/configuracion/me} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\noindent Al pulsar tu nombre (abajo a la izquierda) se abre el \textbf{menú de la cuenta}: Mi perfil,
+Ajustes y reglas, Exportar mis datos, Ayuda y soporte y Cerrar sesión. Una dirección que no existe
+(por ejemplo \texttt{\#/abc}) muestra la página \emph{No encontramos esta página}.
+
+\subsection{Recorrido sugerido para la presentación}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Uso por app}: el mapa de calor y la franja más crítica (más uso de noche).
+  \item \textbf{Mi plan}: el límite baja cada semana según las reglas difusas de la API.
+  \item \textbf{Riesgo de recaída}: la regresión logística y los factores que la explican.
+  \item \textbf{Foqui}: escribe \emph{``Resúmeme mi semana''}; la respuesta la genera Claude con tus números.
+  \item \textbf{Reportes}: descarga el PDF de una semana y exporta el CSV.
+  \item \textbf{Ajustes \textrightarrow{} Dispositivo}: el teléfono vinculado, su batería y la actividad de hoy.
+  \item \textbf{Ajustes \textrightarrow{} Cuenta}: cambia la foto (se guarda en Blob Storage).
+\end{enumerate}
+
+% =====================================================================
+\section{Usar la API}
+
+\subsection{Swagger: probar desde el navegador}
+\begin{enumerate}[leftmargin=*]
+  \item Abre \url{https://focus-api-luisbb27.azurewebsites.net/docs}.
+  \item Prueba primero \ruta{GET /salud} con \menu{Try it out} \textrightarrow{} \menu{Execute}. Debe responder:
+\begin{lstlisting}
+{"status":"ok","base_datos":"ok","motor":"mssql"}
+\end{lstlisting}
+  \item Para las rutas privadas escribe el número de usuario en el campo \texttt{X-Usuario-Id}
+        (lo devuelve \ruta{POST /auth/login}). La cuenta de ejemplo \texttt{demo2@focus.app} es el usuario \textbf{8}.
+\end{enumerate}
+
+\begin{nota}[Los números de las rutas son por usuario]
+\ruta{GET /pausas/7} con \texttt{X-Usuario-Id: 8} es la 7.\textordmasculine{} pausa del usuario 8, no la pausa
+con id 7 de la tabla. Sin el header la API responde \texttt{422}; con un usuario inexistente o
+desactivado, \texttt{401}.
+\end{nota}
+
+\subsection{Desde PowerShell}
+\begin{lstlisting}[language=texto]
+$api = "https://focus-api-luisbb27.azurewebsites.net"
+$h   = @{ "X-Usuario-Id" = "8" }
+
+Invoke-RestMethod "$api/salud"
+Invoke-RestMethod "$api/apps" -Headers $h
+Invoke-RestMethod "$api/planes/activo" -Headers $h
+Invoke-RestMethod "$api/riesgo" -Headers $h
+Invoke-RestMethod "$api/tokens-dispositivo" -Headers $h
+Invoke-RestMethod "$api/estadisticas?desde=2026-10-28&hasta=2026-11-03" -Headers $h
+\end{lstlisting}
+
+\subsection{Con Postman}
+\begin{enumerate}[leftmargin=*]
+  \item Importa \texttt{postman/Focus\_API\_v2.postman\_collection.json} (está en el repositorio y en el ZIP de la API).
+  \item En \menu{Variables} pon \texttt{baseUrl} = \url{https://focus-api-luisbb27.azurewebsites.net}
+        y \texttt{funcUrl} = \url{https://focus-func-luisbb27.azurewebsites.net}.
+  \item \menu{Run collection}: crea un usuario de prueba, recorre todas las rutas (incluidos los casos
+        de error 401, 404, 409 y 422) y al final borra lo que creó.
+\end{enumerate}
+También se puede correr desde la terminal:
+\begin{lstlisting}[language=texto]
+npx newman@6.2.1 run postman/Focus_API_v2.postman_collection.json
+\end{lstlisting}
+
+% =====================================================================
+\section{Revisar todo en el portal de Azure}
+
+Entra a \url{https://portal.azure.com} con la cuenta de \emph{Azure for Students} y abre
+\menu{Grupos de recursos} \textrightarrow{} \texttt{rg-focus}. Ahí están todos los recursos del proyecto.
+
+\subsection{API: App Service \texttt{focus-api-luisbb27}}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Dónde & Qué revisar \\
+\midrule
+Información general & Estado \emph{En ejecución}, la URL y los botones \menu{Reiniciar} / \menu{Detener}. \\
+Supervisión \textrightarrow{} Secuencia de registro & Los mensajes de la API en vivo (peticiones y errores). \\
+Configuración \textrightarrow{} Variables de entorno & \texttt{AZURE\_SQL\_*}, \texttt{AZURE\_STORAGE\_*} y \texttt{ANTHROPIC\_API\_KEY}. Los valores son secretos: no los compartas. \\
+Centro de implementación \textrightarrow{} Registros & Cada despliegue con su fecha y si terminó bien. \\
+Supervisión \textrightarrow{} Métricas & Peticiones, errores HTTP 5xx y tiempo de respuesta. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Base de datos: Azure SQL \texttt{focusdb}}
+\begin{paso}{Abrir el editor de consultas}
+\begin{enumerate}[leftmargin=*]
+  \item En \texttt{rg-focus} abre la base \texttt{focusdb} (servidor \texttt{focus-sql-luisbb27}).
+  \item En \menu{Información general} revisa el estado: \emph{En línea} o \emph{En pausa}. Si está en pausa,
+        se despierta sola al abrir el editor (tarda un minuto).
+  \item Abre \menu{Editor de consultas (versión preliminar)}.
+  \item Inicia sesión con \textbf{Autenticación de SQL Server}: usuario \texttt{focusadmin} y la contraseña
+        que generó el script de despliegue (está en \texttt{deploy\textbackslash salida.env}, que no se sube a GitHub).
+  \item Si aparece un aviso de firewall, pulsa \menu{Permitir la dirección IP del cliente} y vuelve a entrar.
+\end{enumerate}
+\end{paso}
+
+\noindent Las 13 tablas del proyecto:
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{>{\ttfamily}l X}
+\toprule
+usuario & Cuentas (correo, nombre, contraseña cifrada, foto, activo) \\
+app & Apps que mide el teléfono y su límite de aperturas \\
+evento\_uso & Cada uso de una app (inicio, fin, duración) \\
+franja & Catálogo de franjas horarias \\
+plan / ajuste\_plan & Plan del usuario y su ajuste de cada semana (reglas difusas) \\
+pausa & Pausas de fricción mostradas y si se ignoraron \\
+dominio\_bloqueado / intento\_sitio & Sitios bloqueados y cada intento de abrirlos \\
+sesion\_foco & Sesiones de Modo Foco \\
+token\_dispositivo / estado\_dispositivo & Teléfonos vinculados y su último estado (modelo, versión, batería) \\
+configuracion\_usuario & Ajustes del portal (JSON por usuario) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\noindent Consultas útiles para mostrar los datos:
+\begin{lstlisting}[language=SQL]
+-- Tablas y cuántos registros tiene cada una
+SELECT t.name AS tabla, SUM(p.rows) AS filas
+FROM sys.tables t JOIN sys.partitions p ON p.object_id = t.object_id AND p.index_id IN (0, 1)
+GROUP BY t.name ORDER BY t.name;
+
+-- Usuarios registrados
+SELECT id, email, nombre, activo, fecha_registro FROM usuario ORDER BY id;
+
+-- Uso de la cuenta de ejemplo (usuario 8) por app, en minutos
+SELECT a.nombre, COUNT(*) AS aperturas, SUM(e.duracion_seg) / 60 AS minutos
+FROM evento_uso e JOIN app a ON a.id = e.app_id
+WHERE e.usuario_id = 8
+GROUP BY a.nombre ORDER BY minutos DESC;
+
+-- Plan activo y sus ajustes semanales
+SELECT p.numero, p.fecha_inicio, p.limite_base, j.semana, j.uso_meta, j.adherencia, j.cambio_pct
+FROM plan p LEFT JOIN ajuste_plan j ON j.plan_id = p.id
+WHERE p.usuario_id = 8 AND p.activo = 1 ORDER BY j.semana;
+
+-- Pausas de hoy (la fecha se guarda en UTC)
+SELECT numero, tipo, duracion_seg, ignorada, fecha FROM pausa
+WHERE usuario_id = 8 AND CAST(fecha AS date) = CAST(SYSUTCDATETIME() AS date);
+
+-- Teléfono vinculado y lo último que reportó
+SELECT t.numero, t.plataforma, t.activo, s.modelo, s.version_app, s.bateria, s.fecha
+FROM token_dispositivo t LEFT JOIN estado_dispositivo s ON s.token_id = t.id
+WHERE t.usuario_id = 8;
+\end{lstlisting}
+
+\begin{alerta}[Solo consultar]
+Usa \texttt{SELECT} para revisar. No borres ni cambies filas desde el editor: la API lleva la
+numeración por usuario y la integridad de los datos. Para cambiar algo, usa el portal o la API.
+\end{alerta}
+
+\subsection{Fotos: Blob Storage \texttt{focusstluisbb27}}
+\menu{Almacenamiento de datos} \textrightarrow{} \menu{Contenedores} \textrightarrow{} \texttt{fotos}. Cada
+usuario tiene su carpeta (por ejemplo \texttt{usuario-8/}). Al cambiar la foto en
+\menu{Ajustes \textrightarrow{} Cuenta} aparece un archivo nuevo y la API guarda su enlace en \texttt{usuario.foto\_url}.
+
+\subsection{Función serverless: \texttt{focus-func-luisbb27}}
+\menu{Funciones} \textrightarrow{} \texttt{ajuste\_semanal} \textrightarrow{} \menu{Código y prueba}
+permite ejecutarla desde el portal. Calcula el ajuste semanal con las mismas reglas difusas de la API;
+\menu{Supervisar} muestra cada ejecución.
+
+\subsection{Portal web: Static Web App \texttt{focus-web-luisbb27}}
+En \menu{Información general} está la URL pública; en \menu{Entornos} aparece la versión publicada
+(\emph{production}) con la fecha del último despliegue.
+
+\subsection{Créditos}
+\menu{Suscripciones} \textrightarrow{} \emph{Azure for Students} \textrightarrow{} \menu{Análisis de costos}
+muestra cuánto gasta cada recurso. Lo que más consume es el plan B1 del App Service.
+
+% =====================================================================
+\section{Revisar desde la terminal (Azure CLI)}
+Requiere \texttt{az login}. Los comandos son de solo lectura salvo el reinicio.
+\begin{lstlisting}[language=texto]
+az resource list -g rg-focus -o table                              # todos los recursos
+az webapp show -g rg-focus -n focus-api-luisbb27 --query state       # ¿está corriendo?
+az webapp log tail -g rg-focus -n focus-api-luisbb27                # registro en vivo (Ctrl+C para salir)
+az webapp config appsettings list -g rg-focus -n focus-api-luisbb27 --query "[].name" -o tsv
+az sql db show -g rg-focus -s focus-sql-luisbb27 -n focusdb --query "{estado:status, sku:currentSku.name}"
+az storage blob list --account-name focusstluisbb27 -c fotos --auth-mode login -o table
+az staticwebapp show -g rg-focus -n focus-web-luisbb27 --query defaultHostname
+az webapp restart -g rg-focus -n focus-api-luisbb27                 # reiniciar la API
+\end{lstlisting}
+
+% =====================================================================
+\section{Publicar cambios}
+Desde PowerShell, en la carpeta del repositorio:
+\begin{lstlisting}[language=texto]
+.\deploy\02_desplegar_api.ps1     # sube la API, la reinicia y prueba /salud
+.\deploy\05_desplegar_web.ps1     # compila el portal contra la API y lo publica
+python deploy/06_datos_demo.py --api https://focus-api-luisbb27.azurewebsites.net --email demo2@focus.app --refrescar
+\end{lstlisting}
+El último comando pone al día la cuenta de ejemplo (eventos, pausas de hoy y semanas del plan).
+Conviene correrlo el día de la presentación.
+
+% =====================================================================
+\section{Avance del proyecto}
+
+\subsection{Lo que ya está hecho y publicado}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Portal web con el diseño de Figma (pantallas e1--e47)}: acceso, Mi plan, Riesgo de recaída,
+        Uso por app, Apps y sitios, Foqui, Reportes, Ajustes de la cuenta y Cuenta (menú, perfil,
+        desactivar, cerrar sesión, sesión expirada y página no encontrada).
+  \item \textbf{API} con 13 tablas en capas (controladores, servicios, repositorios, modelos y esquemas),
+        más de 70 operaciones, 94 pruebas automáticas y colección de Postman.
+  \item \textbf{IA}: lógica difusa (ajuste semanal), regresión logística (riesgo), aprendizaje supervisado
+        (pausas ignoradas), red neuronal (pronóstico de uso), algoritmo genético (horario de pausas),
+        búsqueda A* (ruta del plan) y el Compañero Foqui con Claude.
+  \item \textbf{Cambios recientes en la API} (todos solo agregan, no rompen nada de lo anterior):
+        intentos de abrir sitios bloqueados (\ruta{/dominios/\{n\}/intentos}), estado del teléfono
+        (\ruta{/tokens-dispositivo/\{n\}/estado}), subida de fotos desde el portal y la corrección
+        para que los ajustes del plan se guarden en Azure SQL.
+  \item \textbf{Portal}: preferencias de formato de hora (24/12 h) e inicio de semana (lunes o domingo),
+        sin desplazamiento lateral desde 1024 px.
+  \item \textbf{Datos de ejemplo} en la cuenta \texttt{demo2@focus.app} (usuario 8): 6 apps,
+        unos 280 eventos, pausas, plan en la semana 4 con 3 ajustes, teléfono vinculado y 3 sitios bloqueados.
+\end{itemize}
+
+\subsection{Pendiente}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Zona horaria} de Preferencias: se guarda y se está terminando de aplicar a todas las fechas.
+  \item \textbf{Cambiar la clave de Anthropic} (se mostró en un chat): crear una nueva en Claude Console,
+        borrar la anterior y guardarla en la variable \texttt{ANTHROPIC\_API\_KEY} del App Service.
+  \item \textbf{App Android} (repositorio \texttt{focus\_app}): enviar su modelo, versión y batería con
+        \ruta{PUT /tokens-dispositivo/\{n\}/estado} para que las cuentas reales los muestren.
+\end{itemize}
+
+% =====================================================================
+\section{Problemas comunes}
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{5.2cm} X}
+\toprule
+Síntoma & Qué hacer \\
+\midrule
+El portal tarda o dice \emph{``La base de datos se está iniciando''} & La base serverless estaba en pausa. Espera 30--60 s y recarga. \\
+Sale \emph{``Tu sesión terminó''} & La sesión expiró (30 min sin actividad si no marcaste ``Mantener la sesión'') o la cuenta se desactivó. Vuelve a entrar. \\
+Foqui responde con mensajes genéricos & Falta o es inválida \texttt{ANTHROPIC\_API\_KEY} en el App Service. \\
+Una cuenta se ve vacía & No tiene datos. Corre \texttt{06\_datos\_demo.py} o usa \texttt{demo2@focus.app}. \\
+Después de desplegar la API sigue la versión anterior & \texttt{az webapp restart -g rg-focus -n focus-api-luisbb27}. \\
+El editor de consultas no deja entrar & Agrega tu IP en el firewall del servidor SQL (\menu{Redes}). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\end{document}

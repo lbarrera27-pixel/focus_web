@@ -19,3 +19,6 @@ serverless/local.settings.json
 
 # Configuración local de Claude Code
 .claude/
+
+# Archivos de entrega generados (ZIP y PDF)
+entrega/
