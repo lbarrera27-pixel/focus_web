@@ -157,7 +157,9 @@ def test_pausas_septima_pausa(client, u1, u2):
     assert len(client.get("/pausas", headers=u1).json()) == 6
 
 
-def test_planes_y_ajustes(client, u1):
+def test_planes_y_ajustes(client):
+    # Usuario propio: las pausas ignoradas de otras pruebas cambiarían el cálculo difuso de la semana
+    u1 = registrar(client, "planes@focus.app")
     r = client.post("/planes", headers=u1, json={"fecha_inicio": "2026-10-19", "limite_base": 240})
     assert r.status_code == 201 and r.json()["numero"] == 1
     assert client.get("/planes/activo", headers=u1).json()["numero"] == 1
