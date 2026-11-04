@@ -94,10 +94,17 @@ function telemetria({ tokens, eventos, estadisticas }) {
 // Colores de los clústeres en el orden del diseño (A ámbar, B rojo, C verde)
 export const COLORES_CLUSTER = ['#f59e0b', '#ef4444', '#10b981']
 
-function clusteres({ eventos, apps, desde, hasta }) {
+// Grupos de "Tus patrones de uso" según los minutos por sesión (app en un día). Los cortes separan
+// las entradas breves (≤ 3 min), las sesiones de pocos minutos repetidas (3–8 min) y las largas (> 8 min).
+// Se guardan en orden de duración para asignar el grupo; la leyenda los muestra rápidas, largas, cortas.
+const GRUPOS_SESION = [
+  { id: 'rapidas', hasta: 3, color: COLORES_CLUSTER[0] },
+  { id: 'cortas', hasta: 8, color: COLORES_CLUSTER[2] },
+  { id: 'largas', hasta: Infinity, color: COLORES_CLUSTER[1] },
+]
+
+function clusteres({ eventos, desde, hasta }) {
   const delPeriodo = eventos.filter((e) => enRango(e.inicio, desde, hasta))
-  const categoria = (n) => apps.find((a) => a.numero === n)?.categoria || 'sin categoría'
-  const nombre = (n) => apps.find((a) => a.numero === n)?.nombre || `App ${n}`
 
   // Cada punto es una app en un día: aperturas de ese día y duración media de sus sesiones
   const porAppDia = new Map()
@@ -109,27 +116,23 @@ function clusteres({ eventos, apps, desde, hasta }) {
     porAppDia.set(clave, a)
   }
 
-  // Un clúster por categoría (las 3 con más aperturas)
-  const totales = new Map()
-  for (const a of porAppDia.values()) totales.set(categoria(a.app_numero), (totales.get(categoria(a.app_numero)) ?? 0) + a.aperturas)
-  const top = [...totales.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
-  const total = delPeriodo.length || 1
-
-  const grupos = top.map(([cat, aperturas], i) => ({
-    letra: String.fromCharCode(65 + i),
-    nombre: cat.charAt(0).toUpperCase() + cat.slice(1),
-    porcentaje: Math.round((aperturas / total) * 100),
-    color: COLORES_CLUSTER[i],
-  }))
-  const puntos = [...porAppDia.values()]
-    .map((a) => ({
+  // Tres grupos por cómo son las sesiones (minutos por sesión), sin importar el tipo de app
+  const puntos = [...porAppDia.values()].map((a) => {
+    const duracionMedia = minutos(a.segundos) / a.aperturas
+    return {
       id: `${a.app_numero}|${a.dia}`,
-      app: `${nombre(a.app_numero)} · ${a.dia}`,
+      dia: a.dia,
       aperturas: a.aperturas,
-      duracionMedia: minutos(a.segundos) / a.aperturas,
-      grupo: top.findIndex(([cat]) => cat === categoria(a.app_numero)),
-    }))
-    .filter((p) => p.grupo >= 0)
+      duracionMedia,
+      grupo: GRUPOS_SESION.findIndex((g) => duracionMedia < g.hasta),
+    }
+  })
+  const total = delPeriodo.length || 1
+  const grupos = GRUPOS_SESION.map((g, i) => {
+    const pts = puntos.filter((p) => p.grupo === i)
+    const aperturas = pts.reduce((s, p) => s + p.aperturas, 0)
+    return { ...g, letra: String.fromCharCode(65 + i), porcentaje: Math.round((aperturas / total) * 100), puntos: pts.length }
+  })
   return { total: delPeriodo.length, grupos, puntos }
 }
 

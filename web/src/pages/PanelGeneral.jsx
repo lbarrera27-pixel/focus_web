@@ -10,7 +10,6 @@ import iconoFlecha from '../assets/icons/arrow-head.svg'
 import iconoCerebro from '../assets/icons/brain.svg'
 import iconoPulso from '../assets/icons/pulse.svg'
 import { fechaISO, formatoDuracion } from '../data/panel.js'
-import { GRUPO_CATEGORIA } from '../data/ajustes.js'
 import { ahoraEnZona, hora } from '../data/preferencias.js'
 import Ayuda, { useGlobo } from '../components/web/Ayuda.jsx'
 import './PanelGeneral.css'
@@ -87,15 +86,14 @@ const ANCHO_D = 568
 const ALTO_D = 151
 const EJE = { izq: 103, der: 487, arr: 13, abj: 129 }
 
-// Nombre en lenguaje cotidiano para cada grupo, según la categoría de sus apps
-const HABITOS = {
-  social: { titulo: 'Sesiones rápidas · Redes sociales', resumen: 'entradas rápidas a redes', detalle: 'Uso frecuente de pocos minutos.' },
-  mensajeria: { titulo: 'Revisión frecuente · Mensajes', resumen: 'revisiones breves de mensajes', detalle: 'Aperturas constantes y breves.' },
-  video: { titulo: 'Sesiones largas · Streaming y videos', resumen: 'sesiones largas de video', detalle: 'Pocas aperturas, pero de larga duración.' },
-  juegos: { titulo: 'Partidas · Juegos', resumen: 'partidas de juegos', detalle: 'Sesiones de juego de duración media.' },
+// Cada grupo se describe solo por cómo son sus sesiones (sin tipos de app)
+const SESIONES = {
+  rapidas: { titulo: 'Sesiones rápidas', tipo: 'Sesión rápida', resumen: 'entradas breves de pocos minutos' },
+  largas: { titulo: 'Sesiones largas', tipo: 'Sesión prolongada', resumen: 'períodos continuos y prolongados de uso' },
+  cortas: { titulo: 'Sesiones cortas recurrentes', tipo: 'Sesión corta', resumen: 'consultas rápidas y repetidas' },
 }
-const habito = (nombre) =>
-  HABITOS[GRUPO_CATEGORIA(nombre)] ?? { titulo: `Otras apps · ${nombre}`, resumen: `uso de ${nombre.toLowerCase()}`, detalle: 'Apps de otra categoría.' }
+// Orden de la leyenda: amarillo, rojo, verde
+const ORDEN_LEYENDA = ['rapidas', 'largas', 'cortas']
 
 const promedio = (v) => (v.length ? v.reduce((s, x) => s + x, 0) / v.length : 0)
 const minutosTexto = (m) => (m >= 1 ? `${m.toFixed(1)} min` : `${Math.round(m * 60)} s`)
@@ -112,7 +110,7 @@ function ClusterCard({ c }) {
   // Resumen de cada grupo: minutos promedio por sesión y veces abiertas al día (por app)
   const grupos = c.grupos.map((g, i) => {
     const pts = c.puntos.filter((p) => p.grupo === i)
-    return { ...g, ...habito(g.nombre), minSesion: promedio(pts.map((p) => p.duracionMedia)), aperturasDia: promedio(pts.map((p) => p.aperturas)) }
+    return { ...g, ...SESIONES[g.id], minSesion: promedio(pts.map((p) => p.duracionMedia)), aperturasDia: promedio(pts.map((p) => p.aperturas)) }
   })
   const elipses = grupos.map((g, i) => {
     const pts = c.puntos.filter((p) => p.grupo === i).map(pos)
@@ -131,25 +129,29 @@ function ClusterCard({ c }) {
       ry: Math.min(desv(ys, cy) * 1.2 + 12, (EJE.abj - EJE.arr) / 2.6),
     }
   })
-  const resumenGrupo = (g) => (
+  // Globo: solo tipo de sesión, duración estimada y frecuencia
+  const detalleSesion = (tipo, duracion, frecuencia) => (
     <>
-      <b>{g.titulo}</b>
-      <span>{g.detalle}</span>
-      <span className="ayuda-globo__fila">Minutos por sesión <b>{minutosTexto(g.minSesion)}</b></span>
-      <span className="ayuda-globo__fila">Veces abierta al día <b>{g.aperturasDia.toFixed(1)}</b></span>
+      <span className="ayuda-globo__fila">Tipo de sesión <b>{tipo}</b></span>
+      <span className="ayuda-globo__fila">Duración estimada <b>{duracion}</b></span>
+      <span className="ayuda-globo__fila">Frecuencia <b>{frecuencia}</b></span>
     </>
   )
+  const resumenGrupo = (g) =>
+    g.puntos
+      ? detalleSesion(g.titulo, `${minutosTexto(g.minSesion)} en promedio`, `${g.aperturasDia.toFixed(1)} aperturas al día`)
+      : detalleSesion(g.titulo, '—', 'Sin sesiones de este tipo en el periodo')
 
   return (
     <Card
       className="card--clusteres card--legible"
-      etiqueta="HÁBITOS POR APLICACIÓN · PERIODO ELEGIDO"
+      etiqueta="TUS SESIONES · PERIODO ELEGIDO"
       titulo="Tus patrones de uso"
       ayuda={
         <Ayuda
           titulo="Tus patrones de uso"
-          que="Agrupa tus apps según cómo las usas: cada punto es una app en un día. Más arriba = la abriste más veces; más a la derecha = tus sesiones duraron más."
-          accion="Si un grupo de sesiones largas ocupa mucho, pon un límite de tiempo a esas apps; si son muchas entradas rápidas, activa la pausa antes de abrirlas."
+          que="Agrupa tus sesiones de uso según cuánto tiempo duran y cuántas veces abres el dispositivo, ayudándote a identificar si tu uso es compulsivo o prolongado."
+          accion="Muchas sesiones rápidas suelen ser uso compulsivo: prueba la pausa antes de abrir. Si dominan las sesiones largas, ponte un límite de tiempo por sesión."
         />
       }
       extra={
@@ -160,7 +162,7 @@ function ClusterCard({ c }) {
       }
     >
       <div className="clusteres">
-        <svg className="dispersion" viewBox={`0 0 ${ANCHO_D} ${ALTO_D}`} role="img" aria-label="Tus apps según cuántas veces las abres y cuánto duran tus sesiones">
+        <svg className="dispersion" viewBox={`0 0 ${ANCHO_D} ${ALTO_D}`} role="img" aria-label="Tus sesiones según cuántas veces abres el dispositivo y cuántos minutos duran">
           {[0.25, 0.5, 0.75].map((f) => (
             <line key={f} x1={EJE.izq} x2={EJE.der} y1={EJE.arr + f * (EJE.abj - EJE.arr)} y2={EJE.arr + f * (EJE.abj - EJE.arr)} stroke="#edf1f5" />
           ))}
@@ -180,31 +182,22 @@ function ClusterCard({ c }) {
           {c.puntos.map((p) => {
             const { x, y, r } = pos(p)
             const g = grupos[p.grupo]
-            const [app, fecha] = p.app.split(' · ')
-            const dia = new Date(`${fecha}T00:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '')
             return (
               <circle key={p.id} className="pg-punto" cx={x} cy={y} r={r} fill={g.color}
-                {...props(
-                  <>
-                    <b>{app}</b>
-                    <span>{g.titulo} · {dia}</span>
-                    <span className="ayuda-globo__fila">Minutos por sesión <b>{minutosTexto(p.duracionMedia)}</b></span>
-                    <span className="ayuda-globo__fila">Veces abierta ese día <b>{p.aperturas}</b></span>
-                  </>,
-                )}
+                {...props(detalleSesion(g.tipo, minutosTexto(p.duracionMedia), `${p.aperturas} ${p.aperturas === 1 ? 'apertura' : 'aperturas'}`))}
               />
             )
           })}
           <text x="96" y="70" textAnchor="end" className="dispersion__eje">Veces abierta</text>
-          <text x="295" y="148" textAnchor="middle" className="dispersion__eje">Minutos por sesión →</text>
+          <text x="295" y="148" textAnchor="middle" className="dispersion__eje">Duración de la sesión (minutos) →</text>
           {!c.puntos.length && (
             <text x="295" y="72" textAnchor="middle" className="dispersion__vacio">Sin uso en el periodo</text>
           )}
         </svg>
 
         <ul className="leyenda-clusteres">
-          {grupos.map((g) => (
-            <li key={g.letra} tabIndex={0} {...props(resumenGrupo(g))}>
+          {ORDEN_LEYENDA.map((id) => grupos.find((g) => g.id === id)).map((g) => (
+            <li key={g.id} tabIndex={0} {...props(resumenGrupo(g))}>
               <span className="punto-color" style={{ background: g.color }} />
               <span>
                 <b>{g.titulo}</b>
@@ -807,7 +800,7 @@ function FrictionCard({ f }) {
 
 const TARJETAS = [
   { id: 'telemetria', claves: 'telemetria android dispositivo heartbeat pipeline', C: TelemetryCard, prop: 't', dato: 'telemetria' },
-  { id: 'clusteres', claves: 'patrones habitos clusteres comportamiento aperturas redes mensajes videos', C: ClusterCard, prop: 'c', dato: 'clusteres' },
+  { id: 'clusteres', claves: 'patrones sesiones rapidas largas cortas aperturas duracion clusteres', C: ClusterCard, prop: 'c', dato: 'clusteres' },
   { id: 'riesgo', claves: 'riesgo recaida hora tentacion recomendacion vulnerable', C: RiskCard, prop: 'r', dato: 'riesgo' },
   { id: 'semanal', claves: 'semanal habito tiempo objetivo plan', C: WeeklyCard, prop: 's', dato: 'semanal' },
   { id: 'uso', claves: 'uso frecuencia sesiones apps categorias', C: UsageCard, prop: 'u', dato: 'uso' },
