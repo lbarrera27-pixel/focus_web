@@ -47,25 +47,37 @@
 .card--legible .ventana small { font-size: 11px; line-height: 15px; }
 
 /* Reloj de 24 horas */
-.pg-reloj-caja { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; column-gap: 18px; }
+/* El reloj y su leyenda alineados con el título de la tarjeta; la barra de estado ocupa todo el ancho */
+.card--legible .riesgo__mapa.pg-reloj-caja {
+  display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); align-items: center; column-gap: 20px; row-gap: 12px;
+}
 .pg-reloj-caja .ventana { grid-column: 1 / -1; }
 .pg-reloj { display: block; width: 100%; max-width: 300px; height: auto; overflow: visible; }
-.pg-reloj__guia { fill: none; stroke: #e2e8f0; stroke-dasharray: 2 4; }
-.pg-reloj__guia--max { stroke: #fed7aa; }
-.pg-reloj__sector { stroke: #fff; stroke-width: 1.5; cursor: help; outline: none; transition: filter 0.12s, transform 0.12s; transform-origin: 150px 150px; }
-.pg-reloj__sector:hover, .pg-reloj__sector:focus-visible, .pg-reloj__sector--activo { stroke: #0f172a; stroke-width: 2; }
-.pg-reloj__sector:hover, .pg-reloj__sector:focus-visible { transform: scale(1.04); filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.2)); }
-.pg-reloj__valor { font: 700 9px 'Inter', system-ui, sans-serif; pointer-events: none; }
-.pg-reloj__hora { font: 600 11px 'Inter', system-ui, sans-serif; fill: #64748b; }
+.pg-reloj__guia { fill: none; stroke: #cbd5e1; stroke-dasharray: 2 4; }
+.pg-reloj__guia--max { stroke: #fca5a5; }
+/* Borde fino del color de cada nivel: las horas bajas se distinguen sobre el fondo blanco */
+.pg-reloj__sector { stroke-width: 1; cursor: pointer; outline: none; transform-origin: 150px 150px; transition: transform 0.15s ease-out, filter 0.15s ease-out; }
+.pg-reloj__sector:hover, .pg-reloj__sector:focus-visible, .pg-reloj__sector--activo {
+  stroke: #0f172a; stroke-width: 1.5; transform: scale(1.05); filter: drop-shadow(0 3px 5px rgba(15, 23, 42, 0.25));
+}
+.pg-reloj__valor { font: 700 9.5px 'Inter', system-ui, sans-serif; pointer-events: none; }
+.pg-reloj__hora { font: 700 11px 'Inter', system-ui, sans-serif; fill: #475569; }
 .pg-reloj__centro { fill: #fff; stroke: #e2e8f0; }
-.pg-reloj__centro-valor { font: 700 20px 'Inter', system-ui, sans-serif; fill: #0f172a; }
-.pg-reloj__centro-hora { font: 600 12px 'Inter', system-ui, sans-serif; fill: #b45309; }
-.pg-reloj__centro-pie { font: 400 9px 'Inter', system-ui, sans-serif; fill: #64748b; }
+.pg-reloj__centro-hora { font: 600 12px 'Inter', system-ui, sans-serif; fill: #334155; }
+.pg-reloj__centro-valor { font: 800 24px 'Inter', system-ui, sans-serif; }
+.pg-reloj__centro-riesgo { font: 700 11px 'Inter', system-ui, sans-serif; }
+.pg-reloj__centro-pie { font: 600 9.5px 'Inter', system-ui, sans-serif; fill: #64748b; letter-spacing: 0.3px; }
+.pg-reloj__insignia { font: 700 8.5px 'Inter', system-ui, sans-serif; }
 .pg-reloj-lado { display: flex; flex-direction: column; gap: 14px; }
-.escala--vertical { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 3px; }
-.card--legible .escala--vertical span { width: 26px; height: 10px; border-radius: 3px; }
+.pg-reloj-leyenda { display: flex; flex-direction: column; gap: 6px; }
+.pg-reloj-leyenda li { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; }
+.pg-reloj-leyenda i { width: 16px; height: 12px; border: 1px solid; border-radius: 4px; }
+.pg-reloj-leyenda b { color: #0f172a; }
+.pg-reloj-leyenda span { color: #64748b; font-variant-numeric: tabular-nums; }
 .pg-reloj-nota { font-size: 12px; line-height: 17px; color: #475569; }
 .pg-reloj-nota b { color: #0f172a; }
+.pg-reloj-estado { min-height: 50px; padding: 9px 12px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
+.pg-reloj-estado .punto-color { width: 10px; height: 10px; border-radius: 50%; }
 @media (prefers-reduced-motion: reduce) { .pg-reloj__sector { transition: none; } }
 
 .pg-recomendacion {

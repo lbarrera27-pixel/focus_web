@@ -9,7 +9,7 @@ import iconoAnalytics from '../assets/icons/analytics.svg'
 import iconoFlecha from '../assets/icons/arrow-head.svg'
 import iconoCerebro from '../assets/icons/brain.svg'
 import iconoPulso from '../assets/icons/pulse.svg'
-import { formatoDuracion, nivelRiesgo } from '../data/panel.js'
+import { formatoDuracion } from '../data/panel.js'
 import { GRUPO_CATEGORIA } from '../data/ajustes.js'
 import { horas } from '../data/plan.js'
 import { hora } from '../data/preferencias.js'
@@ -244,11 +244,22 @@ function sector(h, valor) {
   }
 }
 
-function RelojRiesgo({ valores, props }) {
+// Niveles del reloj: colores con contraste sobre fondo blanco y texto legible encima de cada uno
+const NIVELES_RELOJ = [
+  { hasta: 25, nombre: 'Riesgo bajo', fondo: '#d1fae5', texto: '#065f46', borde: '#6ee7b7' },
+  { hasta: 50, nombre: 'Riesgo moderado', fondo: '#fbbf24', texto: '#451a03', borde: '#f59e0b' },
+  { hasta: 75, nombre: 'Riesgo alto', fondo: '#f97316', texto: '#431407', borde: '#ea580c' },
+  { hasta: 101, nombre: 'Riesgo crítico', fondo: '#dc2626', texto: '#ffffff', borde: '#b91c1c' },
+]
+const nivelReloj = (v) => NIVELES_RELOJ.find((n) => v <= n.hasta) ?? NIVELES_RELOJ[3]
+
+// Sin globo flotante: el detalle va en el centro del reloj y en la barra de estado de abajo
+function RelojRiesgo({ valores, activa, onActiva }) {
   const pico = valores.indexOf(Math.max(...valores))
-  const [activa, setActiva] = useState(null)
-  const h = activa ?? pico
   const hayDatos = Math.max(...valores) > 0
+  const elegida = activa ?? pico
+  const nivel = nivelReloj(valores[elegida])
+  const anchoInsignia = 12 + nivel.nombre.length * 5.6
   return (
     <svg viewBox="0 0 300 300" className="pg-reloj" role="list" aria-label="Reloj de 24 horas con el nivel de tentación de cada hora">
       {/* Guías: uso bajo y máximo */}
@@ -256,23 +267,17 @@ function RelojRiesgo({ valores, props }) {
       <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.base + RELOJ.extra} className="pg-reloj__guia pg-reloj__guia--max" />
       {valores.map((v, hh) => {
         const { d, exterior } = sector(hh, v)
-        const n = nivelRiesgo(v)
-        const p = props(
-          <>
-            <span className="ayuda-globo__fila">Hora <b>{hora(hh)}</b></span>
-            <span className="ayuda-globo__fila">Nivel de tentación/riesgo <b>{v} %</b></span>
-          </>,
-        )
+        const n = nivelReloj(v)
         const [tx, ty] = punto(exterior - 12, anguloHora(hh))
         return (
           <g key={hh} role="listitem">
-            <path d={d} fill={n.fondo} tabIndex={0} className={`pg-reloj__sector${hh === h ? ' pg-reloj__sector--activo' : ''}`}
-              aria-label={`${hora(hh)}: nivel de tentación ${v} %`}
-              {...p}
-              onMouseEnter={(e) => { p.onMouseEnter(e); setActiva(hh) }}
-              onMouseLeave={() => { p.onMouseLeave(); setActiva(null) }}
-              onFocus={(e) => { p.onFocus(e); setActiva(hh) }}
-              onBlur={() => { p.onBlur(); setActiva(null) }}
+            <path d={d} fill={n.fondo} stroke={n.borde} tabIndex={0}
+              className={`pg-reloj__sector${hh === activa ? ' pg-reloj__sector--activo' : ''}`}
+              aria-label={`${hora(hh)}: ${v} % de tentación, ${n.nombre.toLowerCase()}`}
+              onMouseEnter={() => onActiva(hh)}
+              onMouseLeave={() => onActiva(null)}
+              onFocus={() => onActiva(hh)}
+              onBlur={() => onActiva(null)}
             />
             {/* Porcentaje visible en las horas que más destacan */}
             {v >= 50 && <text x={tx} y={ty + 3.5} textAnchor="middle" className="pg-reloj__valor" fill={n.texto} aria-hidden="true">{v}</text>}
@@ -284,16 +289,23 @@ function RelojRiesgo({ valores, props }) {
         const [x, y] = punto(RELOJ.base + RELOJ.extra + 14, anguloHora(hh))
         return <text key={hh} x={x} y={y + 4} textAnchor="middle" className="pg-reloj__hora" aria-hidden="true">{String(hh).padStart(2, '0')}h</text>
       })}
-      {/* Centro: detalle de la hora elegida (o de la más difícil) */}
-      <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.interior - 4} className="pg-reloj__centro" />
-      {hayDatos ? (
+      {/* Centro fijo: pico del día en reposo; la hora elegida al pasar el ratón o el teclado */}
+      <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.interior - 3} className="pg-reloj__centro" />
+      {!hayDatos ? (
+        <text x={RELOJ.c} y={RELOJ.c + 4} textAnchor="middle" className="pg-reloj__centro-pie" aria-hidden="true">Sin datos</text>
+      ) : activa == null ? (
         <g aria-hidden="true">
-          <text x={RELOJ.c} y={RELOJ.c - 4} textAnchor="middle" className="pg-reloj__centro-valor">{valores[h]} %</text>
-          <text x={RELOJ.c} y={RELOJ.c + 13} textAnchor="middle" className="pg-reloj__centro-hora">{hora(h)}</text>
-          <text x={RELOJ.c} y={RELOJ.c + 26} textAnchor="middle" className="pg-reloj__centro-pie">{activa == null ? 'hora más difícil' : 'tentación'}</text>
+          <text x={RELOJ.c} y={RELOJ.c - 16} textAnchor="middle" className="pg-reloj__centro-pie">Pico diario</text>
+          <text x={RELOJ.c} y={RELOJ.c + 2} textAnchor="middle" className="pg-reloj__centro-hora">{hora(pico)} hrs</text>
+          <text x={RELOJ.c} y={RELOJ.c + 20} textAnchor="middle" className="pg-reloj__centro-riesgo" fill={nivelReloj(valores[pico]).borde}>{valores[pico]}% de riesgo</text>
         </g>
       ) : (
-        <text x={RELOJ.c} y={RELOJ.c + 4} textAnchor="middle" className="pg-reloj__centro-pie" aria-hidden="true">Sin datos</text>
+        <g aria-hidden="true">
+          <text x={RELOJ.c} y={RELOJ.c - 17} textAnchor="middle" className="pg-reloj__centro-hora">{hora(activa)} hrs</text>
+          <text x={RELOJ.c} y={RELOJ.c + 8} textAnchor="middle" className="pg-reloj__centro-valor" fill={nivel.borde}>{valores[activa]}%</text>
+          <rect x={RELOJ.c - anchoInsignia / 2} y={RELOJ.c + 15} width={anchoInsignia} height="15" rx="7.5" fill={nivel.fondo} />
+          <text x={RELOJ.c} y={RELOJ.c + 25.5} textAnchor="middle" className="pg-reloj__insignia" fill={nivel.texto}>{nivel.nombre}</text>
+        </g>
       )}
     </svg>
   )
@@ -307,7 +319,8 @@ const PAUSA_RECOMENDADA = {
 }
 
 function RiskCard({ r }) {
-  const { props, globo } = useGlobo()
+  // Hora elegida en el reloj (ratón o teclado); null = reposo
+  const [activa, setActiva] = useState(null)
   const [inicio] = r.conDatos ? r.ventana.split('–') : ['23:00']
   const [hh, mm] = inicio.split(':').map(Number)
   const desde = hora(hh, mm)
@@ -331,25 +344,44 @@ function RiskCard({ r }) {
     >
       <div className="riesgo">
         <div className="riesgo__mapa pg-reloj-caja">
-          <RelojRiesgo valores={r.valores} props={props} />
+          <RelojRiesgo valores={r.valores} activa={activa} onActiva={setActiva} />
           <div className="pg-reloj-lado">
-            <div className="escala escala--vertical" aria-hidden="true">
-              <small>Mucha tentación</small>
-              {['#c2410c', '#fb923c', '#fed7aa', '#fef3c7', '#f1f5f9'].map((c) => (
-                <span key={c} style={{ background: c }} />
+            <ul className="pg-reloj-leyenda" aria-label="Niveles de riesgo">
+              {[...NIVELES_RELOJ].reverse().map((n, i, lista) => (
+                <li key={n.nombre}>
+                  <i style={{ background: n.fondo, borderColor: n.borde }} />
+                  <b>{n.nombre.replace('Riesgo ', '').replace(/^./, (c) => c.toUpperCase())}</b>
+                  <span>{i === lista.length - 1 ? '0' : NIVELES_RELOJ[lista.length - 2 - i].hasta + 1}–{Math.min(100, n.hasta)} %</span>
+                </li>
               ))}
-              <small>Poca</small>
-            </div>
+            </ul>
             <p className="pg-reloj-nota">
               Cada segmento es una hora. Mientras <b>más sale hacia afuera y más oscuro</b>, más usas el celular a esa hora.
             </p>
           </div>
-          <div className="ventana">
-            <span className="punto-color" style={{ background: '#ea580c' }} />
-            <span>
-              <b>{r.conDatos ? `Tu ventana más difícil: ${desde} a ${hasta}` : 'Aún no hay una hora difícil'}</b>
-              <small>{r.conDatos ? 'Son las dos horas seguidas con más uso.' : 'Se calcula con tu uso de las apps.'}</small>
-            </span>
+          {/* Barra de estado fija: detalle de la hora elegida, o la ventana más difícil en reposo */}
+          <div className="ventana pg-reloj-estado" aria-live="polite">
+            {activa == null ? (
+              <>
+                <span className="punto-color" style={{ background: '#dc2626' }} />
+                <span>
+                  <b>{r.conDatos ? `Tu ventana más difícil: ${desde} a ${hasta}` : 'Aún no hay una hora difícil'}</b>
+                  <small>{r.conDatos ? 'Son las dos horas seguidas con más uso. Pasa el ratón por el reloj para ver cada hora.' : 'Se calcula con tu uso de las apps.'}</small>
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="punto-color" style={{ background: nivelReloj(r.valores[activa]).fondo, boxShadow: `0 0 0 1px ${nivelReloj(r.valores[activa]).borde}` }} />
+                <span>
+                  <b>{hora(activa)} a {hora((activa + 1) % 24)} · {r.valores[activa]} % · {nivelReloj(r.valores[activa]).nombre}</b>
+                  <small>
+                    {r.valores[activa] === 100
+                      ? 'Es tu hora de más uso del periodo.'
+                      : `Usas el celular un ${r.valores[activa]} % de lo que lo usas en tu hora más difícil.`}
+                  </small>
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -378,7 +410,6 @@ function RiskCard({ r }) {
           )}
         </aside>
       </div>
-      {globo}
     </Card>
   )
 }
