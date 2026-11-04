@@ -161,7 +161,7 @@ function ClusterCard({ c }) {
         </div>
       }
     >
-      <div className="clusteres">
+      <div className="clusteres pg-patrones">
         <svg className="dispersion" viewBox={`0 0 ${ANCHO_D} ${ALTO_D}`} role="img" aria-label="Tus sesiones según cuántas veces abres el dispositivo y cuántos minutos duran">
           {[0.25, 0.5, 0.75].map((f) => (
             <line key={f} x1={EJE.izq} x2={EJE.der} y1={EJE.arr + f * (EJE.abj - EJE.arr)} y2={EJE.arr + f * (EJE.abj - EJE.arr)} stroke="#edf1f5" />
@@ -195,14 +195,12 @@ function ClusterCard({ c }) {
           )}
         </svg>
 
-        <ul className="leyenda-clusteres">
+        {/* Leyenda compacta debajo de la gráfica; el detalle va en el globo */}
+        <ul className="pg-patrones__leyenda">
           {ORDEN_LEYENDA.map((id) => grupos.find((g) => g.id === id)).map((g) => (
-            <li key={g.id} tabIndex={0} {...props(resumenGrupo(g))}>
-              <span className="punto-color" style={{ background: g.color }} />
-              <span>
-                <b>{g.titulo}</b>
-                <small><strong>{g.porcentaje} %</strong> de tus aperturas: {g.resumen}</small>
-              </span>
+            <li key={g.id} tabIndex={0} aria-label={`${g.titulo}: ${g.porcentaje} % de tus aperturas`} {...props(resumenGrupo(g))}>
+              <i style={{ background: g.color }} />
+              {g.titulo} <b>({g.porcentaje}%)</b>
             </li>
           ))}
         </ul>
