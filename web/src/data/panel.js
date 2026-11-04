@@ -179,7 +179,7 @@ function semanal({ eventos, plan, ajustes, hasta }) {
   const ultimoAjuste = [...(ajustes ?? [])].sort((a, b) => b.semana - a.semana)[0]
   const objetivo = ultimoAjuste?.uso_meta ?? plan?.limite_base ?? null
 
-  const barras = dias.map((d) => ({ dia: DIAS_SEMANA[d.getDay()], uso: usoPorDia.get(fechaISO(d)), objetivo }))
+  const barras = dias.map((d) => ({ dia: DIAS_SEMANA[d.getDay()], fecha: fechaISO(d), uso: usoPorDia.get(fechaISO(d)), objetivo }))
   const promedio = barras.reduce((s, b) => s + b.uso, 0) / 7
   const diferencia = objetivo ? promedio - objetivo : null
   return {

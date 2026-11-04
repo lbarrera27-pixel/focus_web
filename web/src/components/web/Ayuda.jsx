@@ -7,20 +7,23 @@ import './Ayuda.css'
 
 const MARGEN = 8
 
-// Globo flotante junto a `ancla` (DOMRect). Abajo si cabe; si no, arriba. Nunca se sale de la ventana.
-export function Globo({ ancla, id, children, ancho = 260 }) {
+// Globo flotante junto a `ancla` (DOMRect). Abajo si cabe; si no, arriba (o al revés con arriba=true).
+// Nunca se sale de la ventana.
+export function Globo({ ancla, id, children, ancho = 260, arriba = false }) {
   const caja = useRef(null)
   const [pos, setPos] = useState({ left: -9999, top: -9999 })
 
   useLayoutEffect(() => {
     if (!ancla || !caja.current) return
     const { offsetWidth: w, offsetHeight: h } = caja.current
-    const abajo = ancla.bottom + MARGEN + h <= window.innerHeight
+    const cabeArriba = ancla.top - MARGEN - h >= 0
+    const cabeAbajo = ancla.bottom + MARGEN + h <= window.innerHeight
+    const abajo = arriba ? !cabeArriba && cabeAbajo : cabeAbajo
     const top = abajo ? ancla.bottom + MARGEN : Math.max(MARGEN, ancla.top - MARGEN - h)
     const centro = ancla.left + ancla.width / 2
     const left = Math.min(Math.max(MARGEN, centro - w / 2), window.innerWidth - w - MARGEN)
     setPos({ left, top })
-  }, [ancla, children])
+  }, [ancla, children, arriba])
 
   if (!ancla) return null
   return createPortal(
@@ -32,7 +35,8 @@ export function Globo({ ancla, id, children, ancho = 260 }) {
 }
 
 // Para gráficas: mostrar(elemento, contenido) al pasar el ratón o enfocar; ocultar() al salir
-export function useGlobo() {
+// arriba: el globo se abre encima del elemento si cabe (p. ej. sobre la columna de una barra)
+export function useGlobo({ arriba = false } = {}) {
   const id = useId()
   const [estado, setEstado] = useState(null)
   const mostrar = useCallback((elemento, contenido) => setEstado({ elemento, ancla: elemento.getBoundingClientRect(), contenido }), [])
@@ -61,7 +65,7 @@ export function useGlobo() {
     'aria-describedby': estado ? id : undefined,
   })
 
-  const globo = estado && <Globo ancla={estado.ancla} id={id}>{estado.contenido}</Globo>
+  const globo = estado && <Globo ancla={estado.ancla} id={id} arriba={arriba}>{estado.contenido}</Globo>
   return { props, globo, ocultar }
 }
 
