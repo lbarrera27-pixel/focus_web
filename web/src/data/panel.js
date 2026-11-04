@@ -214,7 +214,14 @@ function uso({ eventos, apps, desde, hasta }) {
   const finVentana = new Date(ultimo)
   finVentana.setMinutes(0, 0, 0)
   const inicioVentana = finVentana.getTime() - 11 * 3_600_000
-  const frecuencia = Array.from({ length: 12 }, (_, i) => ({ hora: new Date(inicioVentana + i * 3_600_000).getHours(), sesiones: 0 }))
+  // Promedio habitual de cada hora del día en el periodo (aperturas por día a esa hora), para comparar
+  const diasPeriodo = Math.max(1, Math.round((new Date(`${hasta}T00:00:00`) - new Date(`${desde}T00:00:00`)) / DIA_MS) + 1)
+  const porHoraDelDia = Array(24).fill(0)
+  for (const e of delPeriodo) porHoraDelDia[new Date(e.inicio).getHours()] += 1
+  const frecuencia = Array.from({ length: 12 }, (_, i) => {
+    const hora = new Date(inicioVentana + i * 3_600_000).getHours()
+    return { hora, sesiones: 0, promedio: porHoraDelDia[hora] / diasPeriodo }
+  })
   for (const e of delPeriodo) {
     const i = Math.floor((new Date(e.inicio).getTime() - inicioVentana) / 3_600_000)
     if (i >= 0 && i < 12) frecuencia[i].sesiones += 1

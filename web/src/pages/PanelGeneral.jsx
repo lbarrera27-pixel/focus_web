@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Card, { Insignia } from '../components/Card.jsx'
 import Icono from '../components/Icono.jsx'
 import iconoTelefono from '../assets/icons/phone.svg'
@@ -221,6 +222,83 @@ function ClusterCard({ c }) {
 
 // ---------- Mapa de riesgo por hora ----------
 
+// Reloj radial de 24 h: 00 arriba, 06 a la derecha, 12 abajo, 18 a la izquierda (sentido del reloj)
+const RELOJ = { c: 150, interior: 50, base: 74, extra: 56 }
+const anguloHora = (h) => ((h / 24) * 360 - 90) * (Math.PI / 180)
+const punto = (radio, ang) => [RELOJ.c + radio * Math.cos(ang), RELOJ.c + radio * Math.sin(ang)]
+
+// Sector de anillo centrado en la hora h; más largo cuanto mayor es el valor
+function sector(h, valor) {
+  const exterior = RELOJ.base + (valor / 100) * RELOJ.extra
+  const medio = (7.5 - 0.8) * (Math.PI / 180)   // media hora menos una separación
+  const a0 = anguloHora(h) - medio
+  const a1 = anguloHora(h) + medio
+  const [x0, y0] = punto(RELOJ.interior, a0)
+  const [x1, y1] = punto(exterior, a0)
+  const [x2, y2] = punto(exterior, a1)
+  const [x3, y3] = punto(RELOJ.interior, a1)
+  const f = (n) => n.toFixed(2)
+  return {
+    d: `M${f(x0)} ${f(y0)} L${f(x1)} ${f(y1)} A${exterior} ${exterior} 0 0 1 ${f(x2)} ${f(y2)} L${f(x3)} ${f(y3)} A${RELOJ.interior} ${RELOJ.interior} 0 0 0 ${f(x0)} ${f(y0)} Z`,
+    exterior,
+  }
+}
+
+function RelojRiesgo({ valores, props }) {
+  const pico = valores.indexOf(Math.max(...valores))
+  const [activa, setActiva] = useState(null)
+  const h = activa ?? pico
+  const hayDatos = Math.max(...valores) > 0
+  return (
+    <svg viewBox="0 0 300 300" className="pg-reloj" role="list" aria-label="Reloj de 24 horas con el nivel de tentación de cada hora">
+      {/* Guías: uso bajo y máximo */}
+      <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.base} className="pg-reloj__guia" />
+      <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.base + RELOJ.extra} className="pg-reloj__guia pg-reloj__guia--max" />
+      {valores.map((v, hh) => {
+        const { d, exterior } = sector(hh, v)
+        const n = nivelRiesgo(v)
+        const p = props(
+          <>
+            <span className="ayuda-globo__fila">Hora <b>{hora(hh)}</b></span>
+            <span className="ayuda-globo__fila">Nivel de tentación/riesgo <b>{v} %</b></span>
+          </>,
+        )
+        const [tx, ty] = punto(exterior - 12, anguloHora(hh))
+        return (
+          <g key={hh} role="listitem">
+            <path d={d} fill={n.fondo} tabIndex={0} className={`pg-reloj__sector${hh === h ? ' pg-reloj__sector--activo' : ''}`}
+              aria-label={`${hora(hh)}: nivel de tentación ${v} %`}
+              {...p}
+              onMouseEnter={(e) => { p.onMouseEnter(e); setActiva(hh) }}
+              onMouseLeave={() => { p.onMouseLeave(); setActiva(null) }}
+              onFocus={(e) => { p.onFocus(e); setActiva(hh) }}
+              onBlur={() => { p.onBlur(); setActiva(null) }}
+            />
+            {/* Porcentaje visible en las horas que más destacan */}
+            {v >= 50 && <text x={tx} y={ty + 3.5} textAnchor="middle" className="pg-reloj__valor" fill={n.texto} aria-hidden="true">{v}</text>}
+          </g>
+        )
+      })}
+      {/* Horas guía por fuera */}
+      {[0, 6, 12, 18].map((hh) => {
+        const [x, y] = punto(RELOJ.base + RELOJ.extra + 14, anguloHora(hh))
+        return <text key={hh} x={x} y={y + 4} textAnchor="middle" className="pg-reloj__hora" aria-hidden="true">{String(hh).padStart(2, '0')}h</text>
+      })}
+      {/* Centro: detalle de la hora elegida (o de la más difícil) */}
+      <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.interior - 4} className="pg-reloj__centro" />
+      {hayDatos ? (
+        <g aria-hidden="true">
+          <text x={RELOJ.c} y={RELOJ.c - 4} textAnchor="middle" className="pg-reloj__centro-valor">{valores[h]} %</text>
+          <text x={RELOJ.c} y={RELOJ.c + 13} textAnchor="middle" className="pg-reloj__centro-hora">{hora(h)}</text>
+          <text x={RELOJ.c} y={RELOJ.c + 26} textAnchor="middle" className="pg-reloj__centro-pie">{activa == null ? 'hora más difícil' : 'tentación'}</text>
+        </g>
+      ) : (
+        <text x={RELOJ.c} y={RELOJ.c + 4} textAnchor="middle" className="pg-reloj__centro-pie" aria-hidden="true">Sin datos</text>
+      )}
+    </svg>
+  )
+}
+
 // Pausa sugerida según qué tan intensa es la hora más difícil
 const PAUSA_RECOMENDADA = {
   1: 'Aviso suave (temporizador de 5 s)',
@@ -245,39 +323,26 @@ function RiskCard({ r }) {
       ayuda={
         <Ayuda
           titulo="Mapa de riesgo por hora"
-          que="Cada casilla es una hora del día. El número es qué tanto usas el celular a esa hora comparado con tu hora de más uso (100 %). Más oscuro = más tentación."
+          que="Un reloj de 24 horas: medianoche arriba, las 06:00 a la derecha, mediodía abajo y las 18:00 a la izquierda. Cada segmento es una hora y su porcentaje es qué tanto usas el celular a esa hora comparado con tu hora de más uso (100 %)."
           accion="Programa el Modo Foco o el horario de descanso justo antes de tus horas más oscuras."
         />
       }
       extra={<Insignia>{r.analizados} usos analizados</Insignia>}
     >
       <div className="riesgo">
-        <div className="riesgo__mapa">
-          <div className="escala" aria-hidden="true">
-            <small>Poca tentación</small>
-            {['#f1f5f9', '#fde68a', '#fb923c', '#c2410c'].map((c) => (
-              <span key={c} style={{ background: c }} />
-            ))}
-            <small>Mucha</small>
-          </div>
-          <div className="horas" role="list" aria-label="Nivel de tentación por hora">
-            {r.valores.map((v, h) => {
-              const n = nivelRiesgo(v)
-              return (
-                <div key={h} role="listitem" tabIndex={0} className="hora" style={{ background: n.fondo, color: n.texto }}
-                  aria-label={`Hora ${hora(h)}, nivel de tentación ${v} %`}
-                  {...props(
-                    <>
-                      <span className="ayuda-globo__fila">Hora <b>{hora(h)}</b></span>
-                      <span className="ayuda-globo__fila">Nivel de tentación/riesgo <b>{v} %</b></span>
-                    </>,
-                  )}
-                >
-                  <b>{v}</b>
-                  <small>{String(h).padStart(2, '0')}</small>
-                </div>
-              )
-            })}
+        <div className="riesgo__mapa pg-reloj-caja">
+          <RelojRiesgo valores={r.valores} props={props} />
+          <div className="pg-reloj-lado">
+            <div className="escala escala--vertical" aria-hidden="true">
+              <small>Mucha tentación</small>
+              {['#c2410c', '#fb923c', '#fed7aa', '#fef3c7', '#f1f5f9'].map((c) => (
+                <span key={c} style={{ background: c }} />
+              ))}
+              <small>Poca</small>
+            </div>
+            <p className="pg-reloj-nota">
+              Cada segmento es una hora. Mientras <b>más sale hacia afuera y más oscuro</b>, más usas el celular a esa hora.
+            </p>
           </div>
           <div className="ventana">
             <span className="punto-color" style={{ background: '#ea580c' }} />
@@ -392,25 +457,138 @@ function WeeklyCard({ s }) {
   )
 }
 
-// ---------- Uso ----------
+// ---------- Uso y frecuencia de sesiones ----------
 
-function lineaFrecuencia(frecuencia) {
-  const x0 = 5.62
-  const x1 = 455.27
-  const yArr = 23.96
-  const yAbj = 136.17
-  const max = Math.max(1, ...frecuencia.map((f) => f.sesiones))
-  const pts = frecuencia.map((f, i) => [
-    x0 + (i / (frecuencia.length - 1)) * (x1 - x0),
-    yAbj - 0.08 * (yAbj - yArr) - (f.sesiones / max) * 0.92 * (yAbj - yArr),
-  ])
-  const linea = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
-  const pico = pts[frecuencia.findIndex((f) => f.sesiones === max)] ?? pts[0]
-  return { linea, area: `${linea} V${yAbj} H${x0} Z`, pico }
+// Área de la gráfica de frecuencia (unidades del viewBox)
+const FREC = { ancho: 480, alto: 190, izq: 36, der: 462, arr: 34, abj: 156 }
+
+// Escala "redonda" del eje Y: 0, 5, 10, 15… o 0, 2, 4… según el máximo
+function escalaY(max) {
+  const paso = [1, 2, 5, 10, 20, 50, 100].find((p) => max / p <= 4) ?? 100
+  // Con pocas aperturas la escala llega al menos a 4, para que se lea
+  const tope = Math.max(4, Math.ceil(max / paso) * paso)
+  return { tope, marcas: Array.from({ length: tope / paso + 1 }, (_, i) => i * paso) }
+}
+
+// Curva suave que no inventa picos ni baja de cero (cúbica monótona de Fritsch–Carlson)
+function curvaSuave(pts) {
+  if (pts.length < 2) return ''
+  const n = pts.length
+  const d = pts.slice(0, -1).map(([x, y], i) => (pts[i + 1][1] - y) / (pts[i + 1][0] - x))
+  const m = pts.map((_, i) => (i === 0 ? d[0] : i === n - 1 ? d[n - 2] : d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2))
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) {
+      m[i] = 0
+      m[i + 1] = 0
+      continue
+    }
+    const a = m[i] / d[i]
+    const b = m[i + 1] / d[i]
+    const t = a * a + b * b
+    if (t > 9) {
+      const k = 3 / Math.sqrt(t)
+      m[i] = k * a * d[i]
+      m[i + 1] = k * b * d[i]
+    }
+  }
+  let ruta = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`
+  for (let i = 0; i < n - 1; i++) {
+    const h = (pts[i + 1][0] - pts[i][0]) / 3
+    ruta += ` C${(pts[i][0] + h).toFixed(1)} ${(pts[i][1] + m[i] * h).toFixed(1)}, ${(pts[i + 1][0] - h).toFixed(1)} ${(pts[i + 1][1] - m[i + 1] * h).toFixed(1)}, ${pts[i + 1][0].toFixed(1)} ${pts[i + 1][1].toFixed(1)}`
+  }
+  return ruta
+}
+
+// Comparación con lo habitual a esa hora del día
+function comparacion(sesiones, promedio) {
+  const habitual = promedio < 0.5 ? 'casi nunca' : `${promedio.toFixed(1)} en promedio`
+  if (sesiones >= promedio * 1.5 && sesiones - promedio >= 2) return { texto: 'Más que tu promedio habitual', habitual, tono: 'alto' }
+  if (sesiones <= promedio * 0.5 && promedio - sesiones >= 1) return { texto: 'Menos que tu promedio habitual', habitual, tono: 'bajo' }
+  return { texto: 'Dentro de tu promedio habitual', habitual, tono: 'normal' }
+}
+const aperturasTexto = (n) => `${n} ${n === 1 ? 'apertura' : 'aperturas'}`
+
+function GraficaFrecuencia({ frecuencia }) {
+  const { props, globo } = useGlobo()
+  const [activa, setActiva] = useState(null)
+  const { tope, marcas } = escalaY(Math.max(1, ...frecuencia.map((f) => f.sesiones)))
+  const paso = (FREC.der - FREC.izq) / (frecuencia.length - 1)
+  const x = (i) => FREC.izq + i * paso
+  const y = (v) => FREC.abj - (v / tope) * (FREC.abj - FREC.arr)
+  const pts = frecuencia.map((f, i) => [x(i), y(f.sesiones)])
+  const linea = curvaSuave(pts)
+  const area = `${linea} L${x(frecuencia.length - 1)} ${FREC.abj} L${x(0)} ${FREC.abj} Z`
+  const ultimo = frecuencia.length - 1
+  const ult = frecuencia[ultimo]
+  const etiquetaUltimo = `${ult.sesiones} ${ult.sesiones === 1 ? 'sesión' : 'sesiones'}`
+  const anchoEtiqueta = 14 + etiquetaUltimo.length * 6.4
+
+  return (
+    <div className="pg-frecuencia">
+      <svg viewBox={`0 0 ${FREC.ancho} ${FREC.alto}`} className="pg-frecuencia__svg" role="img"
+        aria-label={`Aperturas por hora en las últimas 12 horas. La más reciente, ${hora(ult.hora)}: ${etiquetaUltimo}.`}>
+        <defs>
+          <linearGradient id="pg-relleno-frecuencia" x1="0" y1={FREC.arr} x2="0" y2={FREC.abj} gradientUnits="userSpaceOnUse">
+            <stop stopColor="#f59e0b" stopOpacity="0.32" />
+            <stop offset="1" stopColor="#f59e0b" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {/* Escala y líneas guía */}
+        {marcas.map((m) => (
+          <g key={m}>
+            <line x1={FREC.izq} x2={FREC.der} y1={y(m)} y2={y(m)} className={m === 0 ? 'pg-frecuencia__base' : 'pg-frecuencia__guia'} />
+            <text x={FREC.izq - 8} y={y(m) + 4} textAnchor="end" className="pg-frecuencia__eje">{m}</text>
+          </g>
+        ))}
+        {activa != null && <line x1={x(activa)} x2={x(activa)} y1={FREC.arr - 6} y2={FREC.abj} className="pg-frecuencia__cursor" />}
+        <path d={area} fill="url(#pg-relleno-frecuencia)" />
+        <path d={linea} fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+        {frecuencia.map((f, i) =>
+          f.sesiones > 0 && i !== ultimo ? (
+            <circle key={i} cx={x(i)} cy={y(f.sesiones)} r={activa === i ? 5 : 3.5} className="pg-frecuencia__punto" />
+          ) : null,
+        )}
+        {/* Punto más reciente con su etiqueta fija */}
+        <circle cx={x(ultimo)} cy={y(ult.sesiones)} r="7" className="pg-frecuencia__ultimo" />
+        <g transform={`translate(${Math.min(x(ultimo), FREC.ancho - anchoEtiqueta / 2 - 2)} ${y(ult.sesiones) - 18})`}>
+          <rect x={-anchoEtiqueta / 2} y="-15" width={anchoEtiqueta} height="20" rx="10" className="pg-frecuencia__insignia" />
+          <text x="0" y="-1" textAnchor="middle" className="pg-frecuencia__insignia-texto">{etiquetaUltimo}</text>
+        </g>
+        {/* Marcas de hora cada 2 h, terminando en la más reciente */}
+        {frecuencia.map((f, i) =>
+          (ultimo - i) % 2 === 0 ? (
+            <text key={i} x={x(i)} y={FREC.abj + 22} textAnchor="middle" className="pg-frecuencia__eje">{hora(f.hora)}</text>
+          ) : null,
+        )}
+        {/* Zonas de cada hora para el ratón y el teclado */}
+        {frecuencia.map((f, i) => {
+          const c = comparacion(f.sesiones, f.promedio)
+          const p = props(
+            <>
+              <b>{hora(f.hora)} – {hora((f.hora + 1) % 24)}</b>
+              <span className="ayuda-globo__fila">Aperturas registradas <b>{f.sesiones}</b></span>
+              <span className="ayuda-globo__fila">Lo habitual a esta hora <b>{c.habitual}</b></span>
+              <span className={`pg-comparacion pg-comparacion--${c.tono}`}>{c.texto}</span>
+            </>,
+          )
+          return (
+            <rect key={i} x={x(i) - paso / 2} y={FREC.arr - 10} width={paso} height={FREC.abj - FREC.arr + 10} className="pg-frecuencia__zona"
+              tabIndex={0} aria-label={`${hora(f.hora)}: ${aperturasTexto(f.sesiones)}. ${c.texto}.`}
+              {...p}
+              onMouseEnter={(e) => { p.onMouseEnter(e); setActiva(i) }}
+              onMouseLeave={() => { p.onMouseLeave(); setActiva(null) }}
+              onFocus={(e) => { p.onFocus(e); setActiva(i) }}
+              onBlur={() => { p.onBlur(); setActiva(null) }}
+            />
+          )
+        })}
+      </svg>
+      {globo}
+    </div>
+  )
 }
 
 function UsageCard({ u }) {
-  const { linea, area, pico } = lineaFrecuencia(u.frecuencia)
   let acumulado = 0
   const dona = u.categorias.length
     ? `conic-gradient(${u.categorias
@@ -421,13 +599,25 @@ function UsageCard({ u }) {
         })
         .join(', ')}, #e2e8f0 ${acumulado}% 100%)`
     : '#f1f5f9'
-  const marcas = [0, 4, 8, 11].map((i) => `${String(u.frecuencia[i].hora).padStart(2, '0')}h`)
 
   return (
-    <Card className="card--uso" etiqueta="APPS RESTRINGIDAS" titulo="Uso y Frecuencia de Sesiones" extra={<Insignia>Actualizado ahora</Insignia>}>
+    <Card
+      className="card--uso card--legible"
+      etiqueta="APPS RESTRINGIDAS"
+      titulo="Uso y frecuencia de sesiones"
+      ayuda={
+        <Ayuda
+          titulo="Uso y frecuencia de sesiones"
+          que="A la izquierda, cómo se reparte tu tiempo entre tipos de apps en el periodo elegido. A la derecha, cuántas veces abriste apps en cada hora de las últimas 12 horas."
+          accion="Si un tipo de app ocupa la mayor parte de la dona, ponle un límite diario en Apps y sitios."
+        />
+      }
+      extra={<Insignia>Actualizado ahora</Insignia>}
+    >
       <div className="uso">
         <div className="uso__resumen">
-          <div className="dona" style={{ background: dona }}>
+          <div className="dona" style={{ background: dona }} role="img"
+            aria-label={`Uso total ${formatoDuracion(u.totalMin)}: ${u.categorias.map((c) => `${c.nombre} ${c.porcentaje} %`).join(', ')}`}>
             <div className="dona__centro">
               <b>{formatoDuracion(u.totalMin)}</b>
               <small>uso total</small>
@@ -438,7 +628,7 @@ function UsageCard({ u }) {
               <li key={c.nombre}>
                 <i style={{ background: c.color }} />
                 <b>{c.nombre}</b>
-                <span>{c.porcentaje}%</span>
+                <span>{c.porcentaje} %</span>
               </li>
             ))}
           </ul>
@@ -446,26 +636,17 @@ function UsageCard({ u }) {
 
         <div className="uso__frecuencia">
           <div className="uso__frecuencia-cabeza">
-            <b>Frecuencia de sesiones</b>
-            <small>Últimas 12 horas con actividad</small>
+            <span className="pg-subtitulo">
+              <b>Frecuencia de sesiones</b>
+              <Ayuda
+                titulo="Frecuencia de sesiones"
+                que="Muestra cuántas veces abriste el dispositivo en bloques de tiempo durante las últimas 12 horas para detectar picos de uso compulsivo."
+                accion="Si ves un pico, pasa el ratón por esa hora: si está por encima de tu promedio habitual, prueba una pausa antes de abrir apps a esa hora."
+              />
+            </span>
+            <small>Aperturas por hora · últimas 12 horas con actividad</small>
           </div>
-          <svg viewBox="0 0 460.886 144.991" className="tendencia" role="img" aria-label="Tendencia de frecuencia de sesiones">
-            <defs>
-              <linearGradient id="relleno-tendencia" x1="0" y1="23.96" x2="0" y2="136.17" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#F59E0B" stopOpacity="0.25" />
-                <stop offset="1" stopColor="#F59E0B" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M5.62 25.22H455.27M5.62 69.34H455.27M5.62 113.47H455.27" stroke="#EDF1F5" strokeWidth="1.19" />
-            <path d={area} fill="url(#relleno-tendencia)" />
-            <path d={linea} fill="none" stroke="#F59E0B" strokeWidth="2.98" strokeLinejoin="round" />
-            <ellipse cx={pico[0]} cy={pico[1]} rx="5.62" ry="6.3" fill="white" stroke="#F59E0B" strokeWidth="2.38" />
-          </svg>
-          <div className="tendencia__horas">
-            {marcas.map((m, i) => (
-              <small key={i}>{m}</small>
-            ))}
-          </div>
+          <GraficaFrecuencia frecuencia={u.frecuencia} />
         </div>
       </div>
     </Card>

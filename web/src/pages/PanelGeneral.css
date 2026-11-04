@@ -46,6 +46,28 @@
 .card--legible .ventana b { font-size: 12px; line-height: 16px; color: #0f172a; }
 .card--legible .ventana small { font-size: 11px; line-height: 15px; }
 
+/* Reloj de 24 horas */
+.pg-reloj-caja { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: center; column-gap: 18px; }
+.pg-reloj-caja .ventana { grid-column: 1 / -1; }
+.pg-reloj { display: block; width: 100%; max-width: 300px; height: auto; overflow: visible; }
+.pg-reloj__guia { fill: none; stroke: #e2e8f0; stroke-dasharray: 2 4; }
+.pg-reloj__guia--max { stroke: #fed7aa; }
+.pg-reloj__sector { stroke: #fff; stroke-width: 1.5; cursor: help; outline: none; transition: filter 0.12s, transform 0.12s; transform-origin: 150px 150px; }
+.pg-reloj__sector:hover, .pg-reloj__sector:focus-visible, .pg-reloj__sector--activo { stroke: #0f172a; stroke-width: 2; }
+.pg-reloj__sector:hover, .pg-reloj__sector:focus-visible { transform: scale(1.04); filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.2)); }
+.pg-reloj__valor { font: 700 9px 'Inter', system-ui, sans-serif; pointer-events: none; }
+.pg-reloj__hora { font: 600 11px 'Inter', system-ui, sans-serif; fill: #64748b; }
+.pg-reloj__centro { fill: #fff; stroke: #e2e8f0; }
+.pg-reloj__centro-valor { font: 700 20px 'Inter', system-ui, sans-serif; fill: #0f172a; }
+.pg-reloj__centro-hora { font: 600 12px 'Inter', system-ui, sans-serif; fill: #b45309; }
+.pg-reloj__centro-pie { font: 400 9px 'Inter', system-ui, sans-serif; fill: #64748b; }
+.pg-reloj-lado { display: flex; flex-direction: column; gap: 14px; }
+.escala--vertical { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 3px; }
+.card--legible .escala--vertical span { width: 26px; height: 10px; border-radius: 3px; }
+.pg-reloj-nota { font-size: 12px; line-height: 17px; color: #475569; }
+.pg-reloj-nota b { color: #0f172a; }
+@media (prefers-reduced-motion: reduce) { .pg-reloj__sector { transition: none; } }
+
 .pg-recomendacion {
   display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid #fbe3a6; border-radius: 14px;
   background: #fff7e6; font-size: 12px; line-height: 18px; color: #334155;
@@ -79,6 +101,37 @@
 .card--legible .barra--excede { background: #ea580c; }
 .card--legible .barra--objetivo { background: #eef2f6; border: 1.5px dashed #94a3b8; border-bottom: 0; }
 .card--legible .nota { gap: 8px; padding: 10px 18px 14px; font-size: 12px; line-height: 17px; color: #475569; }
+
+/* ---------- Uso y frecuencia de sesiones ---------- */
+.card--legible .uso { grid-template-columns: 300px minmax(0, 1fr); gap: 24px; padding: 4px 18px 16px; }
+.card--legible .dona { width: 150px; height: 150px; border-radius: 75px; }
+.card--legible .dona__centro { width: 104px; height: 104px; border-radius: 52px; }
+.card--legible .dona__centro b { font-size: 18px; line-height: 23px; }
+.card--legible .dona__centro small { font-size: 11px; line-height: 15px; }
+.card--legible .leyenda-categorias { width: 120px; gap: 12px; }
+.card--legible .leyenda-categorias li { grid-template-columns: 10px 1fr auto; gap: 8px; font-size: 12px; line-height: 16px; }
+.card--legible .leyenda-categorias i { width: 10px; height: 10px; border-radius: 3px; }
+.card--legible .uso__frecuencia { padding-left: 24px; gap: 6px; }
+.card--legible .uso__frecuencia-cabeza { flex-wrap: wrap; gap: 4px 12px; }
+.card--legible .uso__frecuencia-cabeza small { font-size: 11px; line-height: 15px; color: #64748b; }
+.pg-subtitulo { display: flex; align-items: center; gap: 7px; }
+.pg-subtitulo b { font-size: 13px; line-height: 18px; color: #0f172a; }
+
+.pg-frecuencia__svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pg-frecuencia__guia { stroke: #94a3b8; stroke-opacity: 0.2; stroke-dasharray: 3 4; }
+.pg-frecuencia__base { stroke: #cbd5e1; }
+.pg-frecuencia__eje { font: 11px 'Inter', system-ui, sans-serif; fill: #64748b; font-variant-numeric: tabular-nums; }
+.pg-frecuencia__cursor { stroke: #f59e0b; stroke-opacity: 0.5; stroke-dasharray: 3 3; }
+.pg-frecuencia__punto { fill: #fff; stroke: #f59e0b; stroke-width: 2; transition: r 0.12s; }
+.pg-frecuencia__ultimo { fill: #fff; stroke: #f59e0b; stroke-width: 3; }
+.pg-frecuencia__insignia { fill: #0f172a; }
+.pg-frecuencia__insignia-texto { font: 700 11px 'Inter', system-ui, sans-serif; fill: #fff; }
+.pg-frecuencia__zona { fill: transparent; cursor: crosshair; outline: none; }
+.pg-frecuencia__zona:focus-visible { fill: rgba(245, 158, 11, 0.1); }
+.pg-comparacion { padding: 3px 8px; border-radius: 999px; font-weight: 700; text-align: center; }
+.pg-comparacion--normal { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+.pg-comparacion--alto { background: rgba(248, 113, 113, 0.2); color: #fca5a5; }
+.pg-comparacion--bajo { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
 
 /* ---------- Pausas preventivas ---------- */
 .card--legible .prevenidas { column-gap: 12px; margin: 2px 18px 0; padding: 12px 14px; }
