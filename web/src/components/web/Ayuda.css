@@ -1,0 +1,27 @@
+/* Botón "?" y globo de ayuda (compartidos por las tarjetas del portal) */
+.ayuda-boton {
+  display: inline-grid; place-items: center; flex-shrink: 0; width: 18px; height: 18px; padding: 0;
+  border: 1px solid #cbd5e1; border-radius: 50%; background: #fff; cursor: help;
+  font: 700 11px/1 'Inter', system-ui, sans-serif; color: #64748b;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.ayuda-boton:hover, .ayuda-boton[aria-expanded='true'] { border-color: #f59e0b; background: #fff7e6; color: #b45309; transform: scale(1.08); }
+.ayuda-boton:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+.ayuda-boton--claro { border-color: rgba(255, 255, 255, 0.35); background: transparent; color: #e2e8f0; }
+
+.ayuda-globo {
+  position: fixed; z-index: 80; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px;
+  border-radius: 12px; background: #0f172a; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+  font: 400 12px/17px 'Inter', system-ui, sans-serif; color: #e2e8f0; pointer-events: none;
+  animation: ayuda-entrar 0.12s ease-out;
+}
+.ayuda-globo b { color: #fff; }
+.ayuda-globo__titulo { font-size: 13px; }
+.ayuda-globo__accion { padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.12); color: #fde68a; }
+.ayuda-globo__accion b { color: #fbbf24; }
+.ayuda-globo__fila { display: flex; justify-content: space-between; gap: 16px; }
+.ayuda-globo__fila span { color: #94a3b8; }
+@keyframes ayuda-entrar { from { opacity: 0; transform: translateY(2px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ayuda-boton, .ayuda-globo { transition: none; animation: none; }
+}

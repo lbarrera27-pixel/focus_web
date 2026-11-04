@@ -15,6 +15,7 @@ import iconoInfoAzul from '../../assets/icons/w-info-azul.svg'
 import iconoReloj from '../../assets/icons/w-reloj.svg'
 import iconoBurbuja from '../../assets/icons/w-riesgo-burbuja.svg'
 import { ahoraEnZona } from '../../data/preferencias.js'
+import Ayuda, { useGlobo } from '../../components/web/Ayuda.jsx'
 import './Riesgo.css'
 
 const ICONOS_CONSEJO = { luna: iconoLuna, check: iconoCheck }
@@ -38,35 +39,78 @@ function kpisModelo(umbral, metricas) {
 const ALTO_GRAF = 230
 const y = (p) => 220 - p * 210
 
+// Zona de un valor: segura (bajo la línea de alerta del modelo), atención o crítica (desde ALTO)
+function zona(p, umbral) {
+  if (p >= ALTO) return { id: 'critica', nombre: 'Zona crítica', insignia: 'Riesgo alto' }
+  if (p >= umbral) return { id: 'atencion', nombre: 'Zona de atención', insignia: 'En observación' }
+  return { id: 'segura', nombre: 'Zona segura', insignia: 'Bajo control' }
+}
+
 function GraficaSemanas({ historial, umbral }) {
+  const { props, globo } = useGlobo()
   const n = historial.length
   const x = (i) => (n === 1 ? 50 : ((20 + (i * 480) / (n - 1)) / 520) * 100)
   const puntos = historial.map((h, i) => `${(x(i) / 100) * 520},${y(h.probabilidad)}`).join(' ')
+  const ultima = historial.length - 1
   return (
     <figure className="rg-grafica" aria-label="Probabilidad de recaída por semana">
-      <div className="rg-grafica__area">
-        <svg viewBox={`0 0 520 ${ALTO_GRAF}`} preserveAspectRatio="none" aria-hidden="true">
-          <rect className="rg-zona rg-zona--alta" x="0" y="10" width="520" height={y(ALTO) - 10} />
-          <rect className="rg-zona rg-zona--media" x="0" y={y(ALTO)} width="520" height={y(umbral) - y(ALTO)} />
-          <rect className="rg-zona rg-zona--baja" x="0" y={y(umbral)} width="520" height={220 - y(umbral)} />
-          <line className="rg-umbral" x1="0" x2="520" y1={y(ALTO)} y2={y(ALTO)} />
-          <line className="rg-umbral" x1="0" x2="520" y1={y(umbral)} y2={y(umbral)} />
-          <polyline className="rg-serie" points={puntos} />
-        </svg>
-        <span className="rg-grafica__etiqueta" style={{ top: y(ALTO) - 18 }}>Alto {porcentaje(ALTO)}</span>
-        <span className="rg-grafica__etiqueta" style={{ top: y(umbral) - 18 }}>Alerta {porcentaje(umbral)}</span>
-        {historial.map((h, i) => (
-          <span
-            key={h.semana}
-            className="rg-punto"
-            style={{ left: `${x(i)}%`, top: y(h.probabilidad) }}
-            title={`Semana ${h.semana}: ${porcentaje(h.probabilidad)}`}
-          />
-        ))}
+      <ul className="rg-zonas">
+        <li className="rg-zonas__segura"><i />Zona segura <span>menos de {porcentaje(umbral)}</span></li>
+        <li className="rg-zonas__atencion"><i />Zona de atención <span>{porcentaje(umbral)} a {porcentaje(ALTO)}</span></li>
+        <li className="rg-zonas__critica"><i />Zona crítica <span>más de {porcentaje(ALTO)}</span></li>
+      </ul>
+      <div className="rg-grafica__cuerpo">
+        {/* Escala del eje Y: 0 % a 100 % */}
+        <div className="rg-grafica__escala" aria-hidden="true">
+          {[1, 0.8, 0.6, 0.4, 0.2, 0].map((p) => <span key={p} style={{ top: y(p) }}>{Math.round(p * 100)} %</span>)}
+        </div>
+        <div className="rg-grafica__area">
+          <svg viewBox={`0 0 520 ${ALTO_GRAF}`} preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              {/* Degradado suave de rojo (arriba) a verde (abajo); los cortes coinciden con las líneas */}
+              <linearGradient id="rg-degradado" x1="0" x2="0" y1={y(1)} y2={y(0)} gradientUnits="userSpaceOnUse">
+                <stop offset="0" stopColor="#fee2e2" />
+                <stop offset={1 - ALTO} stopColor="#fef2f2" />
+                <stop offset={1 - ALTO} stopColor="#fffbeb" />
+                <stop offset={1 - umbral} stopColor="#fffbeb" />
+                <stop offset={1 - umbral} stopColor="#f0fdf4" />
+                <stop offset="1" stopColor="#dcfce7" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y={y(1)} width="520" height={y(0) - y(1)} fill="url(#rg-degradado)" />
+            {[0.2, 0.4, 0.8].map((p) => <line key={p} className="rg-guia" x1="0" x2="520" y1={y(p)} y2={y(p)} />)}
+            <line className="rg-umbral rg-umbral--alto" x1="0" x2="520" y1={y(ALTO)} y2={y(ALTO)} />
+            <line className="rg-umbral rg-umbral--alerta" x1="0" x2="520" y1={y(umbral)} y2={y(umbral)} />
+            <polyline className="rg-serie" points={puntos} />
+          </svg>
+          {historial.map((h, i) => {
+            const z = zona(h.probabilidad, umbral)
+            // La primera y la última etiqueta se alinean hacia dentro para no salirse de la gráfica
+            const borde = n > 1 && i === 0 ? ' rg-punto-grupo--inicio' : n > 1 && i === ultima ? ' rg-punto-grupo--fin' : ''
+            return (
+              <div key={h.semana} className={`rg-punto-grupo rg-punto-grupo--${z.id}${borde}`} style={{ left: `${x(i)}%`, top: y(h.probabilidad) }}>
+                <span className="rg-punto-valor">{porcentaje(h.probabilidad)}</span>
+                <button
+                  type="button"
+                  className="rg-punto"
+                  aria-label={`Semana ${h.semana}: ${porcentaje(h.probabilidad)}, ${z.nombre.toLowerCase()}`}
+                  {...props(
+                    <>
+                      <b>Semana {h.semana}</b>
+                      <span className="ayuda-globo__fila">Probabilidad <b>{porcentaje(h.probabilidad)}</b></span>
+                      <span className="ayuda-globo__fila">Estado <b>{z.nombre}</b></span>
+                    </>,
+                  )}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
-      <div className={`rg-grafica__eje${n === 1 ? ' rg-grafica__eje--uno' : ''}`}>
-        {historial.map((h) => <span key={h.semana}>S{h.semana}</span>)}
+      <div className="rg-grafica__eje" aria-hidden="true">
+        {historial.map((h, i) => <span key={h.semana} style={{ left: `${x(i)}%` }}>S{h.semana}</span>)}
       </div>
+      {globo}
     </figure>
   )
 }
@@ -100,9 +144,20 @@ function ConDatos({ r }) {
 
       <div className="w-fila rg-cuerpo">
         <section className="w-tarjeta rg-tarjeta">
-          <h2 className="w-titulo-3">Probabilidad por semana</h2>
+          <div className="rg-titulo">
+            <h2 className="w-titulo-3">Probabilidad por semana</h2>
+            <Ayuda
+              titulo="Probabilidad por semana"
+              que={`Muestra la tendencia estimada de volver a exceder tu tiempo de pantalla según tus patrones de ${historial.length === 1 ? 'la última semana' : `las últimas ${historial.length} semanas`}.`}
+              accion="Si la línea sube hacia la zona de atención o la crítica, revisa tus horas de más uso y activa el Modo Foco o el horario de descanso."
+            />
+            {historial.length > 0 && (() => {
+              const z = zona(historial[historial.length - 1].probabilidad, r.umbral)
+              return <em className={`rg-insignia rg-insignia--${z.id} rg-titulo__estado`}>Ahora: {z.insignia}</em>
+            })()}
+          </div>
           <GraficaSemanas historial={historial} umbral={r.umbral} />
-          <p className="w-texto w-texto--2">Las zonas llevan nombre y línea punteada, no dependen solo del color.</p>
+          <p className="w-texto w-texto--2">Las zonas llevan nombre y línea guía, no dependen solo del color. Pasa el ratón por un punto para ver el detalle.</p>
           <div className="w-divisor" />
           <p className="w-sobretitulo">VALORES POR SEMANA</p>
           <ul className="rg-semanas">

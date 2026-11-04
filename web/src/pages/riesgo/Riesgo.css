@@ -13,26 +13,60 @@
 
 /* Gráfica de línea (520 × 230 en el diseño) */
 .rg-grafica { margin: 0; display: flex; flex-direction: column; gap: 12px; }
-.rg-grafica__area { position: relative; height: 230px; }
-.rg-grafica__area svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.rg-zona--alta { fill: var(--w-peligro-suave); }
-.rg-zona--media { fill: var(--w-marca-sutil); }
-.rg-zona--baja { fill: var(--w-exito-suave); }
-.rg-umbral { stroke: var(--w-linea); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.rg-serie { fill: none; stroke: var(--w-texto); stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.rg-grafica__etiqueta {
-  position: absolute; left: 8px;
-  font-size: 11px; line-height: 15px; font-weight: 700; color: var(--w-texto-fuerte);
+.rg-titulo { display: flex; align-items: center; gap: 8px; }
+.rg-titulo__estado { margin-left: auto; padding: 3px 10px; font-size: 11px; }
+.rg-grafica__cuerpo { display: flex; gap: 8px; }
+.rg-zonas { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.rg-zonas li { display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; font-weight: 700; }
+.rg-zonas span { font-weight: 400; color: var(--w-texto-2); }
+.rg-zonas i { width: 14px; height: 0; border-top: 2px dashed; }
+.rg-zonas__segura { color: #047857; }
+.rg-zonas__segura i { border-top-style: solid; border-color: #34d399; }
+.rg-zonas__atencion { color: #b45309; }
+.rg-zonas__atencion i { border-color: #f59e0b; }
+.rg-zonas__critica { color: #b91c1c; }
+.rg-zonas__critica i { border-color: #f87171; }
+.rg-grafica__escala { position: relative; flex: 0 0 34px; height: 230px; }
+.rg-grafica__escala span {
+  position: absolute; right: 0; transform: translateY(-50%); white-space: nowrap;
+  font-size: 11px; line-height: 15px; font-variant-numeric: tabular-nums; color: var(--w-texto-3);
 }
+.rg-grafica__area { position: relative; flex: 1; min-width: 0; height: 230px; }
+.rg-grafica__area svg { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 10px; }
+.rg-guia { stroke: #94a3b8; stroke-opacity: 0.18; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.rg-umbral { stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.rg-umbral--alto { stroke: #f87171; }
+.rg-umbral--alerta { stroke: #f59e0b; }
+.rg-serie { fill: none; stroke: var(--w-texto); stroke-width: 2.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.rg-punto-grupo { position: absolute; width: 0; height: 0; }
+.rg-punto-grupo--inicio .rg-punto-valor { transform: translateX(-10px); }
+.rg-punto-grupo--fin .rg-punto-valor { left: auto; right: 0; transform: translateX(10px); }
 .rg-punto {
-  position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px;
-  border-radius: 50%; background: var(--w-superficie); border: 2px solid var(--w-texto);
+  position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; padding: 0; cursor: pointer;
+  border-radius: 50%; background: var(--w-superficie); border: 2.5px solid var(--w-texto);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.rg-grafica__eje {
-  display: flex; justify-content: space-between; padding: 0 14px;
+.rg-punto:hover, .rg-punto:focus-visible { outline: none; transform: scale(1.3); box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.12); }
+.rg-punto-grupo--critica .rg-punto { border-color: #b91c1c; }
+.rg-punto-grupo--atencion .rg-punto { border-color: #d97706; }
+.rg-punto-grupo--segura .rg-punto { border-color: #047857; }
+.rg-punto-valor {
+  position: absolute; bottom: 12px; left: 0; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
+  font-size: 12px; line-height: 16px; font-weight: 800; color: var(--w-texto);
+}
+.rg-insignia {
+  padding: 1px 7px; border-radius: 999px; font-style: normal; font-size: 10px; line-height: 15px; font-weight: 700;
+}
+.rg-insignia--critica { background: #fee2e2; color: #b91c1c; }
+.rg-insignia--atencion { background: #fef3c7; color: #92400e; }
+.rg-insignia--segura { background: #d1fae5; color: #047857; }
+/* Mismo ancho que el área de la gráfica (a la derecha de la escala) para alinear cada semana con su punto */
+.rg-grafica__eje { position: relative; height: 15px; margin-left: 42px; }
+.rg-grafica__eje span {
+  position: absolute; transform: translateX(-50%);
   font-size: 11px; line-height: 15px; font-weight: 600; color: var(--w-texto-2);
 }
-.rg-grafica__eje--uno { justify-content: center; }
 
 .rg-semanas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .rg-semanas li {

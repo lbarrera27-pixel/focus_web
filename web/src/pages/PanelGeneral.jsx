@@ -9,6 +9,11 @@ import iconoFlecha from '../assets/icons/arrow-head.svg'
 import iconoCerebro from '../assets/icons/brain.svg'
 import iconoPulso from '../assets/icons/pulse.svg'
 import { formatoDuracion, nivelRiesgo } from '../data/panel.js'
+import { GRUPO_CATEGORIA } from '../data/ajustes.js'
+import { horas } from '../data/plan.js'
+import { hora } from '../data/preferencias.js'
+import Ayuda, { useGlobo } from '../components/web/Ayuda.jsx'
+import './PanelGeneral.css'
 
 // ---------- Telemetría ----------
 
@@ -76,53 +81,86 @@ function TelemetryCard({ t }) {
   )
 }
 
-// ---------- Clústeres ----------
+// ---------- Patrones de uso (antes "Clústeres") ----------
 
 const ANCHO_D = 568
 const ALTO_D = 151
 const EJE = { izq: 103, der: 487, arr: 13, abj: 129 }
 
+// Nombre en lenguaje cotidiano para cada grupo, según la categoría de sus apps
+const HABITOS = {
+  social: { titulo: 'Sesiones rápidas · Redes sociales', resumen: 'entradas rápidas a redes', detalle: 'Uso frecuente de pocos minutos.' },
+  mensajeria: { titulo: 'Revisión frecuente · Mensajes', resumen: 'revisiones breves de mensajes', detalle: 'Aperturas constantes y breves.' },
+  video: { titulo: 'Sesiones largas · Streaming y videos', resumen: 'sesiones largas de video', detalle: 'Pocas aperturas, pero de larga duración.' },
+  juegos: { titulo: 'Partidas · Juegos', resumen: 'partidas de juegos', detalle: 'Sesiones de juego de duración media.' },
+}
+const habito = (nombre) =>
+  HABITOS[GRUPO_CATEGORIA(nombre)] ?? { titulo: `Otras apps · ${nombre}`, resumen: `uso de ${nombre.toLowerCase()}`, detalle: 'Apps de otra categoría.' }
+
+const promedio = (v) => (v.length ? v.reduce((s, x) => s + x, 0) / v.length : 0)
+const minutosTexto = (m) => (m >= 1 ? `${m.toFixed(1)} min` : `${Math.round(m * 60)} s`)
+
 function ClusterCard({ c }) {
+  const { props, globo } = useGlobo()
   const maxDur = Math.max(1, ...c.puntos.map((p) => p.duracionMedia))
   const maxAp = Math.max(1, ...c.puntos.map((p) => p.aperturas))
   const pos = (p) => ({
     x: EJE.izq + 14 + (p.duracionMedia / maxDur) * (EJE.der - EJE.izq - 28),
     y: EJE.abj - 12 - (p.aperturas / maxAp) * (EJE.abj - EJE.arr - 24),
-    r: 2 + (p.aperturas / maxAp) * 2.5,
+    r: 2.4 + (p.aperturas / maxAp) * 2.6,
   })
-  const elipses = c.grupos.map((g, i) => {
+  // Resumen de cada grupo: minutos promedio por sesión y veces abiertas al día (por app)
+  const grupos = c.grupos.map((g, i) => {
+    const pts = c.puntos.filter((p) => p.grupo === i)
+    return { ...g, ...habito(g.nombre), minSesion: promedio(pts.map((p) => p.duracionMedia)), aperturasDia: promedio(pts.map((p) => p.aperturas)) }
+  })
+  const elipses = grupos.map((g, i) => {
     const pts = c.puntos.filter((p) => p.grupo === i).map(pos)
     if (!pts.length) return null
     // Elipse centrada en la media con radio de 1.2 desviaciones estándar (acotada al área del gráfico)
-    const media = (v) => v.reduce((s, x) => s + x, 0) / v.length
-    const desv = (v, m) => Math.sqrt(media(v.map((x) => (x - m) ** 2)))
+    const desv = (v, m) => Math.sqrt(promedio(v.map((x) => (x - m) ** 2)))
     const xs = pts.map((p) => p.x)
     const ys = pts.map((p) => p.y)
-    const cx = media(xs)
-    const cy = media(ys)
+    const cx = promedio(xs)
+    const cy = promedio(ys)
     return {
-      color: g.color,
+      g,
       cx,
       cy,
       rx: Math.min(desv(xs, cx) * 1.2 + 14, (EJE.der - EJE.izq) / 5),
       ry: Math.min(desv(ys, cy) * 1.2 + 12, (EJE.abj - EJE.arr) / 2.6),
     }
   })
+  const resumenGrupo = (g) => (
+    <>
+      <b>{g.titulo}</b>
+      <span>{g.detalle}</span>
+      <span className="ayuda-globo__fila">Minutos por sesión <b>{minutosTexto(g.minSesion)}</b></span>
+      <span className="ayuda-globo__fila">Veces abierta al día <b>{g.aperturasDia.toFixed(1)}</b></span>
+    </>
+  )
 
   return (
     <Card
-      className="card--clusteres"
-      etiqueta="BIG DATA · PERIODO SELECCIONADO"
-      titulo="Clústeres de Comportamiento"
+      className="card--clusteres card--legible"
+      etiqueta="HÁBITOS POR APLICACIÓN · PERIODO ELEGIDO"
+      titulo="Tus patrones de uso"
+      ayuda={
+        <Ayuda
+          titulo="Tus patrones de uso"
+          que="Agrupa tus apps según cómo las usas: cada punto es una app en un día. Más arriba = la abriste más veces; más a la derecha = tus sesiones duraron más."
+          accion="Si un grupo de sesiones largas ocupa mucho, pon un límite de tiempo a esas apps; si son muchas entradas rápidas, activa la pausa antes de abrirlas."
+        />
+      }
       extra={
         <div className="cifra-header">
           <b>{c.total.toLocaleString('es-MX')}</b>
-          <small>eventos procesados</small>
+          <small>usos registrados</small>
         </div>
       }
     >
       <div className="clusteres">
-        <svg className="dispersion" viewBox={`0 0 ${ANCHO_D} ${ALTO_D}`} role="img" aria-label="Gráfico de dispersión de clústeres conductuales">
+        <svg className="dispersion" viewBox={`0 0 ${ANCHO_D} ${ALTO_D}`} role="img" aria-label="Tus apps según cuántas veces las abres y cuánto duran tus sesiones">
           {[0.25, 0.5, 0.75].map((f) => (
             <line key={f} x1={EJE.izq} x2={EJE.der} y1={EJE.arr + f * (EJE.abj - EJE.arr)} y2={EJE.arr + f * (EJE.abj - EJE.arr)} stroke="#edf1f5" />
           ))}
@@ -131,69 +169,110 @@ function ClusterCard({ c }) {
             <rect x={EJE.izq} y={0} width={EJE.der - EJE.izq + 40} height={EJE.abj} />
           </clipPath>
           <g clipPath="url(#area-dispersion)">
-          {elipses.map(
-            (e, i) =>
-              e && (
-                <ellipse key={i} cx={e.cx} cy={e.cy} rx={e.rx} ry={e.ry} fill={e.color} fillOpacity="0.08" stroke={e.color} strokeOpacity="0.35" strokeDasharray="3 3" />
-              ),
-          )}
+            {elipses.map(
+              (e, i) =>
+                e && (
+                  <ellipse key={i} className="pg-elipse" cx={e.cx} cy={e.cy} rx={e.rx} ry={e.ry} fill={e.g.color} fillOpacity="0.08"
+                    stroke={e.g.color} strokeOpacity="0.4" strokeDasharray="3 3" {...props(resumenGrupo(e.g))} />
+                ),
+            )}
           </g>
           {c.puntos.map((p) => {
             const { x, y, r } = pos(p)
+            const g = grupos[p.grupo]
+            const [app, fecha] = p.app.split(' · ')
+            const dia = new Date(`${fecha}T00:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '')
             return (
-              <circle key={p.id} cx={x} cy={y} r={r} fill={c.grupos[p.grupo].color}>
-                <title>{`${p.app}: ${p.aperturas} aperturas · ${p.duracionMedia.toFixed(1)} min de media`}</title>
-              </circle>
+              <circle key={p.id} className="pg-punto" cx={x} cy={y} r={r} fill={g.color}
+                {...props(
+                  <>
+                    <b>{app}</b>
+                    <span>{g.titulo} · {dia}</span>
+                    <span className="ayuda-globo__fila">Minutos por sesión <b>{minutosTexto(p.duracionMedia)}</b></span>
+                    <span className="ayuda-globo__fila">Veces abierta ese día <b>{p.aperturas}</b></span>
+                  </>,
+                )}
+              />
             )
           })}
-          <text x="74" y="66" className="dispersion__eje">Aperturas</text>
-          <text x="274" y="148" className="dispersion__eje">Duración media de sesión</text>
+          <text x="96" y="70" textAnchor="end" className="dispersion__eje">Veces abierta</text>
+          <text x="295" y="148" textAnchor="middle" className="dispersion__eje">Minutos por sesión →</text>
           {!c.puntos.length && (
-            <text x="295" y="72" textAnchor="middle" className="dispersion__vacio">Sin eventos en el periodo</text>
+            <text x="295" y="72" textAnchor="middle" className="dispersion__vacio">Sin uso en el periodo</text>
           )}
         </svg>
 
         <ul className="leyenda-clusteres">
-          {c.grupos.map((g) => (
-            <li key={g.letra}>
+          {grupos.map((g) => (
+            <li key={g.letra} tabIndex={0} {...props(resumenGrupo(g))}>
               <span className="punto-color" style={{ background: g.color }} />
               <span>
-                <b>Cluster {g.letra}</b>
-                <small>{g.nombre}</small>
+                <b>{g.titulo}</b>
+                <small><strong>{g.porcentaje} %</strong> de tus aperturas: {g.resumen}</small>
               </span>
-              <strong>{g.porcentaje}%</strong>
             </li>
           ))}
         </ul>
       </div>
+      {globo}
     </Card>
   )
 }
 
-// ---------- Riesgo ----------
+// ---------- Mapa de riesgo por hora ----------
+
+// Pausa sugerida según qué tan intensa es la hora más difícil
+const PAUSA_RECOMENDADA = {
+  1: 'Aviso suave (temporizador de 5 s)',
+  2: 'Ejercicio de respiración breve',
+  3: 'Bloqueo asistido con chatbot de apoyo',
+}
 
 function RiskCard({ r }) {
+  const { props, globo } = useGlobo()
+  const [inicio] = r.conDatos ? r.ventana.split('–') : ['23:00']
+  const [hh, mm] = inicio.split(':').map(Number)
+  const desde = hora(hh, mm)
+  const hasta = hora((hh + 2) % 24)
+  // Sugerencia: empezar a cuidarse media hora antes de la ventana difícil
+  const antes = hora((hh + 23) % 24, 30)
+
   return (
     <Card
-      className="card--riesgo"
-      etiqueta="IA EXPLICABLE · MAMDANI"
-      titulo="Mapa de Riesgo de Recaída"
-      extra={<Insignia>{r.analizados} eventos analizados</Insignia>}
+      className="card--riesgo card--legible"
+      etiqueta="TUS HORAS DE RIESGO"
+      titulo="Mapa de riesgo por hora"
+      ayuda={
+        <Ayuda
+          titulo="Mapa de riesgo por hora"
+          que="Cada casilla es una hora del día. El número es qué tanto usas el celular a esa hora comparado con tu hora de más uso (100 %). Más oscuro = más tentación."
+          accion="Programa el Modo Foco o el horario de descanso justo antes de tus horas más oscuras."
+        />
+      }
+      extra={<Insignia>{r.analizados} usos analizados</Insignia>}
     >
       <div className="riesgo">
         <div className="riesgo__mapa">
-          <div className="escala">
-            <small>BAJO</small>
+          <div className="escala" aria-hidden="true">
+            <small>Poca tentación</small>
             {['#f1f5f9', '#fde68a', '#fb923c', '#c2410c'].map((c) => (
               <span key={c} style={{ background: c }} />
             ))}
-            <small>ALTO</small>
+            <small>Mucha</small>
           </div>
-          <div className="horas">
+          <div className="horas" role="list" aria-label="Nivel de tentación por hora">
             {r.valores.map((v, h) => {
               const n = nivelRiesgo(v)
               return (
-                <div key={h} className="hora" style={{ background: n.fondo, color: n.texto }} title={`${String(h).padStart(2, '0')}:00 · riesgo ${v}`}>
+                <div key={h} role="listitem" tabIndex={0} className="hora" style={{ background: n.fondo, color: n.texto }}
+                  aria-label={`Hora ${hora(h)}, nivel de tentación ${v} %`}
+                  {...props(
+                    <>
+                      <span className="ayuda-globo__fila">Hora <b>{hora(h)}</b></span>
+                      <span className="ayuda-globo__fila">Nivel de tentación/riesgo <b>{v} %</b></span>
+                    </>,
+                  )}
+                >
                   <b>{v}</b>
                   <small>{String(h).padStart(2, '0')}</small>
                 </div>
@@ -203,81 +282,112 @@ function RiskCard({ r }) {
           <div className="ventana">
             <span className="punto-color" style={{ background: '#ea580c' }} />
             <span>
-              <b>{r.conDatos ? 'Ventana crítica detectada' : 'Aún no hay ventana crítica'}</b>
-              <small>{r.conDatos ? `${r.ventana} · hora con más tiempo de uso` : 'Se calcula con los eventos de uso'}</small>
+              <b>{r.conDatos ? `Tu ventana más difícil: ${desde} a ${hasta}` : 'Aún no hay una hora difícil'}</b>
+              <small>{r.conDatos ? 'Son las dos horas seguidas con más uso.' : 'Se calcula con tu uso de las apps.'}</small>
             </span>
           </div>
         </div>
 
-        <div className="inferencia">
-          <div className="inferencia__cabeza">
-            <span className="inferencia__icono">
-              <Icono src={iconoCerebro} tam={16} />
-            </span>
+        <aside className="pg-recomendacion" aria-label="Recomendación personalizada">
+          <div className="pg-recomendacion__cabeza">
+            <span className="pg-recomendacion__icono"><Icono src={iconoCerebro} tam={16} /></span>
             <span>
-              <small>MOTOR DE INFERENCIA</small>
-              <b>Regla activa #{String(r.regla.nivel * 3 - 2).padStart(2, '0')}</b>
+              <small>RECOMENDACIÓN PERSONALIZADA</small>
+              <b>Tu momento más vulnerable</b>
             </span>
           </div>
-          <pre className="codigo">
-            <span className="kw">IF</span> uso_hora &gt; promedio{'\n'}
-            <span className="kw">AND</span> time = {r.regla.hora}{'\n'}
-            <span className="kw">THEN</span> Friction_Level = <b className="alto">{r.regla.etiquetaNivel}</b>
-          </pre>
-          <div className="inferencia__pie">
-            <span className="mu">μ = {r.regla.mu}</span>
-            <span className="nivel">Fricción Nivel {r.regla.nivel}</span>
-          </div>
-        </div>
+          {r.conDatos ? (
+            <>
+              <p>
+                Detectamos que <b>entre las {desde} y las {hasta}</b> es cuando más usas el celular, y ahí es más fácil pasarte de tu límite diario.
+              </p>
+              <p className="pg-recomendacion__sugerencia">
+                Te sugerimos activar el <b>modo descanso</b> o limitar las apps de ocio a partir de las <b>{antes}</b>.
+              </p>
+              <span className="pg-recomendacion__pausa">
+                Pausa recomendada: <b>{PAUSA_RECOMENDADA[r.regla.nivel]}</b>
+              </span>
+            </>
+          ) : (
+            <p>Cuando tu teléfono envíe uso, aquí verás a qué hora te cuesta más y qué hacer.</p>
+          )}
+        </aside>
       </div>
+      {globo}
     </Card>
   )
 }
 
-// ---------- Semanal ----------
+// ---------- Tiempo vs. objetivo ----------
 
 function WeeklyCard({ s }) {
-  const max = Math.max(1, ...s.barras.flatMap((b) => [b.uso, b.objetivo ?? 0])) / 0.86
+  const { props, globo } = useGlobo()
+  const max = Math.max(1, ...s.barras.flatMap((b) => [b.uso, b.objetivo ?? 0])) / 0.9
   const mejor = s.cambioPct != null && s.cambioPct <= 0
   return (
     <Card
-      className="card--semanal"
+      className="card--semanal card--legible"
       etiqueta="HÁBITO SEMANAL"
-      titulo="Tiempo vs. Objetivo"
+      titulo="Tiempo vs. objetivo"
+      ayuda={
+        <Ayuda
+          titulo="Tiempo vs. objetivo"
+          que="Compara cada día de la última semana tu tiempo en apps (barra naranja) con la meta diaria de tu plan (barra gris). La insignia es cuánto estás, en promedio, por debajo (−) o por encima (+) de la meta."
+          accion="Si varios días rebasas la meta, revisa en Uso por app cuáles apps suben más y ponles un límite."
+        />
+      }
       extra={
         s.cambioPct != null && (
-          <span className={`insignia${mejor ? '' : ' insignia--alerta'}`}>
+          <span className={`insignia${mejor ? '' : ' insignia--alerta'}`} title={mejor ? 'Promedio por debajo de la meta' : 'Promedio por encima de la meta'}>
             {s.cambioPct > 0 ? '+' : '−'}
-            {Math.abs(s.cambioPct).toFixed(1)}%
+            {Math.abs(s.cambioPct).toFixed(1)} %
           </span>
         )
       }
     >
       <div className="leyenda-barras">
-        <span><i style={{ background: '#f59e0b' }} />Uso real</span>
-        <span><i style={{ background: '#cbd5e1' }} />Objetivo</span>
+        <span><i className="leyenda-barras__uso" />Uso real</span>
+        <span><i className="leyenda-barras__meta" />Meta</span>
       </div>
       <div className="barras">
-        {s.barras.map((b, i) => (
-          <div className="barras__dia" key={i}>
-            <div className="barras__par" title={`${Math.round(b.uso)} min de uso${b.objetivo ? ` · objetivo ${Math.round(b.objetivo)} min` : ''}`}>
-              <span className="barra barra--objetivo" style={{ height: `${((b.objetivo ?? 0) / max) * 100}%` }} />
-              <span className="barra barra--uso" style={{ height: `${(b.uso / max) * 100}%` }} />
+        {s.barras.map((b, i) => {
+          const dif = b.objetivo != null ? Math.round(b.uso - b.objetivo) : null
+          return (
+            <div className="barras__dia" key={i}>
+              <div className="barras__par" tabIndex={0}
+                aria-label={`${b.dia}: ${horas(b.uso)} de uso${b.objetivo != null ? `, meta ${horas(b.objetivo)}` : ''}`}
+                {...props(
+                  <>
+                    <b>{b.dia}</b>
+                    <span className="ayuda-globo__fila">Tiempo usado <b>{horas(b.uso)}</b></span>
+                    {b.objetivo != null && (
+                      <>
+                        <span className="ayuda-globo__fila">Meta <b>{horas(b.objetivo)}</b></span>
+                        <span className="ayuda-globo__fila">Diferencia <b>{dif > 0 ? '+' : dif < 0 ? '−' : ''}{Math.abs(dif)} min</b></span>
+                      </>
+                    )}
+                  </>,
+                )}
+              >
+                <span className="barra barra--objetivo" style={{ height: `${((b.objetivo ?? 0) / max) * 100}%` }} />
+                <span className={`barra barra--uso${dif > 0 ? ' barra--excede' : ''}`} style={{ height: `${(b.uso / max) * 100}%` }} />
+              </div>
+              <small>{b.dia}</small>
             </div>
-            <small>{b.dia}</small>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <p className="nota">
         <Icono src={iconoPulso} tam={14} />
         {s.diferencia == null ? (
-          <span>Sin plan activo: crea uno para comparar contra un objetivo.</span>
+          <span>Sin plan activo: crea uno para comparar contra una meta.</span>
         ) : (
           <span>
-            <b className={mejor ? 'ok' : 'alerta'}>{Math.round(Math.abs(s.diferencia))} min {mejor ? 'menos' : 'más'}</b> de uso promedio diario que el objetivo.
+            <b className={mejor ? 'ok' : 'alerta'}>{Math.round(Math.abs(s.diferencia))} min {mejor ? 'menos' : 'más'}</b> de uso promedio al día que tu meta.
           </span>
         )}
       </p>
+      {globo}
     </Card>
   )
 }
@@ -362,34 +472,68 @@ function UsageCard({ u }) {
   )
 }
 
-// ---------- Fricción ----------
+// ---------- Pausas preventivas (antes "Intervenciones · Éxito por nivel") ----------
+
+// Qué hace cada nivel de pausa, en palabras simples
+const NIVELES_TEXTO = {
+  1: { nombre: 'Aviso suave', detalle: 'Temporizador de 5 s' },
+  2: { nombre: 'Pausa consciente', detalle: 'Ejercicio de respiración' },
+  3: { nombre: 'Bloqueo asistido', detalle: 'Chatbot de apoyo' },
+}
 
 function FrictionCard({ f }) {
+  const { props, globo } = useGlobo()
   return (
-    <Card className="card--friccion" etiqueta="INTERVENCIONES" titulo="Éxito por Nivel" extra={<Insignia>{f.global}% global</Insignia>}>
+    <Card
+      className="card--friccion card--legible"
+      etiqueta="EFECTIVIDAD DE LAS PAUSAS"
+      titulo="Pausas preventivas y control"
+      ayuda={
+        <Ayuda
+          titulo="Pausas preventivas"
+          que="Las pausas preventivas son recordatorios automáticos diseñados para ayudarte a detener el uso impulsivo del dispositivo antes de superar tu meta."
+          accion="Si un nivel funciona poco contigo, súbelo para las apps que más te cuestan en Apps y sitios."
+        />
+      }
+      extra={<Insignia>{f.global} % autocontrol</Insignia>}
+    >
       <div className="prevenidas">
         <b>{f.prevenidas}</b>
-        <span>recaídas prevenidas</span>
-        <small>de {f.total} pausas en el periodo</small>
+        <span>límites respetados de {f.total} avisos recibidos</span>
+        <small>{f.global} % de autocontrol: no abriste la app después de la pausa</small>
       </div>
       <ul className="niveles">
-        {f.niveles.map((n) => (
-          <li key={n.nivel}>
-            <span className="niveles__num" style={{ background: n.fondo, color: n.texto }}>{n.nivel}</span>
-            <span className="niveles__nombre">
-              <b>Nivel {n.nivel}</b>
-              <small>{n.nombre}</small>
-            </span>
-            <span className="niveles__pista">
-              <span style={{ width: `${n.exito}%` }} />
-            </span>
-            <span className="niveles__cifra">
-              <b>{n.total}</b>
-              <small>{n.exito}%</small>
-            </span>
-          </li>
-        ))}
+        {f.niveles.map((n) => {
+          const t = NIVELES_TEXTO[n.nivel]
+          return (
+            <li key={n.nivel} tabIndex={0}
+              {...props(
+                <>
+                  <b>Nivel {n.nivel} · {t.nombre}</b>
+                  <span>{t.detalle}</span>
+                  <span className="ayuda-globo__fila">Veces activado <b>{n.total}</b></span>
+                  <span className="ayuda-globo__fila">Efectividad <b>{n.exito} %</b></span>
+                  <span>{n.total ? `En ${Math.round((n.exito / 100) * n.total)} de ${n.total} veces no abriste la app.` : 'Aún no se ha mostrado en este periodo.'}</span>
+                </>,
+              )}
+            >
+              <span className="niveles__num" style={{ background: n.fondo, color: n.texto }}>{n.nivel}</span>
+              <span className="niveles__nombre">
+                <b>{t.nombre}</b>
+                <small>{t.detalle}</small>
+              </span>
+              <span className="niveles__pista" aria-hidden="true">
+                <span style={{ width: `${n.exito}%` }} />
+              </span>
+              <span className="niveles__cifra">
+                <b>{n.exito} % efectividad</b>
+                <small>{n.total} {n.total === 1 ? 'vez activado' : 'veces activado'}</small>
+              </span>
+            </li>
+          )
+        })}
       </ul>
+      {globo}
     </Card>
   )
 }
@@ -398,11 +542,11 @@ function FrictionCard({ f }) {
 
 const TARJETAS = [
   { id: 'telemetria', claves: 'telemetria android dispositivo heartbeat pipeline', C: TelemetryCard, prop: 't', dato: 'telemetria' },
-  { id: 'clusteres', claves: 'clusteres big data comportamiento aperturas', C: ClusterCard, prop: 'c', dato: 'clusteres' },
-  { id: 'riesgo', claves: 'riesgo recaida mamdani ia hora fricción', C: RiskCard, prop: 'r', dato: 'riesgo' },
+  { id: 'clusteres', claves: 'patrones habitos clusteres comportamiento aperturas redes mensajes videos', C: ClusterCard, prop: 'c', dato: 'clusteres' },
+  { id: 'riesgo', claves: 'riesgo recaida hora tentacion recomendacion vulnerable', C: RiskCard, prop: 'r', dato: 'riesgo' },
   { id: 'semanal', claves: 'semanal habito tiempo objetivo plan', C: WeeklyCard, prop: 's', dato: 'semanal' },
   { id: 'uso', claves: 'uso frecuencia sesiones apps categorias', C: UsageCard, prop: 'u', dato: 'uso' },
-  { id: 'friccion', claves: 'friccion intervenciones pausas nivel exito', C: FrictionCard, prop: 'f', dato: 'friccion' },
+  { id: 'friccion', claves: 'pausas preventivas control autocontrol friccion intervenciones nivel', C: FrictionCard, prop: 'f', dato: 'friccion' },
 ]
 
 const normalizar = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()

@@ -219,6 +219,7 @@ ul { padding: 0; list-style: none; }
 }
 .card__header { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 16px 10px; }
 .card__titulos { display: flex; flex-direction: column; gap: 4px; }
+.card__titulo-fila { display: flex; align-items: center; gap: 7px; }
 .card__etiqueta { font-size: 6px; line-height: 9px; font-weight: 700; letter-spacing: 0.72px; color: var(--ambar-texto); }
 .card__titulo { font: 400 11px/13.2px var(--display); letter-spacing: -0.15px; color: var(--texto); }
 .insignia {
