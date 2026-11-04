@@ -426,54 +426,64 @@ const etiquetaHoras = (min) => (min % 60 ? `${Math.floor(min / 60)}h 30` : `${mi
 function WeeklyCard({ s }) {
   const { props, globo } = useGlobo({ arriba: true })
   const [activo, setActivo] = useState(null)
-  const { tope, marcas } = escalaHoras(Math.max(60, ...s.barras.flatMap((b) => [b.uso, b.objetivo ?? 0])))
+  const meta = s.objetivo
+  const { tope, marcas } = escalaHoras(Math.max(60, meta ?? 0, ...s.barras.map((b) => b.uso)))
   const alto = (min) => `${Math.min(100, (min / tope) * 100)}%`
   const mejor = s.cambioPct != null && s.cambioPct <= 0
   const hoy = fechaISO(ahoraEnZona())
 
   return (
     <Card
-      className="card--semanal card--legible"
+      className="card--semanal card--legible pg-semanal"
       etiqueta="HÁBITO SEMANAL"
       titulo="Tiempo vs. objetivo"
       ayuda={
         <Ayuda
           titulo="Tiempo vs. objetivo"
-          que="Compara el tiempo real que pasaste en pantalla frente al límite diario que estableciste como meta."
-          accion="Si un día la barra sale en rojo por encima de la meta, revisa en Uso por app qué apps subieron ese día."
+          que={meta != null
+            ? `Compara las horas de uso diario frente a tu límite objetivo de ${hm(meta)} para identificar días de sobreuso.`
+            : 'Compara las horas de uso diario frente a tu límite objetivo para identificar días de sobreuso.'}
+          accion="Si un día la barra sale en rojo por encima de la línea de meta, revisa en Uso por app qué subió ese día."
         />
       }
       extra={
         s.cambioPct != null && (
           <span className={`pg-rendimiento pg-rendimiento--${mejor ? 'bien' : 'mal'}`}
             title={mejor ? 'Promedio diario por debajo de tu meta' : 'Promedio diario por encima de tu meta'}>
-            {s.cambioPct > 0 ? '+' : '−'}{Math.abs(s.cambioPct).toFixed(1)} %
+            {s.cambioPct > 0 ? '+' : '−'}{Math.abs(s.cambioPct).toFixed(1)}%
           </span>
         )
       }
     >
-      <div className="leyenda-barras">
-        <span><i className="leyenda-barras__uso" />Dentro de la meta</span>
-        <span><i className="leyenda-barras__exceso" />Por encima</span>
-        <span><i className="leyenda-barras__meta" />Meta diaria</span>
-      </div>
+      <ul className="pg-semanal__leyenda">
+        <li><i className="pg-semanal__punto pg-semanal__punto--bien" />Dentro de la meta</li>
+        <li><i className="pg-semanal__punto pg-semanal__punto--mal" />Por encima del límite</li>
+        {meta != null && <li><i className="pg-semanal__linea" />Meta diaria ({hm(meta)})</li>}
+      </ul>
+
       <div className="pg-semana">
-        {/* Eje Y en horas con líneas guía */}
+        {/* Eje Y en horas */}
         <div className="pg-semana__eje" aria-hidden="true">
           {marcas.map((m) => <span key={m} style={{ bottom: alto(m) }}>{etiquetaHoras(m)}</span>)}
         </div>
         <div className="pg-semana__area">
           <div className="pg-semana__guias" aria-hidden="true">
             {marcas.map((m) => <i key={m} className="pg-semana__guia" style={{ bottom: alto(m) }} />)}
+            {/* Línea de meta a su altura exacta */}
+            {meta != null && (
+              <span className="pg-semana__meta-linea" style={{ bottom: alto(meta) }}>
+                <em>Meta</em>
+              </span>
+            )}
           </div>
           {s.barras.map((b, i) => {
-            const meta = b.objetivo
-            const excede = meta != null && b.uso > meta
-            const sinDatos = b.uso <= 0
             const esHoy = b.fecha === hoy
+            const sinDatos = b.uso <= 0
+            const excede = meta != null && b.uso > meta
             const dif = meta != null ? b.uso - meta : null
-            const fecha = new Date(`${b.fecha}T00:00:00`).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
-            const titulo = `${fecha.charAt(0).toUpperCase()}${fecha.slice(1)}${esHoy ? ' (hoy)' : ''}`
+            const diaLargo = new Date(`${b.fecha}T00:00:00`).toLocaleDateString('es-MX', { weekday: 'long' })
+            const titulo = `${diaLargo.charAt(0).toUpperCase()}${diaLargo.slice(1)}${esHoy ? ' (hoy)' : ''}`
+            const estado = dif == null ? null : dif > 0 ? `+${hm(dif)} sobre el límite` : `−${hm(dif)} ahorrados`
             const p = props(
               sinDatos ? (
                 <>
@@ -482,36 +492,29 @@ function WeeklyCard({ s }) {
                 </>
               ) : (
                 <>
-                  <b>{titulo}</b>
-                  <span className="ayuda-globo__fila">Uso real <b>{hm(b.uso)}</b></span>
-                  {meta != null && <span className="ayuda-globo__fila">Meta diaria <b>{hm(meta)}</b></span>}
-                  {dif != null && (
-                    <span className={`pg-estado-dia pg-estado-dia--${dif > 0 ? 'mal' : 'bien'}`}>
-                      {dif > 0 ? `+${hm(dif)} por encima de la meta` : `−${hm(dif)} ahorrados`}
-                    </span>
-                  )}
-                  {esHoy && <span>El día todavía no termina.</span>}
+                  <span className="pg-globo-dia">{titulo}</span>
+                  <b className="pg-globo-uso">{hm(b.uso)}</b>
+                  {estado && <span className={`pg-globo-estado pg-globo-estado--${dif > 0 ? 'mal' : 'bien'}`}>{estado}</span>}
+                  {esHoy && <span className="pg-globo-nota">Acumulado hasta ahora</span>}
                 </>
               ),
             )
+            const tipo = sinDatos ? 'vacia' : esHoy ? 'hoy' : excede ? 'mal' : 'bien'
             return (
               <div key={b.fecha} tabIndex={0}
-                className={`pg-semana__col${activo === i ? ' pg-semana__col--activa' : ''}${activo != null && activo !== i ? ' pg-semana__col--atenuada' : ''}${sinDatos ? ' pg-semana__col--vacia' : ''}`}
-                aria-label={sinDatos ? `${titulo}: sin actividad registrada` : `${titulo}: ${hm(b.uso)} de uso${meta != null ? `, meta ${hm(meta)}` : ''}`}
+                className={`pg-semana__col${activo === i ? ' pg-semana__col--activa' : ''}`}
+                aria-label={sinDatos ? `${titulo}: sin actividad registrada` : `${titulo}: ${hm(b.uso)}${estado ? `, ${estado}` : ''}`}
                 {...p}
-                onMouseEnter={(e) => { p.onMouseEnter(e); setActivo(i) }}
+                // El globo se ancla a la punta de la barra (o a la columna si no hay uso)
+                onMouseEnter={(e) => { p.onMouseEnter({ currentTarget: e.currentTarget.querySelector('.pg-semana__barra') ?? e.currentTarget }); setActivo(i) }}
                 onMouseLeave={() => { p.onMouseLeave(); setActivo(null) }}
-                onFocus={(e) => { p.onFocus(e); setActivo(i) }}
+                onFocus={(e) => { p.onFocus({ currentTarget: e.currentTarget.querySelector('.pg-semana__barra') ?? e.currentTarget }); setActivo(i) }}
                 onBlur={() => { p.onBlur(); setActivo(null) }}
               >
                 <div className="pg-semana__pista">
-                  {/* La meta es el "termómetro"; el uso crece por dentro y sobresale en rojo si la rebasa */}
-                  {meta != null && <span className="pg-semana__meta" style={{ height: alto(meta) }} />}
-                  {sinDatos ? (
-                    <span className="pg-semana__sin" aria-hidden="true">—</span>
-                  ) : (
-                    <span className={`pg-semana__uso${excede ? ' pg-semana__uso--exceso' : ''}`} style={{ height: alto(b.uso) }} />
-                  )}
+                  {sinDatos
+                    ? <span className="pg-semana__sin" aria-hidden="true">—</span>
+                    : <span className={`pg-semana__barra pg-semana__barra--${tipo}`} style={{ height: alto(b.uso) }} />}
                 </div>
                 <small className={esHoy ? 'pg-semana__hoy' : ''}>{esHoy ? 'Hoy' : b.dia}</small>
               </div>
@@ -519,8 +522,9 @@ function WeeklyCard({ s }) {
           })}
         </div>
       </div>
+
       <p className={`pg-resumen pg-resumen--${s.diferencia == null ? 'neutro' : mejor ? 'bien' : 'mal'}`}>
-        <Icono src={iconoPulso} tam={16} />
+        <Icono src={iconoPulso} tam={18} tinta={s.diferencia == null ? undefined : mejor ? '#10b981' : '#e11d48'} />
         {s.diferencia == null ? (
           <span>Sin plan activo: crea uno para comparar contra una meta.</span>
         ) : (

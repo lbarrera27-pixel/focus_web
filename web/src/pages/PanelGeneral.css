@@ -116,65 +116,78 @@
 .pg-recomendacion__pausa b { color: #065f46; }
 
 /* ---------- Tiempo vs. objetivo ---------- */
-.card--legible .leyenda-barras { flex-wrap: wrap; gap: 6px 14px; padding: 0 18px; }
-.card--legible .leyenda-barras span { gap: 6px; font-size: 11px; line-height: 15px; color: #475569; }
-.card--legible .leyenda-barras i { width: 12px; height: 12px; border-radius: 4px; }
-.leyenda-barras__uso { background: linear-gradient(#34d399, #10b981); }
-.leyenda-barras__exceso { background: linear-gradient(#f87171, #ef4444); }
-.leyenda-barras__meta { background: #e2e8f0; box-shadow: inset 0 0 0 1px #cbd5e1; }
+/* Tarjeta semanal estilo minimalista: más aire, título grande y sombra suave */
+.pg-semanal { border-color: #f1f5f9; border-radius: 24px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
+.card--legible.pg-semanal .card__header { padding: 24px 24px 6px; }
+.card--legible.pg-semanal .card__etiqueta { font-size: 12px; line-height: 16px; letter-spacing: 0.05em; font-weight: 700; color: #d97706; }
+.card--legible.pg-semanal .card__titulo { font-size: 20px; line-height: 26px; font-weight: 700; color: #1e293b; }
 
 /* Insignia de rendimiento: verde si gastas menos que la meta */
-.pg-rendimiento { padding: 5px 11px; border-radius: 999px; font-size: 12px; line-height: 16px; font-weight: 800; white-space: nowrap; }
-.pg-rendimiento--bien { background: #d1fae5; color: #065f46; box-shadow: inset 0 0 0 1px #6ee7b7; }
-.pg-rendimiento--mal { background: #fee2e2; color: #991b1b; box-shadow: inset 0 0 0 1px #fca5a5; }
+.pg-rendimiento { padding: 4px 12px; border-radius: 999px; font-size: 14px; line-height: 20px; font-weight: 700; white-space: nowrap; }
+.pg-rendimiento--bien { background: #ecfdf5; color: #059669; }
+.pg-rendimiento--mal { background: #fff1f2; color: #e11d48; }
 
-/* Barras "termómetro": la meta es el contenedor gris y el uso crece por dentro */
-.pg-semana { display: flex; gap: 8px; height: 168px; margin: 14px 18px 0; }
-.pg-semana__eje { position: relative; flex: 0 0 34px; margin-bottom: 22px; }
+.pg-semanal__leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 4px 24px 0; }
+.pg-semanal__leyenda li { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 16px; color: #64748b; }
+.pg-semanal__punto { width: 9px; height: 9px; border-radius: 50%; }
+.pg-semanal__punto--bien { background: #10b981; }
+.pg-semanal__punto--mal { background: #f43f5e; }
+.pg-semanal__linea { width: 18px; height: 0; border-top: 2px dashed #cbd5e1; }
+
+/* Gráfica: barras esbeltas y línea de meta horizontal */
+.pg-semana { display: flex; gap: 10px; height: 176px; margin: 18px 24px 0; }
+.pg-semana__eje { position: relative; flex: 0 0 26px; margin-bottom: 24px; }
 .pg-semana__eje span {
   position: absolute; right: 0; transform: translateY(50%); white-space: nowrap;
-  font-size: 10px; line-height: 13px; color: #64748b; font-variant-numeric: tabular-nums;
+  font-size: 12px; line-height: 14px; color: #94a3b8; font-variant-numeric: tabular-nums;
 }
-.pg-semana__area { position: relative; flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 4px; }
-/* Las guías comparten la base de las barras (sin la fila de los días) */
-.pg-semana__guias { position: absolute; inset: 0 0 22px; pointer-events: none; }
-.pg-semana__guia { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed rgba(148, 163, 184, 0.35); }
+.pg-semana__area { position: relative; flex: 1; min-width: 0; display: flex; justify-content: space-between; }
+.pg-semana__guias { position: absolute; inset: 0 0 24px; pointer-events: none; }
+.pg-semana__guia { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid #f1f5f9; }
+.pg-semana__meta-linea { position: absolute; left: 0; right: 0; z-index: 1; height: 0; border-top: 1.5px dashed #cbd5e1; }
+.pg-semana__meta-linea em {
+  position: absolute; right: 0; bottom: 3px; padding: 0 4px; border-radius: 4px; background: #fff;
+  font-style: normal; font-size: 10px; line-height: 13px; font-weight: 600; color: #94a3b8;
+}
 .pg-semana__col {
-  position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  border-radius: 10px; cursor: pointer; outline: none; transition: opacity 0.15s, background 0.15s;
+  position: relative; z-index: 2; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; outline: none;
 }
-.pg-semana__col--atenuada { opacity: 0.45; }
-.pg-semana__col--activa, .pg-semana__col:focus-visible { background: rgba(241, 245, 249, 0.8); }
 .pg-semana__pista { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; }
-.pg-semana__meta {
-  position: absolute; bottom: 0; width: 24px; border-radius: 8px 8px 4px 4px;
-  background: #e2e8f0; box-shadow: inset 0 0 0 1px #cbd5e1;
+.pg-semana__barra {
+  position: absolute; bottom: 0; width: 18px; border-radius: 999px 999px 4px 4px;
+  transition: transform 0.2s ease-out, filter 0.2s ease-out, height 0.3s ease-out;
 }
-.pg-semana__uso {
-  position: absolute; bottom: 0; width: 14px; border-radius: 6px 6px 3px 3px;
-  background: linear-gradient(#34d399, #10b981); transition: height 0.3s ease-out, transform 0.15s;
+.pg-semana__barra--bien { background: linear-gradient(#34d399, #10b981); }
+.pg-semana__barra--mal { background: linear-gradient(#f43f5e, #e11d48); }
+.pg-semana__barra--hoy { background: linear-gradient(#e2e8f0, #cbd5e1); box-shadow: inset 0 0 0 1px #94a3b8; }
+.pg-semana__col:hover .pg-semana__barra, .pg-semana__col:focus-visible .pg-semana__barra, .pg-semana__col--activa .pg-semana__barra {
+  transform: translateY(-4px); filter: brightness(1.08) drop-shadow(0 4px 6px rgba(15, 23, 42, 0.15));
 }
-.pg-semana__uso--exceso { background: linear-gradient(#f87171, #ef4444); box-shadow: 0 0 0 2px #fff; }
-.pg-semana__col--activa .pg-semana__uso, .pg-semana__col:focus-visible .pg-semana__uso { transform: scaleX(1.15); filter: brightness(1.05); }
-.pg-semana__sin { position: absolute; bottom: 4px; font-size: 13px; font-weight: 700; color: #94a3b8; }
-.pg-semana__col--vacia small { color: #94a3b8; }
-.pg-semana__col small { height: 16px; font-size: 11px; line-height: 16px; color: #475569; }
-.pg-semana__hoy { font-weight: 800; color: #b45309 !important; }
-.pg-estado-dia { padding: 3px 8px; border-radius: 999px; font-weight: 700; text-align: center; }
-.pg-estado-dia--bien { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
-.pg-estado-dia--mal { background: rgba(239, 68, 68, 0.22); color: #fca5a5; }
+.pg-semana__col:focus-visible small { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: 4px; }
+.pg-semana__sin { position: absolute; bottom: 2px; font-size: 13px; font-weight: 700; color: #cbd5e1; }
+.pg-semana__col small { height: 16px; font-size: 12px; line-height: 16px; color: #64748b; }
+.pg-semana__hoy { font-weight: 700; color: #d97706 !important; }
+
+/* Globo de cada día */
+.pg-globo-dia { font-size: 12px; color: #94a3b8; }
+.pg-globo-uso { font-size: 18px; line-height: 22px; }
+.pg-globo-estado { font-weight: 700; }
+.pg-globo-estado--bien { color: #34d399; }
+.pg-globo-estado--mal { color: #fb7185; }
+.pg-globo-nota { font-size: 11px; color: #94a3b8; }
 
 /* Resumen inferior en pastilla */
 .pg-resumen {
-  display: flex; align-items: center; gap: 8px; margin: 12px 18px 16px; padding: 9px 12px; border-radius: 12px;
-  font-size: 12px; line-height: 17px; color: #334155;
+  display: flex; align-items: center; gap: 10px; margin: 18px 24px 24px; padding: 14px; border-radius: 16px;
+  font-size: 13px; line-height: 18px; color: #475569;
 }
-.pg-resumen--bien { background: #ecfdf5; box-shadow: inset 0 0 0 1px #a7f3d0; }
+.pg-resumen--bien { background: rgba(236, 253, 245, 0.6); border: 1px solid #d1fae5; }
 .pg-resumen--bien b { color: #047857; }
-.pg-resumen--mal { background: #fef2f2; box-shadow: inset 0 0 0 1px #fecaca; }
-.pg-resumen--mal b { color: #b91c1c; }
-.pg-resumen--neutro { background: #f8fafc; }
-@media (prefers-reduced-motion: reduce) { .pg-semana__col, .pg-semana__uso { transition: none; } }
+.pg-resumen--mal { background: #fff1f2; border: 1px solid #ffe4e6; }
+.pg-resumen--mal b { color: #be123c; }
+.pg-resumen--neutro { background: #f8fafc; border: 1px solid #f1f5f9; }
+@media (prefers-reduced-motion: reduce) { .pg-semana__barra { transition: none; } }
 
 /* ---------- Uso y frecuencia de sesiones ---------- */
 .card--legible .uso { grid-template-columns: 300px minmax(0, 1fr); gap: 24px; padding: 4px 18px 16px; }
