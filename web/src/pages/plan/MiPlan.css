@@ -117,13 +117,6 @@
 
 .ep-relajar { position: relative; display: flex; align-items: center; gap: 12px; cursor: pointer; }
 .ep-relajar input { position: absolute; width: 42px; height: 24px; margin: 0; opacity: 0; cursor: pointer; }
-.ep-switch { position: relative; flex-shrink: 0; width: 42px; height: 24px; border-radius: 12px; background: #cbd5e1; transition: background 0.15s; }
-.ep-switch::after {
-  content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2); transition: transform 0.15s;
-}
-.ep-relajar input:checked + .ep-switch { background: var(--w-marca); }
-.ep-relajar input:checked + .ep-switch::after { transform: translateX(18px); }
 
 .ep-vista { flex: 0 0 440px !important; display: flex; flex-direction: column; gap: 16px; padding: 24px; }
 .ep-vista > div:first-child { display: flex; flex-direction: column; gap: 4px; }
@@ -222,3 +215,27 @@
 .mp > .w-fila:first-of-type > .w-kpi, .mp .w-fila > .w-kpi { align-items: center; justify-content: center; text-align: center; }
 .mp .mp-kpi__detalle { max-width: 36ch; }
 .mp .mp-progreso { width: 100%; max-width: 280px; }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .mp-cambio--sube { color: #6ec7f7; }
+:root[data-tema='oscuro'] .mp-dias__barra { background: #2b3a52; }
+:root[data-tema='oscuro'] .ep-segmentado .ep-segmentado__activo { box-shadow: 0 1px 1.5px rgba(15, 23, 41, 0.08); }
+:root[data-tema='oscuro'] .ep-barras i { background: #fbbf24; }
+:root[data-tema='oscuro'] .mp-kpi__cambio--baja { color: #6ef7d0; }
+:root[data-tema='oscuro'] .mp-kpi__cambio--sube { color: #f7a96e; }
+:root[data-tema='oscuro'] .mp-progreso .w-barra > span { background: linear-gradient(90deg, #34d399, #059669); }
+:root[data-tema='oscuro'] .mp-progreso small { color: #6ef7d0; }
+:root[data-tema='oscuro'] .mp-nivel--bien { background: hsla(149, 70%, 50%, 0.16); color: #6ef7d0; }
+:root[data-tema='oscuro'] .mp-nivel--medio { background: hsla(48, 70%, 50%, 0.16); color: #f7a96e; }
+:root[data-tema='oscuro'] .mp-nivel--mal { background: hsla(0, 70%, 50%, 0.16); color: #eb7a7a; }
+:root[data-tema='oscuro'] .mp-nivel--neutro { background: #1e293b; color: #cbd5e1; }
+:root[data-tema='oscuro'] .mp-razon__num { background: hsla(48, 70%, 50%, 0.16); color: #f7a96e; }
+:root[data-tema='oscuro'] .mp-efecto--baja { background: hsla(149, 70%, 50%, 0.16); color: #6ef7d0; }
+:root[data-tema='oscuro'] .mp-efecto--igual { background: #1e293b; color: #cbd5e1; }
+:root[data-tema='oscuro'] .mp-efecto--sube { background: hsla(48, 70%, 50%, 0.16); color: #f7a96e; }
+:root[data-tema='oscuro'] .mp-resultado { background: #1e293b; border: 1px solid hsla(152, 70%, 55%, 0.4); color: #6ff6d0; }
+:root[data-tema='oscuro'] .mp-resultado small { color: #6ef7d0; }
+:root[data-tema='oscuro'] .mp-linea__item > i { background: #94a3b8; }
+:root[data-tema='oscuro'] .mp-linea__item--baja > i { background: #059669; }
+:root[data-tema='oscuro'] .mp-linea__item--sube > i { background: #d97706; }
+/* ==== fin del tema oscuro ==== */

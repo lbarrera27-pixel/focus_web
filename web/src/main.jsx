@@ -2,6 +2,11 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import './tema-oscuro.css'
+import { aplicarTema, leerTema } from './components/TemaInterruptor.jsx'
+
+// El tema guardado se aplica antes de pintar para que no parpadee
+aplicarTema(leerTema())
 
 // El diseño mide 1440 px de ancho: en pantallas más anchas se amplía para ocupar todo el ancho
 const ANCHO_DISENO = 1440

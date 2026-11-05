@@ -140,3 +140,31 @@
 .ia-nivel__pista i { position: absolute; top: -2px; width: 1px; height: 11px; background: var(--texto-oscuro-2); }
 .ia-nivel__escala { display: flex; justify-content: space-between; padding-top: 6px; }
 .ia-nivel__escala small { font-size: 5px; line-height: 7.5px; color: var(--texto-2); }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .avatar--ia { background: hsla(204, 70%, 50%, 0.16); color: #6ec7f7; }
+:root[data-tema='oscuro'] .ia .card { box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04); }
+:root[data-tema='oscuro'] .ia-kpi { background: #182234; box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04); }
+:root[data-tema='oscuro'] .ia-kpi--riesgo { background-image: linear-gradient(139.7deg, #182234 54.97%, hsla(33, 70%, 50%, 0.16) 91.43%); }
+:root[data-tema='oscuro'] .ia-tendencia { color: #ef9476; }
+:root[data-tema='oscuro'] .ia-tendencia i { background: #f97316; }
+:root[data-tema='oscuro'] .gauge__nivel { color: #f6966f; }
+:root[data-tema='oscuro'] .ia-resumen b { color: #334155; }
+:root[data-tema='oscuro'] .ia-grafica__pico { fill: #182234; }
+:root[data-tema='oscuro'] .ia-insight { background: hsla(48, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .ia-insight b { color: #f2a373; }
+:root[data-tema='oscuro'] .ia-pertenencia__entrada { fill: #182234; }
+:root[data-tema='oscuro'] .ia-regla b { color: #fff; }
+:root[data-tema='oscuro'] .ia-regla__icono { background: rgba(245, 158, 11, 0.13); }
+:root[data-tema='oscuro'] .ia-regla__icono--azul { background: rgba(2, 132, 199, 0.15); }
+:root[data-tema='oscuro'] .ia-regla em { background: rgba(234, 88, 12, 0.18); color: #fed7aa; }
+:root[data-tema='oscuro'] .ia-regla__codigo { background: #162238; color: #cbd5e1; }
+:root[data-tema='oscuro'] .ia-regla__codigo i { color: #7dd3fc; }
+:root[data-tema='oscuro'] .ia-regla__codigo hr { border-top: 1px solid #334155; }
+:root[data-tema='oscuro'] .ia-nivel--n1 { background-image: linear-gradient(154.6deg, #182234 0%, hsla(48, 70%, 50%, 0.16) 100%); }
+:root[data-tema='oscuro'] .ia-nivel--n2 { background-image: linear-gradient(154.6deg, #182234 0%, #1e293b 100%); }
+:root[data-tema='oscuro'] .ia-nivel--n3 { background-image: linear-gradient(154.6deg, #182234 0%, #1e293b 100%); }
+:root[data-tema='oscuro'] .ia-nivel--n1 .ia-nivel__insignia { background: hsla(48, 70%, 50%, 0.16); color: #f2a373; }
+:root[data-tema='oscuro'] .ia-nivel--n2 .ia-nivel__insignia { background: hsla(204, 70%, 50%, 0.16); color: #6ec7f7; }
+:root[data-tema='oscuro'] .ia-nivel--n3 .ia-nivel__insignia { background: #0f172a; color: #fff; }
+/* ==== fin del tema oscuro ==== */

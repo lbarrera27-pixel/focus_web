@@ -25,3 +25,15 @@
 @media (prefers-reduced-motion: reduce) {
   .ayuda-boton, .ayuda-globo { transition: none; animation: none; }
 }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .ayuda-boton { border: 1px solid hsla(213, 70%, 55%, 0.4); background: #182234; color: #94a3b8; }
+:root[data-tema='oscuro'] .ayuda-boton:hover, :root[data-tema='oscuro'] .ayuda-boton[aria-expanded='true'] { border-color: #f59e0b; background: hsla(41, 70%, 50%, 0.16); color: #f7a96e; }
+:root[data-tema='oscuro'] .ayuda-boton:focus-visible { outline: 2px solid #f59e0b; }
+:root[data-tema='oscuro'] .ayuda-boton--claro { border-color: rgba(42, 54, 73, 0.35); color: #e2e8f0; }
+:root[data-tema='oscuro'] .ayuda-globo { background: #0f172a; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28); color: #e2e8f0; }
+:root[data-tema='oscuro'] .ayuda-globo b { color: #fff; }
+:root[data-tema='oscuro'] .ayuda-globo__accion { border-top: 1px solid rgba(42, 54, 73, 0.12); color: #fde68a; }
+:root[data-tema='oscuro'] .ayuda-globo__accion b { color: #fbbf24; }
+:root[data-tema='oscuro'] .ayuda-globo__fila span { color: #94a3b8; }
+/* ==== fin del tema oscuro ==== */

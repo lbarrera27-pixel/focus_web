@@ -79,3 +79,15 @@
 /* Tarjetas superiores centradas */
 .us-kpis > .w-kpi { align-items: center; justify-content: center; text-align: center; }
 .us-kpis .w-display { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .us-segmentado .us-segmentado__activo { box-shadow: 0 1px 1.5px rgba(15, 23, 41, 0.08); }
+:root[data-tema='oscuro'] .us-barra { background: #2b3a52; }
+:root[data-tema='oscuro'] .us-nivel-0 { background: #1e293b; }
+:root[data-tema='oscuro'] .us-nivel-1 { background: #fde68a; }
+:root[data-tema='oscuro'] .us-nivel-2 { background: #fbbf24; }
+:root[data-tema='oscuro'] .us-nivel-3 { background: #d97706; }
+:root[data-tema='oscuro'] .us-nivel-4 { background: #b45309; }
+:root[data-tema='oscuro'] .us-nivel-5 { background: #7c2d12; }
+:root[data-tema='oscuro'] .us-categorias__pista { background: #1e293b; }
+/* ==== fin del tema oscuro ==== */

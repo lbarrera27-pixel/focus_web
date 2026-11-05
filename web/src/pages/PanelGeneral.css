@@ -309,3 +309,104 @@
 /* Tiempo vs. objetivo: la gráfica crece con la tarjeta y el resumen queda pegado abajo sin huecos */
 .pg-semana { flex: 1 1 auto; height: auto; min-height: 210px; margin-top: 14px; }
 .pg-semanal .pg-resumen { margin-top: 16px; margin-bottom: 20px; }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .card--legible .dispersion__eje { fill: #64748b; }
+:root[data-tema='oscuro'] .pg-punto:hover { stroke: #0f172a; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres li:hover, :root[data-tema='oscuro'] .card--legible .leyenda-clusteres li:focus-visible { background: #182234; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres small { color: #94a3b8; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres small strong { color: #8ea4d7; }
+:root[data-tema='oscuro'] .card--legible .hora:hover, :root[data-tema='oscuro'] .card--legible .hora:focus-visible { box-shadow: 0 0 0 2px #0f172a; }
+:root[data-tema='oscuro'] .card--legible .ventana b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-reloj__guia { stroke: hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-reloj__guia--max { stroke: hsla(0, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-reloj__sector:hover, :root[data-tema='oscuro'] .pg-reloj__sector:focus-visible, :root[data-tema='oscuro'] .pg-reloj__sector--activo { stroke: #0f172a; }
+:root[data-tema='oscuro'] .pg-reloj__hora { fill: #475569; }
+:root[data-tema='oscuro'] .pg-reloj__centro { fill: #182234; stroke: #2a3649; }
+:root[data-tema='oscuro'] .pg-reloj__centro-hora { fill: #334155; }
+:root[data-tema='oscuro'] .pg-reloj__centro-pie { fill: #64748b; }
+:root[data-tema='oscuro'] .pg-reloj-leyenda b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-reloj-leyenda span { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-reloj-nota { color: #cbd5e1; }
+:root[data-tema='oscuro'] .pg-reloj-nota b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-reloj-estado { background: #182234; border: 1px solid #2a3649; }
+:root[data-tema='oscuro'] .pg-reloj-estado .punto-color { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15); }
+:root[data-tema='oscuro'] .pg-recomendacion { border: 1px solid hsla(43, 70%, 55%, 0.4); background: hsla(41, 70%, 50%, 0.16); color: #334155; }
+:root[data-tema='oscuro'] .pg-recomendacion__cabeza small { color: #f7a96e; }
+:root[data-tema='oscuro'] .pg-recomendacion__cabeza b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion__icono { background: #0f172a; }
+:root[data-tema='oscuro'] .pg-recomendacion b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion__sugerencia { background: #182234; }
+:root[data-tema='oscuro'] .pg-recomendacion__pausa { background: hsla(149, 70%, 50%, 0.16); color: #6ef7d0; }
+:root[data-tema='oscuro'] .pg-recomendacion__pausa b { color: #6ff6d0; }
+:root[data-tema='oscuro'] .pg-semanal { border-color: #2a3649; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
+:root[data-tema='oscuro'] .card--legible.pg-semanal .card__etiqueta { color: #f7b76e; }
+:root[data-tema='oscuro'] .card--legible.pg-semanal .card__titulo { color: #9aaccb; }
+:root[data-tema='oscuro'] .pg-rendimiento--bien { background: #1e293b; color: #6ef7cd; }
+:root[data-tema='oscuro'] .pg-rendimiento--mal { background: #1e293b; color: #e11d48; }
+:root[data-tema='oscuro'] .pg-semanal__leyenda li { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semanal__punto--bien { background: #10b981; }
+:root[data-tema='oscuro'] .pg-semanal__punto--mal { background: #f43f5e; }
+:root[data-tema='oscuro'] .pg-semanal__linea { border-top: 2px dashed hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-semana__eje span { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__guia { border-top: 1px solid #2a3649; }
+:root[data-tema='oscuro'] .pg-semana__meta-linea { border-top: 1.5px dashed hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-semana__meta-linea em { background: #182234; color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__barra--bien { background: linear-gradient(#34d399, #10b981); }
+:root[data-tema='oscuro'] .pg-semana__barra--mal { background: linear-gradient(#f43f5e, #e11d48); }
+:root[data-tema='oscuro'] .pg-semana__barra--hoy { background: linear-gradient(#2b3a52, hsla(213, 70%, 50%, 0.16)); box-shadow: inset 0 0 0 1px #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__col:focus-visible small { outline: 2px solid #f59e0b; }
+:root[data-tema='oscuro'] .pg-semana__sin { color: #cbd5e1; }
+:root[data-tema='oscuro'] .pg-semana__col small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__hoy { color: #f7b76e !important; }
+:root[data-tema='oscuro'] .pg-globo-dia { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-globo-estado--bien { color: #34d399; }
+:root[data-tema='oscuro'] .pg-globo-estado--mal { color: #fb7185; }
+:root[data-tema='oscuro'] .pg-globo-nota { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-resumen { color: #cbd5e1; }
+:root[data-tema='oscuro'] .pg-resumen--bien { background: rgba(30, 41, 59, 0.6); border: 1px solid hsla(149, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-resumen--bien b { color: #6ef7d0; }
+:root[data-tema='oscuro'] .pg-resumen--mal { background: #1e293b; border: 1px solid hsla(356, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-resumen--mal b { color: #f27392; }
+:root[data-tema='oscuro'] .pg-resumen--neutro { background: #182234; border: 1px solid #2a3649; }
+:root[data-tema='oscuro'] .card--legible .uso__frecuencia-cabeza small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-subtitulo b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-frecuencia__guia { stroke: #94a3b8; }
+:root[data-tema='oscuro'] .pg-frecuencia__base { stroke: hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-frecuencia__eje { fill: #64748b; }
+:root[data-tema='oscuro'] .pg-frecuencia__cursor { stroke: #f59e0b; }
+:root[data-tema='oscuro'] .pg-frecuencia__punto { fill: #182234; stroke: #f59e0b; }
+:root[data-tema='oscuro'] .pg-frecuencia__ultimo { fill: #182234; stroke: #f59e0b; }
+:root[data-tema='oscuro'] .pg-frecuencia__insignia { fill: #0f172a; }
+:root[data-tema='oscuro'] .pg-frecuencia__insignia-texto { fill: #182234; }
+:root[data-tema='oscuro'] .pg-frecuencia__zona:focus-visible { fill: rgba(245, 158, 11, 0.1); }
+:root[data-tema='oscuro'] .pg-comparacion--normal { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+:root[data-tema='oscuro'] .pg-comparacion--alto { background: rgba(248, 113, 113, 0.2); color: #fca5a5; }
+:root[data-tema='oscuro'] .pg-comparacion--bajo { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+:root[data-tema='oscuro'] .card--legible .prevenidas span { color: #8ea4d7; }
+:root[data-tema='oscuro'] .card--legible .niveles li:hover, :root[data-tema='oscuro'] .card--legible .niveles li:focus-visible { background: #182234; }
+:root[data-tema='oscuro'] .card--legible .niveles__nombre small { color: #94a3b8; }
+:root[data-tema='oscuro'] .card--legible .niveles__pista { background: #1e293b; }
+:root[data-tema='oscuro'] .card--legible .niveles__cifra small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-patrones__leyenda li { border: 1px solid #2a3649; background: #182234; color: #334155; }
+:root[data-tema='oscuro'] .pg-patrones__leyenda li:hover, :root[data-tema='oscuro'] .pg-patrones__leyenda li:focus-visible { background: #182234; border-color: hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-patrones__leyenda b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta { border: 1px solid hsla(43, 70%, 55%, 0.4); background: hsla(41, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__icono { background: #0f172a; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__texto { color: #334155; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__texto > b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__texto b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__pausa { background: hsla(149, 70%, 50%, 0.16); color: #6ef7d0; }
+:root[data-tema='oscuro'] .pg-telemetria__panel { border: 1px solid #2a3649; background: #182234; }
+:root[data-tema='oscuro'] .pg-telemetria__titulo { color: #f7a96e; }
+:root[data-tema='oscuro'] .pg-telemetria__panel dt { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-telemetria__panel dd { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-telemetria__panel dd small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-ok { color: #6ef7d0 !important; }
+:root[data-tema='oscuro'] .pg-apagado { color: #94a3b8 !important; }
+:root[data-tema='oscuro'] .pg-telemetria__boton { border: 1px solid #2a3649; background: #182234; color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-telemetria__boton:hover:not(:disabled) { background: #1e293b; }
+:root[data-tema='oscuro'] .pg-telemetria__boton:focus-visible { outline: 2px solid #f59e0b; }
+:root[data-tema='oscuro'] .pg-senal { color: #94a3b8; }
+/* ==== fin del tema oscuro ==== */

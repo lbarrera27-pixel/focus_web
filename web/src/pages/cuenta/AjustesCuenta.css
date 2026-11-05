@@ -151,3 +151,13 @@
 @media (max-width: 720px) {
   .cu-campos, .cu-perfil, .cu-ayuda { flex-wrap: wrap; }
 }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .cu-pestana { color: #cbd5e1; }
+:root[data-tema='oscuro'] .cu-gris__valor--suave { color: #cbd5e1; }
+:root[data-tema='oscuro'] .cu-dato span { color: #cbd5e1; }
+:root[data-tema='oscuro'] .cu-nota small { color: #cbd5e1; }
+:root[data-tema='oscuro'] .cu-vista__texto small { color: #cbd5e1; }
+:root[data-tema='oscuro'] .cu-pasos li { color: #334155; }
+:root[data-tema='oscuro'] .cu-actividad i.cu-actividad__vacia { background: #2b3a52; }
+/* ==== fin del tema oscuro ==== */

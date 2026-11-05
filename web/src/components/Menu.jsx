@@ -10,6 +10,7 @@ import iconoFoqui from '../assets/icons/w-foqui.svg'
 import iconoReportes from '../assets/icons/w-reportes.svg'
 import iconoAjustes from '../assets/icons/w-ajustes.svg'
 import iconoContraer from '../assets/icons/w-contraer.svg'
+import TemaInterruptor from './TemaInterruptor.jsx'
 import './Menu.css'
 
 export const SECCIONES_ESTUDIANTE = [
@@ -66,6 +67,7 @@ export default function Menu({ activa, onNavegar, usuario, contraido, onContraer
       </nav>
 
       <div className="menu__espacio" />
+      <TemaInterruptor contraido={contraido} />
       <button
         type="button"
         className="menu__item"

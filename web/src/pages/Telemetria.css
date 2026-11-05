@@ -147,3 +147,24 @@
 .tel-red__datos dt { font-size: 5px; line-height: 7.5px; font-weight: 700; letter-spacing: 0.3px; color: var(--texto-3); }
 .tel-red__datos dd { font-size: 7px; line-height: 10.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tel-red__boton { height: 39px; padding: 0 14px; justify-content: flex-start; }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .tel-principal__telefono { border: 1.127px solid #2a3649; background: #182234; }
+:root[data-tema='oscuro'] .tel-principal__led { border: 1.127px solid #2a3649; }
+:root[data-tema='oscuro'] .tel-metrica__icono { background: hsla(48, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .tel-codigo { background: #182234; color: #334155; }
+:root[data-tema='oscuro'] .tel-etiqueta { background: hsla(141, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .tel-etiqueta--error { background: #1e293b; color: #eb7a7a; }
+:root[data-tema='oscuro'] .tel-permisos em { background: hsla(141, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .terminal { border: 1.127px solid #1e293b; background: #0b1220; }
+:root[data-tema='oscuro'] .terminal__barra { background: #111c2e; border-bottom: 1.127px solid #1e293b; }
+:root[data-tema='oscuro'] .terminal__tabla th { background: #0e1829; }
+:root[data-tema='oscuro'] .terminal__tabla td { border-top: 1.127px solid rgba(51, 65, 85, 0.45); color: #cbd5e1; }
+:root[data-tema='oscuro'] .tipo--app { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+:root[data-tema='oscuro'] .tipo--friccion { background: rgba(244, 63, 94, 0.12); color: #fb7185; }
+:root[data-tema='oscuro'] .tipo--unlock { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+:root[data-tema='oscuro'] .ack { color: #34d399; }
+:root[data-tema='oscuro'] .tel-red__icono { background: hsla(149, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .switch { background: hsla(213, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .switch span { background: #182234; }
+/* ==== fin del tema oscuro ==== */

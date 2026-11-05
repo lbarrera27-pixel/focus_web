@@ -128,3 +128,28 @@
   display: flex; align-items: center; gap: 7px; margin: 8px 16px 0; padding: 7px 9px; border-radius: 8px; background: var(--fondo-suave);
   font-size: 5px; line-height: 7.5px; color: var(--texto-3);
 }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .bd .card { box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04); }
+:root[data-tema='oscuro'] .bd-kpi { background: #182234; box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04); }
+:root[data-tema='oscuro'] .bd-kpi--cluster { background-image: linear-gradient(146deg, #182234 60.14%, hsla(48, 70%, 50%, 0.16) 92.27%); }
+:root[data-tema='oscuro'] .bd-kpi__letra { border: 1.127px solid #f5d37b; background: hsla(48, 70%, 50%, 0.16); color: #f7c46e; }
+:root[data-tema='oscuro'] .bd-kpi__chip--baja, :root[data-tema='oscuro'] .bd-kpi__chip--alerta { background: hsla(34, 70%, 50%, 0.16); color: #ef9476; }
+:root[data-tema='oscuro'] .bd-todos--activo { background: hsla(48, 70%, 50%, 0.16); color: #f7c46e; }
+:root[data-tema='oscuro'] .bd-tu { fill: #182234; }
+:root[data-tema='oscuro'] .bd-tu-etiqueta { fill: #182234; }
+:root[data-tema='oscuro'] .bd-arquetipo--activo { background: hsla(48, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .bd-arquetipo b { color: #334155; }
+:root[data-tema='oscuro'] .bd-arquetipo strong { color: #334155; }
+:root[data-tema='oscuro'] .bd-muestra > span:first-child { background: #182234; }
+:root[data-tema='oscuro'] .bd-etiqueta-ambar { background: hsla(48, 70%, 50%, 0.16); color: #f7c46e; }
+:root[data-tema='oscuro'] .bd-etiqueta-azul { background: hsla(204, 70%, 50%, 0.16); color: #6ec7f7; }
+:root[data-tema='oscuro'] .bd-etiqueta-azul i { background: #38bdf8; }
+:root[data-tema='oscuro'] .bd-perfil__icono { background: rgba(245, 158, 11, 0.12); }
+:root[data-tema='oscuro'] .bd-perfil__tarjeta b { color: #fff; }
+:root[data-tema='oscuro'] .bd-rasgos em { background: #182234; }
+:root[data-tema='oscuro'] .bd-rec__icono { background: hsla(48, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .bd-rec em { background: hsla(141, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .bd-rec__boton:hover:not(:disabled) { background: #ea9a0a; }
+:root[data-tema='oscuro'] .bd-rec__boton:disabled { background: hsla(141, 70%, 50%, 0.16); }
+/* ==== fin del tema oscuro ==== */

@@ -9,7 +9,6 @@ import { api } from '../../api.js'
 import TabReglas from './TabReglas.jsx'
 import TabApps from './TabApps.jsx'
 import TabLimites from './TabLimites.jsx'
-import TabPrivacidad from './TabPrivacidad.jsx'
 import TabSitios from './TabSitios.jsx'
 import { useAvisos } from '../../components/web/Avisos.jsx'
 import { horas } from '../../data/plan.js'
@@ -22,7 +21,6 @@ const PESTANAS = [
   { id: 'sitios', titulo: 'Sitios bloqueados' },
   { id: 'limites', titulo: 'Límites diarios' },
   { id: 'reglas', titulo: 'Reglas de fricción' },
-  { id: 'privacidad', titulo: 'Privacidad académica' },
 ]
 
 // Cómo se nombra cada clave de /configuracion/me en el diálogo de cambios sin guardar
@@ -273,10 +271,8 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
           <TabApps {...props} />
         ) : pestana === 'limites' ? (
           <TabLimites {...props} />
-        ) : pestana === 'sitios' ? (
-          <TabSitios usuario={usuario} locales={locales} guardarSitios={guardarSitios} ultimaSync={ultimaSync} />
         ) : (
-          <TabPrivacidad {...props} />
+          <TabSitios usuario={usuario} locales={locales} guardarSitios={guardarSitios} ultimaSync={ultimaSync} />
         )}
       </div>
 
