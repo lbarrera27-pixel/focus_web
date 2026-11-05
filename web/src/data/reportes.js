@@ -114,7 +114,12 @@ export function construirSemanas(r, ahora = ahoraEnZona()) {
       antesDelPlan: s === 0,
       eventos,
       pausas: enSemana(r.pausas ?? [], desde, 'fecha'),
-      dias: dias.map((min, i) => ({ etiqueta: DIAS[i], min, excede: limite != null && min > limite })),
+      // Etiquetas con la fecha real: la semana del plan empieza el día en que empezó el plan
+      dias: dias.map((min, i) => {
+        const fecha = new Date(desde.getTime() + i * DIA_MS)
+        const largo = DIAS_LARGOS[fecha.getDay()]
+        return { etiqueta: DIAS[(fecha.getDay() + 6) % 7], nombre: largo[0].toUpperCase() + largo.slice(1), min, excede: limite != null && min > limite }
+      }),
       promedio,
       cambioUso: anterior?.promedio > 0 ? Math.round(((promedio - anterior.promedio) / anterior.promedio) * 100) : null,
       limite,
@@ -171,13 +176,54 @@ export function textoResumen(s, r, nombre, esUltima) {
   return parrafos
 }
 
+// Diagnóstico corto de la semana (sin repetir las tarjetas): días que pasaron el límite y nuevo límite
+export function diagnosticoSemana(s) {
+  if (s.antesDelPlan) return `Esta es tu semana antes de empezar el plan. Con este punto de partida se calculó tu primer límite.`
+  const exceso = s.dias.filter((d) => d.excede)
+  const peor = exceso.length ? exceso.reduce((a, b) => (b.min > a.min ? b : a)) : null
+  const primera = !exceso.length ? 'Esta semana no superaste tu límite ningún día. ¡Muy bien!'
+    : exceso.length === 1
+      ? `Esta semana superaste tu límite 1 día: el ${peor.nombre.toLowerCase()}, con ${horas(peor.min)}.`
+      : `Esta semana superaste tu límite en ${exceso.length} días (especialmente el ${peor.nombre.toLowerCase()}, con ${horas(peor.min)}).`
+  const segunda = s.nuevoLimite != null
+    ? (s.cambioPlan === 0 ? `Tu límite diario se mantiene en ${horas(s.nuevoLimite)}.` : `Tu nuevo límite diario ajustado es de ${horas(s.nuevoLimite)}.`)
+    : ''
+  return `${primera} ${segunda}`.trim()
+}
+
+// Consejo accionable: Modo Foco en la franja donde más se concentró el uso de esa semana
+export function consejoSemana(s, r) {
+  if (!s.eventos.length) return null
+  const uso = construirUso({ eventos: s.eventos, apps: r.apps ?? [], desde: fechaISO(s.desde), hasta: fechaISO(s.hasta) }, null)
+  if (!uso?.franja) return null
+  return `Activa el Modo Foco a las ${uso.franja.desde} ${rangoDias(uso.franja.dias)}, que es cuando más se concentra tu uso.`
+}
+
 export const escritoTexto = (s) => `Escrito por Foqui el ${fechaConDia(s.escrito)} a las ${hora(8)} · con los números de abajo`
 
+export const NIVEL_NOMBRE = { bajo: 'Bajo', medio: 'Moderado', alto: 'Alto' }
+
 export const kpisSemana = (s) => [
-  { etiqueta: 'PROMEDIO DIARIO', valor: horas(s.promedio), detalle: s.cambioUso == null ? 'sin semana anterior' : `${signo(s.cambioUso)} %` },
-  { etiqueta: 'ADHERENCIA', valor: s.adherencia == null ? '—' : `${Math.round(s.adherencia * 100)} %`, detalle: s.diasDentro == null ? 'antes del plan' : `${s.diasDentro} de 7 días` },
-  { etiqueta: 'AJUSTE', valor: s.cambioPlan == null ? '—' : `${signo(s.cambioPlan)} %`, detalle: s.cambioPlan == null ? 'sin ajuste' : 'según tu semana' },
-  { etiqueta: 'RIESGO', valor: s.nivel ? s.nivel[0].toUpperCase() + s.nivel.slice(1) : '—', detalle: s.probabilidad == null ? 'sin riesgo' : `${Math.round(s.probabilidad * 100)} %` },
+  {
+    id: 'promedio', etiqueta: 'PROMEDIO DIARIO', valor: horas(s.promedio),
+    detalle: s.cambioUso == null ? 'sin semana previa para comparar' : `${signo(s.cambioUso)} % vs. semana previa`,
+    ayuda: 'Tiempo promedio que usaste el celular al día durante esta semana.',
+  },
+  {
+    id: 'cumplimiento', etiqueta: 'CUMPLIMIENTO', valor: s.adherencia == null ? '—' : `${Math.round(s.adherencia * 100)} %`,
+    detalle: s.diasDentro == null ? 'antes del plan' : `${s.diasDentro} de 7 días cumplidos`,
+    ayuda: 'Porcentaje de días en que mantuviste tu tiempo por debajo del límite permitido.',
+  },
+  {
+    id: 'ajuste', etiqueta: 'AJUSTE DEL LÍMITE', valor: s.cambioPlan == null ? '—' : `${signo(s.cambioPlan)} %`,
+    detalle: s.cambioPlan == null ? 'sin ajuste esa semana' : s.cambioPlan < 0 ? 'Reducción gradual' : s.cambioPlan > 0 ? 'Se relaja un poco' : 'Se mantiene igual',
+    ayuda: 'Ajuste automático para la siguiente semana, pensado para mantener un ritmo sostenible.',
+  },
+  {
+    id: 'riesgo', etiqueta: 'RIESGO DE SOBREUSO', valor: s.nivel ? NIVEL_NOMBRE[s.nivel] : '—', nivel: s.nivel,
+    detalle: s.probabilidad == null ? 'sin cálculo esa semana' : `${Math.round(s.probabilidad * 100)} % de probabilidad`,
+    ayuda: 'Probabilidad estimada de volver a exceder tu límite durante la próxima semana.',
+  },
 ]
 
 // ---------- Exportar métricas (Figma e37) ----------

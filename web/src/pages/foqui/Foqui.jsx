@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Icono from '../../components/Icono.jsx'
 import { Esqueleto } from '../../components/web/Comunes.jsx'
 import { horas, limiteActual, ordenar } from '../../data/plan.js'
-import Ayuda, { useGlobo } from '../../components/web/Ayuda.jsx'
+import Ayuda from '../../components/web/Ayuda.jsx'
+import UsoPorDia from '../../components/web/UsoPorDia.jsx'
 import iconoReloj from '../../assets/icons/w-reloj.svg'
 import iconoCalendario from '../../assets/icons/cu-calendario.svg'
 import iconoAjuste from '../../assets/icons/aj-perilla.svg'
@@ -42,65 +43,6 @@ function Kpi({ etiqueta, valor, detalle, icono, tono, ayuda, valorTono }) {
       </div>
       <p className={`w-titulo-2 fq-kpi__valor${valorTono ? ` fq-kpi__valor--${valorTono}` : ''}`}>{valor}</p>
       <p className="w-texto w-texto--2">{detalle}</p>
-    </div>
-  )
-}
-
-// Escala del eje Y en horas enteras (mínimo 3 h)
-function escalaHoras(maxMin) {
-  const tope = Math.max(3, Math.ceil(maxMin / 60))
-  const paso = tope <= 4 ? 1 : 2
-  const topeRedondo = Math.ceil(tope / paso) * paso
-  return { tope: topeRedondo * 60, marcas: Array.from({ length: topeRedondo / paso + 1 }, (_, i) => i * paso) }
-}
-
-function UsoPorDia({ dias, limite }) {
-  const { props, globo } = useGlobo({ arriba: true })
-  const pasados = dias.filter((d) => !d.futuro)
-  const { tope, marcas } = escalaHoras(Math.max(limite ?? 0, ...pasados.map((d) => d.min)))
-  const alto = (min) => `${Math.min(100, (min / tope) * 100)}%`
-  const conUso = pasados.filter((d) => d.min > 0 && !d.hoy)
-  const menor = conUso.length > 1 ? Math.min(...conUso.map((d) => d.min)) : null
-  return (
-    <div className="fq-uso">
-      <div className="fq-uso__eje" aria-hidden="true">
-        {marcas.map((h) => <span key={h} style={{ bottom: alto(h * 60) }}>{h}h</span>)}
-      </div>
-      <div className="fq-uso__area">
-        <div className="fq-uso__guias" aria-hidden="true">
-          {marcas.map((h) => <i key={h} style={{ bottom: alto(h * 60) }} />)}
-          {limite != null && <span className="fq-uso__limite" style={{ bottom: alto(limite) }}><em>Límite</em></span>}
-        </div>
-        {dias.map((d) => {
-          const excede = limite != null && d.min > limite
-          const tipo = d.futuro ? 'futuro' : d.min <= 0 ? 'vacio' : excede ? 'mal' : 'bien'
-          const nota = d.futuro ? 'Día por registrar.'
-            : d.min <= 0 ? 'Sin registros o dispositivo en reposo.'
-              : excede ? `${horas(d.min - limite)} sobre tu límite.`
-                : d.min === menor ? '¡Día con menor tiempo en pantalla!'
-                  : limite != null ? 'Dentro de tu límite.' : null
-          const etiqueta = `${d.nombre}${d.hoy ? ' (hoy)' : ''}`
-          const contenido = (
-            <>
-              <b>{etiqueta}</b>
-              {!d.futuro && <span>{d.min > 0 ? `${horas(d.min)} de uso activo` : '0 minutos'}</span>}
-              {nota && <span className={`fq-uso__nota fq-uso__nota--${tipo}`}>{nota}</span>}
-            </>
-          )
-          return (
-            <div key={d.etiqueta} tabIndex={0} className={`fq-uso__col fq-uso__col--${tipo}${d.hoy ? ' fq-uso__col--hoy' : ''}`}
-              aria-label={`${etiqueta}: ${d.futuro ? 'por registrar' : horas(d.min)}. ${nota ?? ''}`} {...props(contenido)}>
-              <div className="fq-uso__pista">
-                {d.futuro ? <span className="fq-uso__pendiente">Pendiente</span>
-                  : d.min > 0 ? <span className="fq-uso__barra" style={{ height: alto(d.min) }} />
-                    : <span className="fq-uso__cero" />}
-              </div>
-              <small>{d.hoy ? 'Hoy' : d.etiqueta}</small>
-            </div>
-          )
-        })}
-      </div>
-      {globo}
     </div>
   )
 }
@@ -370,10 +312,10 @@ export default function Foqui({ usuario, datos, onNavegar }) {
               : sinNumeros ? <p className="w-cuerpo w-texto--3">Sin conexión: tu uso aparecerá aquí al reintentar.</p>
                 : <Esqueleto alto={150} />}
             {resumen && !sinNumeros && (
-              <ul className="fq-uso__leyenda">
-                <li><i className="fq-uso__punto--bien" />Dentro del límite</li>
-                <li><i className="fq-uso__punto--mal" />Sobre el límite</li>
-                <li><i className="fq-uso__punto--futuro" />Por registrar</li>
+              <ul className="ud__leyenda">
+                <li><i className="ud__punto--bien" />Dentro del límite</li>
+                <li><i className="ud__punto--mal" />Sobre el límite</li>
+                <li><i className="ud__punto--futuro" />Por registrar</li>
               </ul>
             )}
           </section>

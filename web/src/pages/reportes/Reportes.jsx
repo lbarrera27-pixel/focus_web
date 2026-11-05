@@ -7,15 +7,22 @@ import { Banner, Encabezado, EstadoVacio, Esqueleto } from '../../components/web
 import { fechaISO } from '../../data/panel.js'
 import { horas } from '../../data/plan.js'
 import {
-  PERIODOS_EXPORTAR, anotarDescarga, cargarReportes, construirSemanas, escritoTexto, fechaCorta, generarCSV, kpisSemana,
-  leerDescargas, rango, rangoExportar, seccionesExportar, subtitulo, tamano, textoResumen,
+  NIVEL_NOMBRE, PERIODOS_EXPORTAR, anotarDescarga, cargarReportes, consejoSemana, construirSemanas, diagnosticoSemana, escritoTexto,
+  fechaCorta, generarCSV, kpisSemana, leerDescargas, rango, rangoExportar, seccionesExportar, tamano, textoResumen,
 } from '../../data/reportes.js'
+import Ayuda from '../../components/web/Ayuda.jsx'
+import UsoPorDia from '../../components/web/UsoPorDia.jsx'
+import iconoReloj from '../../assets/icons/w-reloj.svg'
+import iconoMeta from '../../assets/icons/w-meta.svg'
+import iconoAjuste from '../../assets/icons/aj-perilla.svg'
+import iconoAlerta from '../../assets/icons/w-alerta.svg'
+import iconoEscudo from '../../assets/icons/ia-escudo.svg'
+import iconoFoqui from '../../assets/icons/w-foqui.svg'
 import { imprimirReporte } from './imprimir.js'
 import iconoArchivo from '../../assets/icons/w-archivo.svg'
 import iconoArchivoMarca from '../../assets/icons/w-archivo-marca.svg'
 import iconoDescargar from '../../assets/icons/w-descargar.svg'
 import iconoDescargarGrande from '../../assets/icons/w-descargar-22.svg'
-import iconoInfo from '../../assets/icons/w-info-azul.svg'
 import iconoPlan from '../../assets/icons/w-reportes.svg'
 import { ahoraEnZona } from '../../data/preferencias.js'
 import './Reportes.css'
@@ -31,20 +38,7 @@ function descargar(nombre, contenido, tipo) {
   URL.revokeObjectURL(url)
 }
 
-function Grafica({ dias }) {
-  const max = Math.max(1, ...dias.map((d) => d.min))
-  return (
-    <div className="rp-barras" role="img" aria-label={`Uso diario: ${dias.map((d) => `${d.etiqueta} ${horas(d.min)}`).join(', ')}`}>
-      {dias.map((d) => (
-        <div key={d.etiqueta} className={d.excede ? 'rp-barras__excede' : ''}>
-          <b>{d.min ? horas(d.min, { corto: d.min >= 60 }) : ''}</b>
-          <i style={{ height: `${Math.max(4, (d.min / max) * 90)}px` }} />
-          <small>{d.etiqueta}</small>
-        </div>
-      ))}
-    </div>
-  )
-}
+const ICONO_KPI = { promedio: iconoReloj, cumplimiento: iconoMeta, ajuste: iconoAjuste, riesgo: iconoAlerta }
 
 // Figma e37: diálogo "Exportar métricas"
 function Exportar({ r, semanas, nombre, onCerrar, onDescargado }) {
@@ -157,6 +151,7 @@ export default function Reportes({ usuario, datos, onNavegar }) {
   const semanas = useMemo(() => (r?.plan ? construirSemanas(r) : []), [r])
   const actual = semanas.find((s) => s.id === sel) ?? semanas[0]
   const parrafos = actual ? textoResumen(actual, r, nombre, actual === semanas[0]) : []
+  const consejo = actual ? consejoSemana(actual, r) : null
 
   const anotar = (titulo) => setDescargas(anotarDescarga(usuario.id, titulo))
 
@@ -205,8 +200,14 @@ export default function Reportes({ usuario, datos, onNavegar }) {
                 <button type="button" className={`rp-semana${s === actual ? ' rp-semana--activa' : ''}`} aria-current={s === actual}
                   onClick={() => setSel(s.id)}>
                   <span className="rp-semana__icono"><img src={s === actual ? iconoArchivoMarca : iconoArchivo} alt="" /></span>
-                  <span className="rp-semana__texto"><b>{s.titulo}</b><small>{subtitulo(s)}</small></span>
-                  {i === 0 && nuevo && <span className="rp-nuevo">Nuevo</span>}
+                  <span className="rp-semana__texto">
+                    <b>{s.titulo}</b>
+                    <small>{s.antesDelPlan ? 'Antes del plan · ' : ''}{horas(s.promedio)} al día</small>
+                  </span>
+                  <span className="rp-semana__chips">
+                    {i === 0 && <span className="rp-nuevo">{nuevo ? 'Nuevo' : 'Actual'}</span>}
+                    {s.nivel && <span className={`rp-riesgo rp-riesgo--${s.nivel}`}>{NIVEL_NOMBRE[s.nivel]}</span>}
+                  </span>
                 </button>
               </li>
             ))}
@@ -234,21 +235,48 @@ export default function Reportes({ usuario, datos, onNavegar }) {
           </header>
           <div className="rp-kpis">
             {kpisSemana(actual).map((k) => (
-              <div key={k.etiqueta} className="w-tarjeta w-kpi">
-                <p className="w-etiqueta">{k.etiqueta}</p>
-                <p className="w-display">{k.valor}</p>
+              <div key={k.id} className={`w-tarjeta w-kpi rp-kpi rp-kpi--${k.id}`}>
+                <div className="rp-kpi__cabeza">
+                  <p className="w-etiqueta">{k.etiqueta}</p>
+                  <Ayuda titulo={k.etiqueta.charAt(0) + k.etiqueta.slice(1).toLowerCase()} que={k.ayuda} />
+                  <span className="rp-kpi__icono" aria-hidden="true"><Icono src={ICONO_KPI[k.id]} tam={16} /></span>
+                </div>
+                <p className={`w-display${k.nivel ? ` rp-kpi__valor--${k.nivel}` : ''}`}>{k.valor}</p>
                 <p className="w-texto w-texto--3">{k.detalle}</p>
               </div>
             ))}
           </div>
-          {parrafos.map((p) => <p key={p} className="w-cuerpo">{p}</p>)}
+          <section className="rp-diagnostico">
+            <div className="rp-subtitulo">
+              <h3>Diagnóstico semanal</h3>
+              <Ayuda titulo="Diagnóstico semanal" que="Lo más importante de la semana en dos líneas: los días en que te pasaste de tu límite y cómo queda tu límite." />
+            </div>
+            <p>{diagnosticoSemana(actual)}</p>
+          </section>
+          {consejo && (
+            <div className="rp-consejo">
+              <span className="rp-consejo__icono"><Icono src={iconoFoqui} tam={18} /></span>
+              <p><b>Consejo de Foqui:</b> {consejo}</p>
+            </div>
+          )}
+
+          <section className="rp-grafica">
+            <div className="rp-subtitulo">
+              <h3>Uso diario de esa semana</h3>
+              <Ayuda titulo="Uso diario de esa semana" que="Horas de uso de cada día comparadas con el límite que tenías esa semana."
+                accion="Pasa el ratón por una barra para ver el detalle del día." />
+            </div>
+            <UsoPorDia dias={actual.dias} limite={actual.limite} alto={190} />
+            <ul className="ud__leyenda">
+              <li><i className="ud__punto--bien" />Dentro del límite</li>
+              <li><i className="ud__punto--mal" />Sobre el límite</li>
+            </ul>
+          </section>
+
           <p className="rp-nota">
-            <Icono src={iconoInfo} tam={16} />
-            Foqui recibió solo totales, adherencia, cambio del plan y nivel de riesgo. Nunca nombres de apps ni horarios individuales.
+            <Icono src={iconoEscudo} tam={16} />
+            Foqui solo analiza totales de tiempo; nunca accede a nombres de apps ni mensajes privados.
           </p>
-          <div className="w-divisor" />
-          <p className="w-sobretitulo">USO DIARIO DE ESA SEMANA</p>
-          <Grafica dias={actual.dias} />
           <div className="rp-acciones">
             <button type="button" className="w-boton w-boton--secundario" onClick={pdfSemana}>Descargar PDF</button>
             <button type="button" className="w-boton w-boton--secundario" onClick={copiar}>Copiar texto</button>

@@ -78,3 +78,45 @@
   .rp-kpis { flex-wrap: wrap; }
   .rp-kpis > * { flex-basis: calc(50% - 6px); }
 }
+
+/* ---------- Rediseño: historial interactivo, tarjetas con ícono, diagnóstico y consejo ---------- */
+.rp-lista ul { gap: 8px; }
+.rp-semana {
+  border: 1px solid #eef2f7; background: #f8fafc; transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.rp-semana .rp-semana__texto b { color: var(--w-texto-2); }
+.rp-semana:hover { background: #fff; border-color: #e2e8f0; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); transform: translateY(-1px); }
+.rp-semana--activa, .rp-semana--activa:hover {
+  background: #fff; border-color: #fcd34d; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.14); transform: none;
+}
+.rp-semana--activa .rp-semana__texto b { color: var(--w-texto); }
+.rp-semana__chips { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.rp-nuevo { background: #fef3c7; color: #b45309; }
+.rp-riesgo { padding: 2px 8px; border-radius: 999px; font-size: 11px; line-height: 15px; font-weight: 700; }
+.rp-riesgo--bajo { background: #d1fae5; color: #047857; }
+.rp-riesgo--medio { background: #fef3c7; color: #b45309; }
+.rp-riesgo--alto { background: #ffe4e6; color: #be123c; }
+
+.rp-kpi { border-top: 3px solid var(--acento-kpi); }
+.rp-kpi--promedio { --acento-kpi: #93c5fd; --suave-kpi: #eff6ff; }
+.rp-kpi--cumplimiento { --acento-kpi: #6ee7b7; --suave-kpi: #ecfdf5; }
+.rp-kpi--ajuste { --acento-kpi: #fcd34d; --suave-kpi: #fffbeb; }
+.rp-kpi--riesgo { --acento-kpi: #fda4af; --suave-kpi: #fff1f2; }
+.rp-kpi__cabeza { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.rp-kpi__cabeza .w-etiqueta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-kpi__icono { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; margin-left: auto; border-radius: 50%; background: var(--suave-kpi); }
+.rp-kpi__valor--alto { color: #e11d48; }
+.rp-kpi__valor--medio { color: #b45309; }
+.rp-kpi__valor--bajo { color: #047857; }
+.rp-kpis .w-texto { white-space: normal; }
+
+.rp-subtitulo { display: flex; align-items: center; gap: 8px; }
+.rp-subtitulo h3 { font-size: 15px; line-height: 20px; font-weight: 700; color: var(--w-texto); }
+.rp-diagnostico { display: flex; flex-direction: column; gap: 8px; }
+.rp-diagnostico > p { font-size: 15px; line-height: 23px; color: var(--w-texto-fuerte); }
+.rp-consejo { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 14px; background: #fffbeb; border: 1px solid #fde68a; }
+.rp-consejo p { font-size: 14px; line-height: 21px; color: #78350f; }
+.rp-consejo b { color: #92400e; }
+.rp-consejo__icono { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: #fef3c7; }
+.rp-grafica { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border-radius: 14px; border: 1px solid var(--w-borde); }
+.rp-nota { align-self: flex-start; padding: 8px 14px; border-radius: 999px; background: #ecfdf5; border: 1px solid #d1fae5; font-size: 12px; color: #065f46; }
