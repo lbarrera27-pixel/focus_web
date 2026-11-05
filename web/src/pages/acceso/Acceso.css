@@ -168,3 +168,34 @@
   display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 12px; background: #eff6ff;
   text-align: left; font-size: 12px; line-height: 17px; color: #1e40af;
 }
+
+/* ---------- Vista fija: ocupa exactamente la pantalla, sin scroll de página ---------- */
+.ac { height: calc(100vh / var(--zoom, 1)); min-height: 0; overflow: hidden; }
+.ac-marca__contenido { max-height: none; min-height: 0; }
+/* Si la ventana es muy baja, el formulario puede desplazarse por dentro en lugar de cortarse */
+.ac-panel { min-height: 0; overflow-y: auto; }
+@media (max-height: 820px) {
+  .ac-marca__contenido { padding-top: 40px; padding-bottom: 40px; }
+  .ac-marca__centro { gap: 20px; }
+  .ac-panel { padding-top: 28px; padding-bottom: 20px; }
+  .ac-formulario { gap: 14px; }
+}
+/* Pantallas de menos de 1440 px: el panel de marca se adapta en vez de forzar scroll horizontal */
+@media (max-width: 1439px) {
+  .ac { min-width: 0; }
+  .ac-marca__contenido { padding-left: 56px; padding-right: 56px; }
+  .ac-marca__centro, .ac-marca__lema { width: auto; max-width: 623px; }
+  .ac-marca__nombre p:first-child { font-size: 80px; line-height: 82px; }
+  .ac-marca__caracteristicas { flex-wrap: wrap; }
+}
+@media (max-width: 1100px) {
+  .ac-marca__logo { gap: 24px; }
+  .ac-marca__logo > img, .ac-marca__logo > svg { width: 120px; height: auto; }
+  .ac-marca__nombre p:first-child { font-size: 60px; line-height: 62px; }
+  .ac-marca__nombre p:last-child { font-size: 20px; }
+  .ac-marca__lema { font-size: 15px; line-height: 23px; }
+}
+@media (max-width: 860px) {
+  .ac { grid-template-columns: 1fr; }
+  .ac-marca { display: none; }
+}

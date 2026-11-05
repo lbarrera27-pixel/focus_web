@@ -18,7 +18,6 @@ import iconoFlecha from '../../assets/acceso/flecha.svg'
 import logoGoogle from '../../assets/acceso/google.svg'
 import logoApple from '../../assets/acceso/apple.svg'
 import logoFacebook from '../../assets/acceso/facebook.svg'
-import iconoDemo from '../../assets/acceso/demo.svg'
 import iconoEscudo from '../../assets/acceso/escudo.svg'
 import iconoAviso from '../../assets/acceso/aviso.svg'
 import iconoAlerta from '../../assets/acceso/alerta.svg'
@@ -243,16 +242,6 @@ function IniciarSesion({ email, setEmail, onEntrar, onOlvide }) {
         </div>
         {aviso && <p className="ac-nota" role="status">{aviso}</p>}
 
-        <p className="ac-separador"><span>o</span></p>
-        <button
-          type="button"
-          className="ac-boton-secundario"
-          disabled={cargando}
-          onClick={() => onEntrar({ id: 0, nombre: 'Demo', demo: true }, false)}
-        >
-          <img src={iconoDemo} alt="" width={16} height={16} />
-          Ver demo sin cuenta
-        </button>
         {cargando && <p className="ac-nota">La primera vez del día puede tardar hasta 1 minuto.</p>}
       </div>
 
@@ -383,6 +372,14 @@ export default function Acceso({ onEntrar }) {
   const [email, setEmail] = useState('')
   const panel = useRef(null)
   const primera = useRef(true)
+
+  // La demo ya no tiene botón: se abre solo con el enlace directo …/#/demo (presentaciones y pruebas)
+  useEffect(() => {
+    if (window.location.hash === '#/demo') {
+      window.location.hash = '#/inicio'
+      onEntrar({ id: 0, nombre: 'Demo', demo: true }, false)
+    }
+  }, [onEntrar])
 
   // Al cambiar de pantalla, el foco pasa al título del nuevo contenido (lectores de pantalla y teclado)
   useEffect(() => {
