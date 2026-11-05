@@ -2,8 +2,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Icono from '../../components/Icono.jsx'
 import { Banner, Barra, Encabezado, EstadoVacio, Esqueleto, Kpi } from '../../components/web/Comunes.jsx'
-import { ADHERENCIA, IGNORADAS, REGLAS, inferir, trapecio } from '../../data/difuso.js'
-import { fechaISO } from '../../data/panel.js'
+import Ayuda from '../../components/web/Ayuda.jsx'
+import { inferir } from '../../data/difuso.js'
+import { fechaISO, fechaServidor } from '../../data/panel.js'
 import {
   DIA_MS_PLAN, cargarPreferencias, fechaLarga, horas, ignoradasSemana, inicioSemana, limiteActual, ordenar, porcentaje,
 } from '../../data/plan.js'
@@ -21,68 +22,85 @@ import { hora } from '../../data/preferencias.js'
 import { ahoraEnZona } from '../../data/preferencias.js'
 import './MiPlan.css'
 
-const NOMBRE = { baja: 'Baja', regular: 'Regular', buena: 'Buena', excelente: 'Excelente', pocas: 'Pocas', muchas: 'Muchas' }
-const SALIDA = {
-  reducir_mucho: 'Reducir mucho (−10 %)', reducir_poco: 'Reducir poco (−5 %)', mantener: 'Mantener (0 %)', relajar: 'Relajar (+5 %)',
-}
-const COLORES = {
-  baja: { color: '#b91c1c' }, regular: { color: '#b45309', punteada: true }, buena: { color: '#0369a1' },
-  excelente: { color: '#047857', punteada: true }, pocas: { color: '#047857' }, muchas: { color: '#b91c1c', punteada: true },
-}
 const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-// ---------- Funciones de pertenencia (mismos conjuntos que app/utils/reglas_plan.py) ----------
-function GraficaPertenencia({ titulo, conjuntos, valor }) {
-  const ancho = 500
-  const alto = 120
-  const linea = (params) => {
-    const pts = []
-    for (let i = 0; i <= 200; i++) {
-      const x = i / 200
-      pts.push(`${x * ancho},${(1 - trapecio(x, ...params)) * (alto - 2) + 1}`)
-    }
-    return pts.join(' ')
-  }
+// ---------- Textos sencillos (sin jerga del motor de reglas) ----------
+const NIVEL_CUMPLIMIENTO = {
+  excelente: 'Excelente', buena: 'Bueno', regular: 'Regular · Estable', baja: 'Por mejorar',
+}
+const FRASE_CUMPLIMIENTO = {
+  excelente: 'Cumpliste tu horario casi todos los días',
+  buena: 'Cumpliste bien con tus horarios',
+  regular: 'Cumpliste tu horario algunos días',
+  baja: 'Te costó mantenerte dentro de tu horario',
+}
+// Una razón por regla del motor, contada como la viviría la persona
+const RAZONES = {
+  'excelente-pocas': { titulo: 'Gran semana', texto: 'Cumpliste tu horario y atendiste las pausas, así que tu límite baja un poco más rápido.' },
+  'excelente-muchas': { titulo: 'Buen horario, pausas pendientes', texto: 'Cumpliste tu horario, pero dejaste pasar varias pausas; por eso el límite baja solo un poco.' },
+  'buena-pocas': { titulo: 'Buen manejo de pausas', texto: 'Como no ignoraste las alertas, tu límite se redujo ligeramente para ayudarte a avanzar.' },
+  'buena-muchas': { titulo: 'Pausas por mejorar', texto: 'Tu horario fue bueno, pero ignoraste varias pausas; el límite se mantiene para no presionarte.' },
+  'regular-': { titulo: 'Horarios regulares', texto: 'Al mantener tu ritmo general estable, consolidamos tu tiempo actual sin cambios bruscos.' },
+  'baja-': { titulo: 'Semana difícil', texto: 'Te pasaste de tu límite varios días; lo relajamos un poco para que vuelva a ser alcanzable.' },
+}
+const EFECTO = {
+  reducir_mucho: { texto: 'Baja tu límite', tono: 'baja' },
+  reducir_poco: { texto: 'Baja tu límite', tono: 'baja' },
+  mantener: { texto: 'Lo mantiene', tono: 'igual' },
+  relajar: { texto: 'Lo relaja', tono: 'sube' },
+}
+const tonoPct = (v) => (v >= 0.8 ? 'bien' : v >= 0.55 ? 'medio' : 'mal')
+
+// Anillo de progreso (0–1)
+function Anillo({ valor, tono, children }) {
+  const r = 42
+  const c = 2 * Math.PI * r
   return (
-    <section className="w-tarjeta mp-pertenencia">
-      <div className="mp-pertenencia__titulo">
+    <div className={`mp-anillo mp-anillo--${tono}`}>
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r={r} className="mp-anillo__pista" />
+        <circle cx="50" cy="50" r={r} className="mp-anillo__valor"
+          strokeDasharray={`${c * Math.max(0, Math.min(1, valor))} ${c}`} transform="rotate(-90 50 50)" />
+      </svg>
+      <div className="mp-anillo__centro">{children}</div>
+    </div>
+  )
+}
+
+function Medidor({ titulo, ayuda, valor, tono, centro, nivel, mensaje }) {
+  return (
+    <section className="w-tarjeta mp-medidor">
+      <div className="mp-medidor__titulo">
         <h2 className="w-titulo-3">{titulo}</h2>
-        <span className="mp-chip">{Math.round(valor * 100)} %</span>
+        <Ayuda titulo={titulo} que={ayuda} />
       </div>
-      <div className="mp-pertenencia__grafica">
-        <svg viewBox={`0 0 ${ancho} ${alto}`} preserveAspectRatio="none" role="img"
-          aria-label={`${titulo}: ${Math.round(valor * 100)} %`}>
-          <line x1="0" x2={ancho} y1={alto - 0.5} y2={alto - 0.5} className="mp-eje" />
-          {Object.entries(conjuntos).map(([nombre, params]) => (
-            <polyline key={nombre} points={linea(params)} className="mp-conjunto"
-              style={{ stroke: COLORES[nombre].color, strokeDasharray: COLORES[nombre].punteada ? '5 4' : undefined }} />
-          ))}
-        </svg>
-        <span className="mp-valor" style={{ left: `${valor * 100}%` }} aria-hidden="true" />
+      <div className="mp-medidor__cuerpo">
+        <Anillo valor={valor} tono={tono}>{centro}</Anillo>
+        <div className="mp-medidor__texto">
+          <span className={`mp-nivel mp-nivel--${tono}`}>{nivel}</span>
+          <p>{mensaje}</p>
+        </div>
       </div>
-      <div className="mp-eje-x">{['0 %', '25 %', '50 %', '75 %', '100 %'].map((t) => <span key={t}>{t}</span>)}</div>
-      <ul className="mp-leyenda">
-        {Object.entries(conjuntos).map(([nombre, params]) => (
-          <li key={nombre}>
-            <i className={COLORES[nombre].punteada ? 'mp-leyenda__punteada' : ''} style={{ '--c': COLORES[nombre].color }} />
-            {NOMBRE[nombre]} · {Math.round(trapecio(valor, ...params) * 100)} %
-          </li>
-        ))}
-      </ul>
     </section>
   )
 }
 
 function Historial({ ajustes, proximo }) {
+  const lista = [...ajustes].reverse().slice(0, 6)
   return (
     <section className="w-tarjeta mp-historial">
-      <h2 className="w-titulo-3">Historial de ajustes</h2>
-      <ul>
-        {[...ajustes].reverse().slice(0, 6).map((a) => {
+      <h2 className="w-titulo-3">Historial y próximo ajuste</h2>
+      <ol className="mp-linea">
+        {lista.map((a) => {
           const tono = a.cambio_pct < 0 ? 'baja' : a.cambio_pct > 0 ? 'sube' : 'igual'
+          const estado = { baja: 'Disminución aplicada', sube: 'Límite relajado', igual: 'Límite mantenido' }[tono]
           return (
-            <li key={a.semana}>
-              <span>Semana {a.semana}</span>
+            <li key={a.semana} className={`mp-linea__item mp-linea__item--${tono}`}>
+              <i aria-hidden="true" />
+              <span>
+                <b>Semana {a.semana}</b>
+                <small>{estado}</small>
+              </span>
               <b className={`mp-cambio mp-cambio--${tono}`}>
                 <Icono src={{ baja: iconoBaja, sube: iconoSube, igual: iconoIgual }[tono]} tam={14} />
                 {porcentaje(a.cambio_pct)}
@@ -90,11 +108,11 @@ function Historial({ ajustes, proximo }) {
             </li>
           )
         })}
-      </ul>
+      </ol>
       <div className="mp-aviso mp-aviso--exito">
         <Icono src={iconoInfoVerde} tam={16} />
         <span>
-          <b className="w-cuerpo">Próximo ajuste: {proximo.fecha} · {hora(0)}</b>
+          <b className="w-cuerpo">Próxima actualización: {proximo.fecha} · {hora(0)} hrs</b>
           <span className="w-texto w-texto--2">{proximo.detalle}</span>
         </span>
       </div>
@@ -102,64 +120,162 @@ function Historial({ ajustes, proximo }) {
   )
 }
 
+// Días de la semana evaluada que quedaron dentro del límite (sin uso cuenta como cumplido, igual que el servidor)
+// La ventana son los 7 días previos a la fecha del ajuste (o al fin de esa semana del plan si no la trae).
+function diasCumplidos(plan, ajuste, limite, eventos = []) {
+  const f = ajuste.fecha
+  const fin = !f ? inicioSemana(plan, ajuste.semana + 1)
+    : f.length === 10 ? new Date(`${f}T00:00:00`) : fechaServidor(f)
+  const inicio = new Date(fin.getTime() - 7 * DIA_MS_PLAN)
+  const hoy = ahoraEnZona()
+  let cumplidos = 0
+  let total = 0
+  for (let i = 0; i < 7; i++) {
+    const fecha = new Date(inicio.getTime() + i * DIA_MS_PLAN)
+    if (fecha > hoy) break
+    const iso = fechaISO(fecha)
+    const min = eventos.filter((e) => fechaISO(new Date(e.inicio)) === iso).reduce((s, e) => s + e.duracion_seg, 0) / 60
+    total += 1
+    if (min <= limite) cumplidos += 1
+  }
+  return { cumplidos, total }
+}
+
+// Pausas de la semana evaluada: total e ignoradas
+function pausasSemana(plan, semana, pausas = []) {
+  const desde = inicioSemana(plan, semana).getTime()
+  const hasta = desde + 7 * DIA_MS_PLAN
+  const lista = pausas.filter((p) => {
+    const t = fechaServidor(p.fecha).getTime()
+    return t >= desde && t < hasta
+  })
+  return { total: lista.length, ignoradas: lista.filter((p) => p.ignorada).length }
+}
+
 // ---------- e9 ----------
-function ConAjustes({ plan, ajustes, pausas, prefs }) {
+function ConAjustes({ plan, ajustes, pausas, eventos, prefs }) {
   const ultimo = ajustes[ajustes.length - 1]
   const ign = ignoradasSemana(plan, ultimo.semana, pausas)
   const inf = inferir(ultimo.adherencia, ign)
   const limite = limiteActual(plan, ajustes)
   const anterior = limiteActual(plan, ajustes.slice(0, -1))
   const nivelAdh = Object.entries(inf.pertenencia).sort((a, b) => b[1] - a[1])[0][0]
-  const nivelIgn = inf.pertenenciaIgn.muchas > inf.pertenenciaIgn.pocas ? 'muchas' : 'pocas'
   const siguiente = inicioSemana(plan, plan.semana_actual + 1)
   const proyectado = Math.max(prefs.meta_min, limite * (1 + ultimo.cambio_pct / 100))
+  const semanaActual = Math.min(plan.semana_actual + 1, prefs.semanas)
+  const avance = semanaActual / prefs.semanas
+
+  const dias = diasCumplidos(plan, ultimo, ultimo.uso_meta ?? anterior, eventos)
+  const conteo = pausasSemana(plan, ultimo.semana, pausas)
+  const atendidas = conteo.total ? 1 - conteo.ignoradas / conteo.total : 1
+  const frasePausas = !conteo.total
+    ? 'no hubo pausas que atender'
+    : conteo.ignoradas === 0 ? 'atendiste todas las pausas'
+      : atendidas >= 0.75 ? 'atendiste casi todas las pausas' : 'dejaste pasar varias pausas'
+
+  const razones = inf.reglas
+    .filter((r) => r.fuerza > 0)
+    .sort((a, b) => b.fuerza - a.fuerza)
+    .slice(0, 3)
+  const totalFuerza = razones.reduce((s, r) => s + r.fuerza, 0) || 1
+  const difMin = Math.round(limite - anterior)
+  const resultado = difMin < 0
+    ? `Reducción de ${Math.abs(difMin)} min (${porcentaje(ultimo.cambio_pct)}) en tu límite diario. Es un ritmo constante y sostenible.`
+    : difMin > 0
+      ? `Tu límite sube ${difMin} min (${porcentaje(ultimo.cambio_pct)}) para que vuelva a ser alcanzable.`
+      : 'Tu límite se mantiene igual esta semana para que consolides el ritmo.'
 
   return (
     <>
       <div className="w-fila">
-        <Kpi etiqueta="LÍMITE ACTUAL" valor={horas(limite)} detalle={`al día, desde ${limite === anterior ? 'el inicio del plan' : `el ${fechaLarga(inicioSemana(plan, ultimo.semana + 1)).split(',')[0]}`}`} />
-        <Kpi etiqueta="CAMBIO DE ESTA SEMANA" valor={porcentaje(ultimo.cambio_pct)}
-          detalle={`adherencia ${NOMBRE[nivelAdh].toLowerCase()}, ${nivelIgn} pausas ignoradas`} />
-        <Kpi etiqueta="AVANCE DEL PLAN" valor={`Semana ${Math.min(plan.semana_actual + 1, prefs.semanas)} de ${prefs.semanas}`}
-          detalle={`meta final: ${horas(prefs.meta_min)}`} />
+        <Kpi etiqueta="TU LÍMITE ACTUAL" valor={horas(limite)}
+          detalle={limite === anterior ? 'al día · desde el inicio del plan' : `al día · activo desde el ${fechaLarga(inicioSemana(plan, ultimo.semana + 1)).split(',')[0]}`} />
+        <div className="w-tarjeta w-kpi mp-kpi">
+          <p className="w-etiqueta">AJUSTE DE ESTA SEMANA</p>
+          <p className={`w-display mp-kpi__cambio mp-kpi__cambio--${ultimo.cambio_pct < 0 ? 'baja' : ultimo.cambio_pct > 0 ? 'sube' : 'igual'}`}>
+            {porcentaje(ultimo.cambio_pct)}
+          </p>
+          <p className="w-texto w-texto--2 mp-kpi__detalle">{FRASE_CUMPLIMIENTO[nivelAdh]} y {frasePausas}.</p>
+        </div>
+        <div className="w-tarjeta w-kpi mp-kpi">
+          <p className="w-etiqueta">PROGRESO DEL PROGRAMA</p>
+          <p className="w-display">Semana {semanaActual} de {prefs.semanas}</p>
+          <span className="mp-progreso"><Barra valor={avance} /><small>{Math.round(avance * 100)} %</small></span>
+          <p className="w-texto w-texto--2">Meta objetivo: {horas(prefs.meta_min)} / día</p>
+        </div>
       </div>
 
       <div className="w-fila">
-        <GraficaPertenencia titulo="Adherencia" conjuntos={ADHERENCIA} valor={inf.adherencia} />
-        <GraficaPertenencia titulo="Pausas ignoradas" conjuntos={IGNORADAS} valor={inf.ignoradas} />
+        <Medidor
+          titulo="Cumplimiento del horario"
+          ayuda="Mide qué tan fielmente mantuviste tu uso dentro de tu límite diario durante la semana."
+          valor={inf.adherencia}
+          tono={tonoPct(inf.adherencia)}
+          centro={<><b>{Math.round(inf.adherencia * 100)}%</b><small>cumplido</small></>}
+          nivel={`Nivel: ${NIVEL_CUMPLIMIENTO[nivelAdh]}`}
+          mensaje={dias.total
+            ? `Respetaste tu horario en ${dias.cumplidos} de los últimos ${dias.total} días.`
+            : 'Aún no hay días completos en esta semana.'}
+        />
+        <Medidor
+          titulo="Atención a los recordatorios"
+          ayuda="Indica cuántas veces te detuviste cuando la app te sugirió tomar un respiro."
+          valor={atendidas}
+          tono={conteo.total ? tonoPct(atendidas) : 'neutro'}
+          centro={conteo.total
+            ? <><b>{Math.round(atendidas * 100)}%</b><small>atendidas</small></>
+            : <><Icono src={iconoCheck} tam={22} /><small>sin pausas</small></>}
+          nivel={conteo.total ? `${conteo.ignoradas} de ${conteo.total} ignoradas` : 'Sin recordatorios'}
+          mensaje={!conteo.total
+            ? 'Esta semana la app no necesitó sugerirte pausas.'
+            : conteo.ignoradas === 0
+              ? '¡Excelente! No omitiste ninguna de las pausas preventivas.'
+              : `Atendiste ${conteo.total - conteo.ignoradas} de ${conteo.total} pausas. Intenta detenerte en la siguiente.`}
+        />
       </div>
 
       <div className="w-fila mp-cuerpo">
-        <section className="w-tarjeta mp-reglas">
-          <table>
-            <thead>
-              <tr><th>SI ADHERENCIA ES</th><th>Y PAUSAS IGNORADAS</th><th>ENTONCES</th><th>FUERZA</th></tr>
-            </thead>
-            <tbody>
-              {inf.reglas.map((r, i) => (
-                <tr key={i} className={r.fuerza > 0 ? 'mp-reglas__activa' : ''}>
-                  <td>{NOMBRE[REGLAS[i][0]]}</td>
-                  <td>{REGLAS[i][1] ? NOMBRE[REGLAS[i][1]] : 'Cualquiera'}</td>
-                  <td>{SALIDA[REGLAS[i][2]]}</td>
-                  <td>
-                    <span className="mp-fuerza"><span style={{ width: `${r.fuerza * 100}%` }} /></span>
-                    <b>{r.fuerza.toFixed(2)}</b>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mp-salida">
-            <span>Cambio final de tu límite →</span>
-            <b>{porcentaje(ultimo.cambio_pct)}</b>
-            {prefs.sensibilidad !== 'normal' && <span className="w-texto w-texto--3">(sensibilidad «{prefs.sensibilidad}»)</span>}
+        <section className="w-tarjeta mp-calculo">
+          <div className="mp-medidor__titulo">
+            <h2 className="w-titulo-3">¿Cómo calculamos tu nuevo límite?</h2>
+            <Ayuda titulo="¿Cómo calculamos tu nuevo límite?"
+              que="Tu nuevo límite se calcula automáticamente equilibrando tu tiempo en pantalla y tu respuesta a los recordatorios de descanso." />
+          </div>
+          <ol className="mp-razones">
+            {razones.map((r, i) => {
+              const razon = RAZONES[`${r.adherencia}-${r.ignoradas ?? ''}`]
+              const efecto = EFECTO[r.salida]
+              const peso = r.fuerza / totalFuerza
+              return (
+                <li key={r.numero} className="mp-razon">
+                  <span className="mp-razon__num">{i + 1}</span>
+                  <span className="mp-razon__texto">
+                    <b>{razon.titulo}</b>
+                    <span>{razon.texto}</span>
+                  </span>
+                  <span className="mp-razon__chips">
+                    <span className={`mp-efecto mp-efecto--${efecto.tono}`}>{efecto.texto}</span>
+                    <small>{peso >= 0.6 ? 'Influencia principal' : 'Influencia leve'}</small>
+                  </span>
+                </li>
+              )
+            })}
+          </ol>
+          <p className="mp-resultado">
+            <b>Resultado final:</b> {resultado}
+            {prefs.sensibilidad !== 'normal' && <small> Ritmo elegido: {prefs.sensibilidad}.</small>}
           </p>
         </section>
         <Historial
           ajustes={ajustes}
           proximo={{
-            fecha: siguiente.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric' }).replace(',', ''),
-            detalle: `Tu límite ${proyectado < limite ? 'bajará' : proyectado > limite ? 'subirá' : 'se quedará en'} ${proyectado === limite ? horas(limite) : `a ${horas(proyectado)}`} si mantienes esta semana.`,
+            fecha: (() => {
+              const t = siguiente.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric' }).replace(',', '')
+              return t.charAt(0).toUpperCase() + t.slice(1)
+            })(),
+            detalle: proyectado === limite
+              ? `Si mantienes este ritmo, tu límite se quedará en ${horas(limite)}.`
+              : `Si mantienes este ritmo durante los próximos días, tu límite ${proyectado < limite ? 'bajará' : 'subirá'} a ${horas(proyectado)}, según lo planeado.`,
           }}
         />
       </div>
@@ -270,7 +386,7 @@ function Cargando() {
         ))}
       </div>
       <div className="w-fila">
-        {['Adherencia', 'Pausas ignoradas'].map((t) => (
+        {['Cumplimiento del horario', 'Atención a los recordatorios'].map((t) => (
           <section key={t} className="w-tarjeta mp-pertenencia">
             <div className="mp-pertenencia__titulo"><h2 className="w-titulo-3">{t}</h2><Esqueleto ancho={44} alto={20} /></div>
             <div className="mp-barras-cargando">{barras.map((h, i) => <Esqueleto key={i} alto={h} />)}</div>
@@ -349,7 +465,7 @@ export default function MiPlan({ usuario, datos, error, onRecargar }) {
             accion="Crear mi plan" onAccion={() => setEditando(true)} />
         </section>
       ) : ajustes.length ? (
-        <ConAjustes plan={plan} ajustes={ajustes} pausas={datos.pausas} prefs={prefs} />
+        <ConAjustes plan={plan} ajustes={ajustes} pausas={datos.pausas} eventos={datos.eventos} prefs={prefs} />
       ) : (
         <PrimeraSemana plan={plan} eventos={datos.eventos} onEditar={() => setEditando(true)} />
       )}
