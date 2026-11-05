@@ -1,6 +1,9 @@
 /* Web/Sidebar · Rol=Estudiante (248 px expandida, 76 px contraída) */
 .menu {
-  position: sticky; top: 0; height: calc(100vh / var(--zoom, 1)); min-height: 900px;
+  /* Fija a la pantalla: no se mueve con el scroll vertical ni horizontal.
+     Sin overflow para no recortar el menú de usuario, que se abre a su derecha. */
+  position: fixed; top: 0; left: 0; z-index: 45;
+  height: calc(100vh / var(--zoom, 1));
   width: 248px; flex-shrink: 0;
   display: flex; flex-direction: column; gap: 4px;
   padding: 28px 18px 24px;
@@ -8,6 +11,10 @@
   font-family: 'Inter', system-ui, sans-serif;
 }
 .menu--contraido { width: 76px; padding-left: 16px; padding-right: 16px; align-items: center; }
+
+/* El contenido deja libre el ancho exacto de la barra fija */
+.menu + .contenido { margin-left: 248px; }
+.menu--contraido + .contenido { margin-left: 76px; }
 
 .menu__marca { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 20px; white-space: nowrap; }
 .menu--contraido .menu__marca { padding: 0 0 20px; align-items: center; }
