@@ -8,13 +8,13 @@ export const MODELO = { umbral: 0.42, metricas: { auc_roc: 0.8479, precision: 0.
 
 // Textos de cada una de las 7 variables del modelo y cómo se muestra su valor
 export const FACTORES = {
-  adherencia: { titulo: 'Adherencia de la semana', valor: (v) => `${Math.round(v * 100)} %` },
-  pct_nocturno: { titulo: 'Uso nocturno (22–06 h)', valor: (v) => `${Math.round(v * 100)} %` },
+  adherencia: { titulo: 'Días dentro de tu límite', valor: (v) => `${Math.round(v * 100)} %` },
+  pct_nocturno: { titulo: 'Uso de noche (22:00 a 06:00)', valor: (v) => `${Math.round(v * 100)} %` },
   racha: { titulo: 'Semanas seguidas cumpliendo', valor: (v) => `${Math.round(v)}` },
   pct_foco_completadas: { titulo: 'Sesiones de foco completadas', valor: (v) => `${Math.round(v * 100)} %` },
   pct_ignoradas: { titulo: 'Pausas ignoradas', valor: (v) => `${Math.round(v * 100)} %` },
-  cambio_pct: { titulo: 'Recorte del límite', valor: (v) => `${v < 0 ? '−' : v > 0 ? '+' : ''}${Math.abs(v).toFixed(1)} %` },
-  tendencia: { titulo: 'Tendencia de la adherencia', valor: (v) => `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v * 100))} pts` },
+  cambio_pct: { titulo: 'Cuánto bajó tu límite', valor: (v) => `${v < 0 ? '−' : v > 0 ? '+' : ''}${Math.abs(v).toFixed(1)} %` },
+  tendencia: { titulo: 'Cómo cambió tu ritmo', valor: (v) => `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v * 100))} pts` },
 }
 
 // Qué hacer cuando un factor sube el riesgo
