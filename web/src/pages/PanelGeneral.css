@@ -253,3 +253,43 @@
 .pg-patrones__leyenda li:hover, .pg-patrones__leyenda li:focus-visible { outline: none; background: #f8fafc; border-color: #cbd5e1; }
 .pg-patrones__leyenda i { width: 9px; height: 9px; border-radius: 50%; }
 .pg-patrones__leyenda b { color: #0f172a; }
+
+/* Mapa de riesgo en una sola columna: reloj + leyenda (se reacomodan con el ancho), estado y banner */
+.card--legible.card--riesgo .riesgo.pg-riesgo { display: flex; flex-direction: column; gap: 16px; }
+.card--legible .pg-riesgo .riesgo__mapa.pg-reloj-caja { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; min-width: 0; }
+.pg-riesgo .pg-reloj { flex: 0 1 290px; min-width: 220px; }
+.pg-riesgo .pg-reloj-lado { flex: 1 1 220px; min-width: 0; }
+.pg-riesgo .pg-reloj-caja .ventana { flex: 1 1 100%; }
+.pg-recomendacion-corta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border: 1px solid #fbe3a6;
+  border-radius: 14px; background: #fff7e6;
+}
+.pg-recomendacion-corta__icono { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px; background: #0f172a; }
+.pg-recomendacion-corta__texto { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 17px; color: #334155; }
+.pg-recomendacion-corta__texto > b { font-size: 13px; line-height: 18px; color: #0f172a; }
+.pg-recomendacion-corta__texto b { color: #0f172a; }
+.pg-recomendacion-corta__pausa {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 999px; background: #d1fae5;
+  font-size: 12px; line-height: 16px; font-weight: 700; color: #047857; white-space: nowrap;
+}
+
+/* Telemetría: paneles de métricas y de conexión debajo del flujo */
+.pg-telemetria__paneles { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px 16px; }
+.pg-telemetria__panel {
+  flex: 1 1 170px; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px;
+  border: 1px solid #edf1f5; border-radius: 12px; background: #f8fafc;
+}
+.pg-telemetria__titulo { font-size: 10px; line-height: 14px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: #b45309; }
+.pg-telemetria__panel dl { display: flex; flex-direction: column; gap: 7px; }
+.pg-telemetria__panel dt { font-size: 11px; line-height: 14px; color: #64748b; }
+.pg-telemetria__panel dd { font-size: 12px; line-height: 16px; font-weight: 700; color: #0f172a; }
+.pg-telemetria__panel dd small { font-weight: 400; color: #64748b; }
+.pg-ok { color: #047857 !important; }
+.pg-apagado { color: #64748b !important; }
+.pg-telemetria__boton {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 12px;
+  border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; font-size: 12px; font-weight: 700; color: #0f172a; cursor: pointer;
+}
+.pg-telemetria__boton:hover:not(:disabled) { background: #f1f5f9; }
+.pg-telemetria__boton:disabled { opacity: 0.6; cursor: default; }
+.pg-telemetria__boton:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }

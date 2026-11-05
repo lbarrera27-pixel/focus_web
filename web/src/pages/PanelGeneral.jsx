@@ -9,6 +9,7 @@ import iconoAnalytics from '../assets/icons/analytics.svg'
 import iconoFlecha from '../assets/icons/arrow-head.svg'
 import iconoCerebro from '../assets/icons/brain.svg'
 import iconoPulso from '../assets/icons/pulse.svg'
+import iconoActualizar from '../assets/icons/cu-actualizar.svg'
 import { fechaISO, formatoDuracion } from '../data/panel.js'
 import { ahoraEnZona, hora } from '../data/preferencias.js'
 import Ayuda, { useGlobo } from '../components/web/Ayuda.jsx'
@@ -16,10 +17,19 @@ import './PanelGeneral.css'
 
 // ---------- Telemetría ----------
 
-function TelemetryCard({ t }) {
+function TelemetryCard({ t, onRecargar }) {
+  const [sincronizando, setSincronizando] = useState(false)
+  async function sincronizar() {
+    setSincronizando(true)
+    try {
+      await onRecargar?.()
+    } finally {
+      setSincronizando(false)
+    }
+  }
   return (
     <Card
-      className="card--telemetria"
+      className="card--telemetria pg-telemetria"
       etiqueta="ANDROID CLOUD SYNC"
       titulo="Telemetry Pipeline"
       extra={<Insignia vivo={t.servicioActivo}>{t.servicioActivo ? 'EN VIVO' : 'SIN SEÑAL'}</Insignia>}
@@ -75,6 +85,34 @@ function TelemetryCard({ t }) {
             </div>
           </div>
         ))}
+      </div>
+      {/* Dos paneles para completar el centro de control de la sincronización */}
+      <div className="pg-telemetria__paneles">
+        <section className="pg-telemetria__panel" aria-label="Métricas de sincronización">
+          <p className="pg-telemetria__titulo">Métricas de sincronización</p>
+          <dl>
+            <div><dt>Última sincronización</dt><dd>{t.heartbeat} <small>(automática)</small></dd></div>
+            <div><dt>Datos transferidos</dt><dd>{t.eventos.toLocaleString('es-MX')} registros de actividad</dd></div>
+            <div><dt>Tiempo total medido</dt><dd>{hm(t.minutosUso)} acumuladas</dd></div>
+          </dl>
+        </section>
+        <section className="pg-telemetria__panel" aria-label="Estado de conexión y permisos">
+          <p className="pg-telemetria__titulo">Conexión y permisos</p>
+          <dl>
+            <div>
+              <dt>Servicio en segundo plano</dt>
+              <dd className={t.servicioActivo ? 'pg-ok' : 'pg-apagado'}>{t.servicioActivo ? 'Activo' : 'Sin actividad en 24 h'}</dd>
+            </div>
+            <div>
+              <dt>Permiso de uso de apps</dt>
+              <dd className={t.permisoUso ? 'pg-ok' : 'pg-apagado'}>{t.permisoUso ? 'Concedido' : 'Sin datos aún'}</dd>
+            </div>
+          </dl>
+          <button type="button" className="pg-telemetria__boton" onClick={sincronizar} disabled={sincronizando || !onRecargar}>
+            <Icono src={iconoActualizar} tam={14} />
+            {sincronizando ? 'Sincronizando…' : 'Sincronizar ahora'}
+          </button>
+        </section>
       </div>
     </Card>
   )
@@ -303,9 +341,9 @@ function RelojRiesgo({ valores, activa, onActiva }) {
 
 // Pausa sugerida según qué tan intensa es la hora más difícil
 const PAUSA_RECOMENDADA = {
-  1: 'Aviso suave (temporizador de 5 s)',
-  2: 'Ejercicio de respiración breve',
-  3: 'Bloqueo asistido con chatbot de apoyo',
+  1: 'Aviso suave (5 s)',
+  2: 'Respiración breve',
+  3: 'Chatbot de apoyo',
 }
 
 function RiskCard({ r }) {
@@ -332,7 +370,7 @@ function RiskCard({ r }) {
       }
       extra={<Insignia>{r.analizados} usos analizados</Insignia>}
     >
-      <div className="riesgo">
+      <div className="riesgo pg-riesgo">
         <div className="riesgo__mapa pg-reloj-caja">
           <RelojRiesgo valores={r.valores} activa={activa} onActiva={setActiva} />
           <div className="pg-reloj-lado">
@@ -375,29 +413,18 @@ function RiskCard({ r }) {
           </div>
         </div>
 
-        <aside className="pg-recomendacion" aria-label="Recomendación personalizada">
-          <div className="pg-recomendacion__cabeza">
-            <span className="pg-recomendacion__icono"><Icono src={iconoCerebro} tam={16} /></span>
+        {/* Recomendación corta: banner debajo del reloj */}
+        <aside className="pg-recomendacion-corta" aria-label="Recomendación rápida">
+          <span className="pg-recomendacion-corta__icono"><Icono src={iconoCerebro} tam={16} /></span>
+          <span className="pg-recomendacion-corta__texto">
+            <b>Recomendación rápida</b>
             <span>
-              <small>RECOMENDACIÓN PERSONALIZADA</small>
-              <b>Tu momento más vulnerable</b>
+              {r.conDatos
+                ? <>Pico crítico de <b>{desde} a {hasta}</b>. Te sugerimos activar el Modo Descanso a las <b>{antes}</b>.</>
+                : 'Cuando tu teléfono envíe uso, aquí verás qué hacer en tu hora más difícil.'}
             </span>
-          </div>
-          {r.conDatos ? (
-            <>
-              <p>
-                Detectamos que <b>entre las {desde} y las {hasta}</b> es cuando más usas el celular, y ahí es más fácil pasarte de tu límite diario.
-              </p>
-              <p className="pg-recomendacion__sugerencia">
-                Te sugerimos activar el <b>modo descanso</b> o limitar las apps de ocio a partir de las <b>{antes}</b>.
-              </p>
-              <span className="pg-recomendacion__pausa">
-                Pausa recomendada: <b>{PAUSA_RECOMENDADA[r.regla.nivel]}</b>
-              </span>
-            </>
-          ) : (
-            <p>Cuando tu teléfono envíe uso, aquí verás a qué hora te cuesta más y qué hacer.</p>
-          )}
+          </span>
+          {r.conDatos && <span className="pg-recomendacion-corta__pausa">Pausa: {PAUSA_RECOMENDADA[r.regla.nivel]}</span>}
         </aside>
       </div>
     </Card>
@@ -811,7 +838,7 @@ const TARJETAS = [
 
 const normalizar = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-export default function PanelGeneral({ panel, busqueda }) {
+export default function PanelGeneral({ panel, busqueda, onRecargar }) {
   const q = normalizar(busqueda.trim())
   return (
     <div className="panel">
@@ -819,7 +846,7 @@ export default function PanelGeneral({ panel, busqueda }) {
         const Tarjeta = t.C
         return (
           <div key={t.id} className={`panel__celda panel__celda--${t.id}${q && !normalizar(t.claves).includes(q) ? ' panel__celda--atenuada' : ''}`}>
-            <Tarjeta {...{ [t.prop]: panel[t.dato] }} />
+            <Tarjeta {...{ [t.prop]: panel[t.dato] }} onRecargar={onRecargar} />
           </div>
         )
       })}

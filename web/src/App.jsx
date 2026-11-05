@@ -353,7 +353,7 @@ export default function App() {
           onExportar={exportar}
         />
         {panel ? (
-          <PanelGeneral panel={panel} busqueda={busqueda} />
+          <PanelGeneral panel={panel} busqueda={busqueda} onRecargar={cargar} />
         ) : (
           <div className="panel panel--una">
             <p className="vacio">

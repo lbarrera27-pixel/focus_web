@@ -83,6 +83,9 @@ function telemetria({ tokens, eventos, estadisticas }) {
     servicioActivo: recienteMs < DIA_MS,
     heartbeat: haceCuanto(ultimo),
     eventos: estadisticas.total_eventos,
+    minutosUso: estadisticas.minutos_uso,
+    // Si llegan eventos, la app del teléfono tiene el permiso de "Uso de apps"
+    permisoUso: eventos.length > 0,
     nodos: [
       { titulo: 'Mobile Client', dato: `${activos.length} dispositivo(s)` },
       { titulo: 'Cloud Ingestion', dato: `${estadisticas.total_eventos} eventos` },
