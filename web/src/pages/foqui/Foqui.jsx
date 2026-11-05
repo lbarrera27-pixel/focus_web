@@ -2,7 +2,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Icono from '../../components/Icono.jsx'
 import { Esqueleto } from '../../components/web/Comunes.jsx'
-import { horas } from '../../data/plan.js'
+import { horas, limiteActual, ordenar } from '../../data/plan.js'
+import Ayuda, { useGlobo } from '../../components/web/Ayuda.jsx'
+import iconoReloj from '../../assets/icons/w-reloj.svg'
+import iconoCalendario from '../../assets/icons/cu-calendario.svg'
+import iconoAjuste from '../../assets/icons/aj-perilla.svg'
+import iconoEscudo from '../../assets/icons/ia-escudo.svg'
 import {
   NIVEL_TEXTO, SUGERENCIAS, cargarSemanas, datosUsados, guardarChat, leerChat, preguntar, resumenRapido, resumenSemana,
   signo, textoSemana,
@@ -18,39 +23,84 @@ import iconoMeta from '../../assets/icons/w-meta.svg'
 import iconoLuna from '../../assets/icons/w-luna.svg'
 import './Foqui.css'
 
-const SABE = [
-  [true, 'Minutos totales de la semana'],
-  [true, 'Adherencia y racha'],
-  [true, 'Cambio del plan y nivel de riesgo'],
-  [false, 'Nombres de apps'],
-  [false, 'Horarios y eventos individuales'],
-]
+// Qué recibe Foqui para responder (app/services/companero_service.py: solo datos agregados de la semana)
+const SI_PROCESA = ['Minutos totales acumulados por semana', 'Racha y cumplimiento de tu límite', 'Ajuste del plan y nivel de riesgo']
+const NO_VE = ['Nombres o contenido de tus aplicaciones', 'Mensajes, fotos o historial de navegación', 'Horarios o actividades individuales exactas']
 // Caracteres que aparecen cada 20 ms mientras Foqui "escribe"
 const PASO = 3
 let siguienteId = 0
 const nuevoId = () => `m${Date.now()}-${++siguienteId}`
 
-function Kpi({ etiqueta, valor, detalle }) {
+// Tarjeta de resumen con ícono de color y ayuda "?"
+function Kpi({ etiqueta, valor, detalle, icono, tono, ayuda, valorTono }) {
   return (
-    <div className="w-tarjeta fq-kpi">
-      <p className="w-etiqueta">{etiqueta}</p>
-      <p className="w-titulo-2">{valor}</p>
+    <div className={`w-tarjeta fq-kpi fq-kpi--${tono}`}>
+      <div className="fq-kpi__cabeza">
+        <p className="w-etiqueta">{etiqueta}</p>
+        <Ayuda titulo={etiqueta.charAt(0) + etiqueta.slice(1).toLowerCase()} que={ayuda} />
+        <span className="fq-kpi__icono" aria-hidden="true"><Icono src={icono} tam={16} /></span>
+      </div>
+      <p className={`w-titulo-2 fq-kpi__valor${valorTono ? ` fq-kpi__valor--${valorTono}` : ''}`}>{valor}</p>
       <p className="w-texto w-texto--2">{detalle}</p>
     </div>
   )
 }
 
-function UsoPorDia({ dias }) {
-  const max = Math.max(1, ...dias.map((d) => d.min))
+// Escala del eje Y en horas enteras (mínimo 3 h)
+function escalaHoras(maxMin) {
+  const tope = Math.max(3, Math.ceil(maxMin / 60))
+  const paso = tope <= 4 ? 1 : 2
+  const topeRedondo = Math.ceil(tope / paso) * paso
+  return { tope: topeRedondo * 60, marcas: Array.from({ length: topeRedondo / paso + 1 }, (_, i) => i * paso) }
+}
+
+function UsoPorDia({ dias, limite }) {
+  const { props, globo } = useGlobo({ arriba: true })
+  const pasados = dias.filter((d) => !d.futuro)
+  const { tope, marcas } = escalaHoras(Math.max(limite ?? 0, ...pasados.map((d) => d.min)))
+  const alto = (min) => `${Math.min(100, (min / tope) * 100)}%`
+  const conUso = pasados.filter((d) => d.min > 0 && !d.hoy)
+  const menor = conUso.length > 1 ? Math.min(...conUso.map((d) => d.min)) : null
   return (
-    <div className="fq-barras" role="img" aria-label={`Uso por día: ${dias.filter((d) => !d.futuro).map((d) => `${d.etiqueta} ${horas(d.min)}`).join(', ')}`}>
-      {dias.map((d) => (
-        <div key={d.etiqueta} className={d.hoy ? 'fq-barras__hoy' : d.futuro ? 'fq-barras__futuro' : ''}>
-          <b>{d.futuro ? '' : horas(d.min, { corto: d.min >= 60 })}</b>
-          <i style={d.futuro ? undefined : { height: `${Math.max(4, (d.min / max) * 70)}px` }} />
-          <small>{d.etiqueta}</small>
+    <div className="fq-uso">
+      <div className="fq-uso__eje" aria-hidden="true">
+        {marcas.map((h) => <span key={h} style={{ bottom: alto(h * 60) }}>{h}h</span>)}
+      </div>
+      <div className="fq-uso__area">
+        <div className="fq-uso__guias" aria-hidden="true">
+          {marcas.map((h) => <i key={h} style={{ bottom: alto(h * 60) }} />)}
+          {limite != null && <span className="fq-uso__limite" style={{ bottom: alto(limite) }}><em>Límite</em></span>}
         </div>
-      ))}
+        {dias.map((d) => {
+          const excede = limite != null && d.min > limite
+          const tipo = d.futuro ? 'futuro' : d.min <= 0 ? 'vacio' : excede ? 'mal' : 'bien'
+          const nota = d.futuro ? 'Día por registrar.'
+            : d.min <= 0 ? 'Sin registros o dispositivo en reposo.'
+              : excede ? `${horas(d.min - limite)} sobre tu límite.`
+                : d.min === menor ? '¡Día con menor tiempo en pantalla!'
+                  : limite != null ? 'Dentro de tu límite.' : null
+          const etiqueta = `${d.nombre}${d.hoy ? ' (hoy)' : ''}`
+          const contenido = (
+            <>
+              <b>{etiqueta}</b>
+              {!d.futuro && <span>{d.min > 0 ? `${horas(d.min)} de uso activo` : '0 minutos'}</span>}
+              {nota && <span className={`fq-uso__nota fq-uso__nota--${tipo}`}>{nota}</span>}
+            </>
+          )
+          return (
+            <div key={d.etiqueta} tabIndex={0} className={`fq-uso__col fq-uso__col--${tipo}${d.hoy ? ' fq-uso__col--hoy' : ''}`}
+              aria-label={`${etiqueta}: ${d.futuro ? 'por registrar' : horas(d.min)}. ${nota ?? ''}`} {...props(contenido)}>
+              <div className="fq-uso__pista">
+                {d.futuro ? <span className="fq-uso__pendiente">Pendiente</span>
+                  : d.min > 0 ? <span className="fq-uso__barra" style={{ height: alto(d.min) }} />
+                    : <span className="fq-uso__cero" />}
+              </div>
+              <small>{d.hoy ? 'Hoy' : d.etiqueta}</small>
+            </div>
+          )
+        })}
+      </div>
+      {globo}
     </div>
   )
 }
@@ -81,6 +131,7 @@ export default function Foqui({ usuario, datos, onNavegar }) {
   const sinNumeros = !!semanas?.error
 
   const resumen = useMemo(() => (semanas ? resumenSemana(semanas, datos) : null), [semanas, datos])
+  const limite = useMemo(() => (datos?.plan ? limiteActual(datos.plan, ordenar(datos.ajustes ?? [])) : null), [datos])
 
   useEffect(() => {
     guardarChat(usuario.id, mensajes)
@@ -262,13 +313,27 @@ export default function Foqui({ usuario, datos, onNavegar }) {
         <aside className="fq-lateral">
           {resumen && !sinNumeros ? (
             <div className="fq-kpis">
-              <Kpi etiqueta="PROMEDIO DIARIO" valor={horas(resumen.promedio)}
-                detalle={resumen.cambio == null ? 'esta semana' : `${signo(resumen.cambio)} % vs. semana anterior`} />
-              <Kpi etiqueta="ADHERENCIA" valor={resumen.adherencia == null ? '—' : `${Math.round(resumen.adherencia * 100)} %`}
-                detalle={resumen.adherencia == null ? 'aún sin semana cerrada' : `${Math.round(resumen.adherencia * 7)} de 7 días`} />
-              <Kpi etiqueta="AJUSTE DEL PLAN" valor={resumen.cambioPlan == null ? '—' : `${signo(resumen.cambioPlan)} %`} detalle="según tu semana" />
-              <Kpi etiqueta="RIESGO" valor={resumen.riesgo ? NIVEL_TEXTO[resumen.riesgo.nivel] : '—'}
-                detalle={resumen.riesgo ? `${Math.round(resumen.riesgo.probabilidad * 100)} % para la próxima semana` : 'aún sin datos'} />
+              <Kpi etiqueta="PROMEDIO DIARIO" icono={iconoReloj} tono="azul" valor={horas(resumen.promedio)}
+                detalle={resumen.cambio == null ? 'esta semana' : `${signo(resumen.cambio)} % vs. semana anterior`}
+                ayuda={`Tiempo promedio que pasaste en pantalla cada día de esta semana.${resumen.cambio == null ? ''
+                  : resumen.cambio < 0 ? ` Bajaste un ${Math.abs(resumen.cambio)} % respecto a la semana previa.`
+                    : resumen.cambio > 0 ? ` Subiste un ${resumen.cambio} % respecto a la semana previa.` : ' Igual que la semana previa.'}`} />
+              <Kpi etiqueta="CUMPLIMIENTO DEL HORARIO" icono={iconoCalendario} tono="verde"
+                valor={resumen.adherencia == null ? '—' : `${Math.round(resumen.adherencia * 100)} %`}
+                detalle={resumen.adherencia == null ? 'aún sin semana cerrada' : `${Math.round(resumen.adherencia * 7)} de 7 días completados`}
+                ayuda={`Porcentaje de días en los que respetaste tu límite diario${resumen.adherencia == null ? '.' : ` (${Math.round(resumen.adherencia * 7)} de 7 días logrados).`}`} />
+              <Kpi etiqueta="AJUSTE DE TU LÍMITE" icono={iconoAjuste} tono="ambar"
+                valor={resumen.cambioPlan == null ? '—' : `${signo(resumen.cambioPlan)} %`}
+                detalle={resumen.cambioPlan == null ? 'llega al cerrar tu semana' : resumen.cambioPlan < 0 ? 'Reducción suave según tus hábitos'
+                  : resumen.cambioPlan > 0 ? 'Se relaja para que sea alcanzable' : 'Se mantiene igual'}
+                ayuda={resumen.cambioPlan == null ? 'Cada semana tu límite diario se ajusta según cómo te fue.'
+                  : resumen.cambioPlan < 0 ? `Tu meta diaria se reduce ${Math.abs(resumen.cambioPlan)} % para acompañar tu progreso de forma gradual y sin frustración.`
+                    : resumen.cambioPlan > 0 ? `Tu meta diaria se relaja ${resumen.cambioPlan} % para que vuelva a ser alcanzable.` : 'Tu meta diaria se mantiene para que consolides tu ritmo.'} />
+              <Kpi etiqueta="RIESGO DE SOBREUSO" icono={iconoEscudo} tono="coral"
+                valor={resumen.riesgo ? NIVEL_TEXTO[resumen.riesgo.nivel] : '—'}
+                valorTono={resumen.riesgo?.nivel}
+                detalle={resumen.riesgo ? `${Math.round(resumen.riesgo.probabilidad * 100)} % de probabilidad la próxima semana` : 'aún sin datos'}
+                ayuda="Probabilidad estimada de superar tu límite durante la siguiente semana si mantienes los patrones recientes." />
             </div>
           ) : (
             <div className="fq-kpis" aria-busy="true">
@@ -277,24 +342,40 @@ export default function Foqui({ usuario, datos, onNavegar }) {
           )}
 
           <section className="w-tarjeta fq-sabe">
-            <h2 className="w-titulo-3">Lo que Foqui sabe de ti</h2>
-            <p className="w-texto w-texto--2">Foqui solo pone en palabras estos números; no decide tu plan ni tu riesgo.</p>
-            <ul>
-              {SABE.map(([si, t]) => (
-                <li key={t}>
-                  <span className={si ? 'fq-si' : 'fq-no'}><img src={si ? iconoSi : iconoNo} alt="" /></span>
-                  {si ? 'Sí recibe' : 'Nunca recibe'}: {t}
-                </li>
-              ))}
+            <div className="fq-sabe__titulo">
+              <span className="fq-sabe__escudo" aria-hidden="true"><Icono src={iconoEscudo} tam={16} /></span>
+              <h2 className="w-titulo-3">Tu privacidad primero</h2>
+              <Ayuda titulo="Tu privacidad primero"
+                que="Foqui solo recibe un resumen con los totales de tu semana. Los detalles de tu uso no se le envían." />
+            </div>
+            <p className="w-texto w-texto--2">Foqui solo analiza métricas generales de tiempo para ayudarte; nunca accede a tu información personal ni a contenidos privados.</p>
+            <p className="fq-sabe__sub">Lo que sí procesa para tus resúmenes</p>
+            <ul className="fq-pildoras">
+              {SI_PROCESA.map((t) => <li key={t} className="fq-pildora fq-pildora--si"><span className="fq-si"><img src={iconoSi} alt="" /></span>{t}</li>)}
+            </ul>
+            <p className="fq-sabe__sub">Lo que está 100 % protegido y nunca ve</p>
+            <ul className="fq-pildoras">
+              {NO_VE.map((t) => <li key={t} className="fq-pildora fq-pildora--no"><span className="fq-no"><img src={iconoNo} alt="" /></span>{t}</li>)}
             </ul>
           </section>
 
           <section className="w-tarjeta fq-semana">
             <p className="w-sobretitulo">TU SEMANA</p>
-            <h2 className="w-titulo-3">Uso por día</h2>
-            {resumen && !sinNumeros ? <UsoPorDia dias={resumen.dias} />
+            <div className="fq-sabe__titulo">
+              <h2 className="w-titulo-3">Uso por día</h2>
+              <Ayuda titulo="Uso por día" que="Muestra las horas y minutos que usaste el celular cada día de esta semana, comparados con tu límite diario."
+                accion="Pasa el ratón por un día para ver el detalle." />
+            </div>
+            {resumen && !sinNumeros ? <UsoPorDia dias={resumen.dias} limite={limite} />
               : sinNumeros ? <p className="w-cuerpo w-texto--3">Sin conexión: tu uso aparecerá aquí al reintentar.</p>
-                : <Esqueleto alto={110} />}
+                : <Esqueleto alto={150} />}
+            {resumen && !sinNumeros && (
+              <ul className="fq-uso__leyenda">
+                <li><i className="fq-uso__punto--bien" />Dentro del límite</li>
+                <li><i className="fq-uso__punto--mal" />Sobre el límite</li>
+                <li><i className="fq-uso__punto--futuro" />Por registrar</li>
+              </ul>
+            )}
           </section>
         </aside>
       </div>

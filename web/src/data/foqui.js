@@ -59,7 +59,15 @@ export function resumenSemana({ eventos, riesgo }, datos, ahora = ahoraEnZona())
   return {
     promedio,
     cambio: promedioAnterior > 0 ? Math.round(((promedio - promedioAnterior) / promedioAnterior) * 100) : null,
-    dias: DIAS.map((etiqueta, i) => ({ etiqueta, min: minutos[7 + i], hoy: i === hoy, futuro: i > hoy })),
+    // Etiquetas a partir de la fecha real: la semana puede empezar en lunes o domingo
+    dias: Array.from({ length: 7 }, (_, i) => {
+      const fecha = new Date(inicio.getTime() + i * DIA_MS)
+      const largo = fecha.toLocaleDateString('es-MX', { weekday: 'long' })
+      return {
+        etiqueta: DIAS[(fecha.getDay() + 6) % 7], nombre: largo.charAt(0).toUpperCase() + largo.slice(1),
+        min: minutos[7 + i], hoy: i === hoy, futuro: i > hoy,
+      }
+    }),
     adherencia: ajuste?.adherencia ?? null,
     cambioPlan: ajuste?.cambio_pct ?? null,
     riesgo: riesgo ? { nivel: riesgo.nivel, probabilidad: riesgo.probabilidad } : null,
