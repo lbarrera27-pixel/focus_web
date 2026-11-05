@@ -97,7 +97,7 @@ const ALTO_GRAF = 230
 const y = (p) => 220 - p * 210
 const yPct = (p) => `${(y(p) / ALTO_GRAF) * 100}%`
 
-function GraficaSemanas({ historial, umbral }) {
+function GraficaSemanas({ historial, umbral, factorActual }) {
   const { props, globo } = useGlobo()
   const n = historial.length
   const x = (i) => (n === 1 ? 50 : ((20 + (i * 480) / (n - 1)) / 520) * 100)
@@ -152,6 +152,7 @@ function GraficaSemanas({ historial, umbral }) {
                       <b>Semana {h.semana}</b>
                       <span className={`rg-globo-nivel rg-globo-nivel--${z.id}`}>{porcentaje(h.probabilidad)} de probabilidad de sobreuso</span>
                       <span>{resumen}</span>
+                      {i === ultima && factorActual && <span>Lo que más pesó: <b>{factorActual}</b></span>}
                     </>,
                   )}
                 />
@@ -170,19 +171,21 @@ function GraficaSemanas({ historial, umbral }) {
 
 // Meta recomendada según lo que más está subiendo el nivel
 function metaRecomendada(r, uso, enZonaSegura) {
-  const faltan = Math.max(0, Math.round((r.probabilidad - r.umbral) * 100))
   if (enZonaSegura) return 'Estás en la zona segura. Mantén tus horarios esta semana para seguir así.'
+  const critica = r.probabilidad >= ALTO
+  const destino = critica ? `la zona moderada (menos de ${porcentaje(ALTO)})` : `la zona segura (menos de ${porcentaje(r.umbral)})`
+  const faltan = Math.max(1, Math.round((r.probabilidad - (critica ? ALTO : r.umbral)) * 100))
   const top = r.factores.filter((f) => f.efecto === 'sube').sort((a, b) => b.contribucion - a.contribucion)[0]
-  const cierre = `Te faltan ${faltan} puntos para la zona segura.`
+  const cierre = `Te faltan ${faltan} punto${faltan === 1 ? '' : 's'} para ${destino}.`
   switch (top?.variable) {
     case 'pct_nocturno': {
       const recorte = Math.max(10, Math.round(uso.nocheProm / 3 / 5) * 5)
-      return `Si reduces ${recorte} minutos en tus noches esta semana, tu nivel puede bajar hacia la zona segura. ${cierre}`
+      return `Si reduces ${recorte} minutos en tus noches esta semana, tu nivel puede bajar. ${cierre}`
     }
-    case 'pct_ignoradas': return `Si atiendes cada pausa que te sugiera la app esta semana, tu nivel puede bajar hacia la zona segura. ${cierre}`
-    case 'adherencia': return `Si cumples tu límite al menos 5 de los 7 días, tu nivel puede bajar hacia la zona segura. ${cierre}`
-    case 'pct_foco_completadas': return `Si terminas las sesiones de foco que empieces, tu nivel puede bajar hacia la zona segura. ${cierre}`
-    default: return `Si mantienes tus horarios estables esta semana, tu nivel puede bajar hacia la zona segura. ${cierre}`
+    case 'pct_ignoradas': return `Si atiendes cada pausa que te sugiera la app esta semana, tu nivel puede bajar. ${cierre}`
+    case 'adherencia': return `Si cumples tu límite al menos 5 de los 7 días, tu nivel puede bajar. ${cierre}`
+    case 'pct_foco_completadas': return `Si terminas las sesiones de foco que empieces, tu nivel puede bajar. ${cierre}`
+    default: return `Si mantienes tus horarios estables esta semana, tu nivel puede bajar. ${cierre}`
   }
 }
 
@@ -210,6 +213,31 @@ function accionesDeHoy(factores) {
   return acciones.slice(0, 3)
 }
 
+// Tendencia de las últimas 3 semanas (o las que haya) en palabras
+function diagnostico(historial, dificultades, fortalezas) {
+  const n = historial.length
+  if (n < 2) return { id: 'estable', insignia: 'Primera semana medida', texto: 'Con la próxima semana podremos ver hacia dónde va tu tendencia.' }
+  const desde = historial[Math.max(0, n - 3)]
+  const hasta = historial[n - 1]
+  const semanas = hasta.semana - desde.semana + 1
+  const dif = Math.round((hasta.probabilidad - desde.probabilidad) * 100)
+  const tramo = `de ${porcentaje(desde.probabilidad)} (S${desde.semana}) a ${porcentaje(hasta.probabilidad)} (S${hasta.semana})`
+  const motivos = (xs, fn) => lista(xs.map((f) => fn[f.variable](f.valor).titulo.toLowerCase()))
+  if (dif >= 3) {
+    return {
+      id: 'alza', insignia: `Tendencia al alza (+${dif} pts en ${semanas} semanas)`,
+      texto: `Tu nivel subió ${tramo}${dificultades.length ? `, principalmente por ${motivos(dificultades, DIFICULTAD)}` : ''}.`,
+    }
+  }
+  if (dif <= -3) {
+    return {
+      id: 'baja', insignia: `Tendencia a la baja (${dif} pts en ${semanas} semanas)`,
+      texto: `Tu nivel bajó ${tramo}${fortalezas.length ? ` gracias a ${motivos(fortalezas, FORTALEZA)}` : ''}. ¡Vas por buen camino!`,
+    }
+  }
+  return { id: 'estable', insignia: `Tendencia estable (${dif > 0 ? '+' : ''}${dif} pts en ${semanas} semanas)`, texto: `Tu nivel se mantuvo ${tramo}.` }
+}
+
 // ---------- e13 · Con datos ----------
 function ConDatos({ r, datos }) {
   const historial = r.historial?.length ? r.historial : [{ semana: r.semana, probabilidad: r.probabilidad }]
@@ -222,6 +250,8 @@ function ConDatos({ r, datos }) {
   const acciones = accionesDeHoy(r.factores)
   const [hechos, alternar] = useChecklist(r.semana)
   const nombresCriticos = uso.criticos.map((d) => d.nombre)
+  const tendencia = diagnostico(historial, dificultades, fortalezas)
+  const siguiente = historial[historial.length - 1].semana + 1
 
   return (
     <>
@@ -248,20 +278,28 @@ function ConDatos({ r, datos }) {
               <h2 className="w-titulo-3">Evolución de tus semanas</h2>
               <Ayuda
                 titulo="Evolución de tus semanas"
-                que="Muestra, semana a semana, qué tan probable es que vuelvas a pasarte de tu tiempo objetivo."
-                accion="Pasa el ratón por un punto para ver qué cambió esa semana."
+                que="Calcula la probabilidad de exceder tu límite durante los próximos 7 días a partir de tus patrones de uso recientes."
+                accion="Pasa el ratón por un punto para ver su porcentaje y qué cambió esa semana."
               />
               <em className={`rg-insignia rg-insignia--${z.id} rg-titulo__estado`}>Ahora: {z.nombre}</em>
             </div>
-            <GraficaSemanas historial={historial} umbral={r.umbral} />
-          </section>
+            <GraficaSemanas historial={historial} umbral={r.umbral}
+              factorActual={dificultades[0] ? DIFICULTAD[dificultades[0].variable](dificultades[0].valor).titulo : null} />
 
-          <section className={`w-tarjeta rg-meta rg-meta--${z.id}`}>
-            <span className="rg-meta__icono"><Icono src={iconoMeta} tam={18} /></span>
-            <span>
-              <b>Meta recomendada</b>
-              <span>{metaRecomendada(r, uso, z.id === 'segura')}</span>
-            </span>
+            <div className="rg-diagnostico">
+              <div className="rg-diagnostico__cabeza">
+                <p className="rg-grupo__titulo">Diagnóstico de tu tendencia</p>
+                <span className={`rg-tendencia rg-tendencia--${tendencia.id}`}>{tendencia.insignia}</span>
+              </div>
+              <p className="rg-diagnostico__texto">{tendencia.texto}</p>
+              <div className={`rg-meta rg-meta--${z.id}`}>
+                <span className="rg-meta__icono"><Icono src={iconoMeta} tam={18} /></span>
+                <span>
+                  <b>Objetivo para S{siguiente}</b>
+                  <span>{metaRecomendada(r, uso, z.id === 'segura')}</span>
+                </span>
+              </div>
+            </div>
           </section>
         </div>
 

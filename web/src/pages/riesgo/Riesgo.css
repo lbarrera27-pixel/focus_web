@@ -185,3 +185,12 @@
 .rg-columna .rg-grafica__cuerpo { flex: 1; min-height: 230px; }
 .rg-columna .rg-grafica__escala, .rg-columna .rg-grafica__area { height: auto; }
 .rg-serie { vector-effect: non-scaling-stroke; }
+.rg-diagnostico { display: flex; flex-direction: column; gap: 10px; padding-top: 16px; border-top: 1px solid var(--w-borde); }
+.rg-diagnostico__cabeza { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.rg-diagnostico__texto { font-size: 13px; line-height: 20px; color: var(--w-texto-2); }
+.rg-tendencia { padding: 3px 10px; border-radius: 999px; font-size: 12px; line-height: 16px; font-weight: 700; }
+.rg-tendencia--alza { background: #ffe4e6; color: #be123c; }
+.rg-tendencia--baja { background: #d1fae5; color: #047857; }
+.rg-tendencia--estable { background: #f1f5f9; color: #475569; }
+.rg-diagnostico .rg-meta { border: 1px solid #a7f3d0; border-radius: 12px; }
+.rg-columna .rg-tarjeta { gap: 16px; }
