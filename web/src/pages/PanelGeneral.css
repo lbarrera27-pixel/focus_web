@@ -293,3 +293,15 @@
 .pg-telemetria__boton:hover:not(:disabled) { background: #f1f5f9; }
 .pg-telemetria__boton:disabled { opacity: 0.6; cursor: default; }
 .pg-telemetria__boton:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+
+/* Telemetría compacta: dispositivo con última señal pegado a los dos paneles */
+.pg-telemetria .dispositivo { margin: 4px 16px 0; padding: 12px 14px; border-radius: 14px; gap: 12px; grid-template-columns: 40px 1fr auto; }
+.pg-telemetria .dispositivo__icono { width: 40px; height: 40px; border-radius: 12px; }
+.pg-telemetria .dispositivo__texto b { font-size: 14px; line-height: 19px; }
+.pg-telemetria .dispositivo__texto small { font-size: 12px; line-height: 16px; }
+.pg-telemetria .vinculado { padding: 4px 9px; border-radius: 999px; font-size: 11px; line-height: 15px; }
+.pg-dispositivo__estado { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.pg-senal { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; line-height: 15px; color: #64748b; white-space: nowrap; }
+.pg-senal .punto { width: 7px; height: 7px; }
+.pg-telemetria__paneles { gap: 12px; padding-top: 12px; }
+.pg-dt-ayuda { display: flex; align-items: center; gap: 6px; }

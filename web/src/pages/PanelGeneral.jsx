@@ -3,10 +3,6 @@ import Card, { Insignia } from '../components/Card.jsx'
 import Icono from '../components/Icono.jsx'
 import iconoTelefono from '../assets/icons/phone.svg'
 import iconoCheck from '../assets/icons/check.svg'
-import iconoMovil from '../assets/icons/mobile-client.svg'
-import iconoNube from '../assets/icons/cloud-ingestion.svg'
-import iconoAnalytics from '../assets/icons/analytics.svg'
-import iconoFlecha from '../assets/icons/arrow-head.svg'
 import iconoCerebro from '../assets/icons/brain.svg'
 import iconoPulso from '../assets/icons/pulse.svg'
 import iconoActualizar from '../assets/icons/cu-actualizar.svg'
@@ -20,6 +16,7 @@ import './PanelGeneral.css'
 
 function TelemetryCard({ t, onRecargar }) {
   const [sincronizando, setSincronizando] = useState(false)
+  const { props, globo } = useGlobo({ arriba: true })
   async function sincronizar() {
     setSincronizando(true)
     try {
@@ -30,10 +27,12 @@ function TelemetryCard({ t, onRecargar }) {
   }
   return (
     <Card
-      className="card--telemetria pg-telemetria"
-      etiqueta="ANDROID CLOUD SYNC"
-      titulo="Telemetry Pipeline"
-      extra={<Insignia vivo={t.servicioActivo}>{t.servicioActivo ? 'EN VIVO' : 'SIN SEÑAL'}</Insignia>}
+      className="card--telemetria card--legible pg-telemetria"
+      etiqueta="TU CELULAR"
+      titulo="Sincronización del dispositivo"
+      ayuda={<Ayuda titulo="Sincronización del dispositivo"
+        que="Muestra si tu celular está enviando tus datos de uso para que tus reportes estén al día." />}
+      extra={<Insignia vivo={t.servicioActivo}>{t.servicioActivo ? 'CONECTADO' : 'SIN SEÑAL'}</Insignia>}
     >
       <div className="dispositivo">
         <span className="dispositivo__icono">
@@ -43,50 +42,21 @@ function TelemetryCard({ t, onRecargar }) {
           <b>{t.dispositivo}</b>
           <small>{t.detalle}</small>
         </span>
-        {t.vinculado ? (
-          <span className="vinculado">
-            <Icono src={iconoCheck} tam={12} /> Vinculado
-          </span>
-        ) : (
-          <span className="vinculado vinculado--no">Sin vincular</span>
-        )}
-      </div>
-
-      <dl className="metricas3">
-        <div>
-          <dt>SERVICIO</dt>
-          <dd>
+        <span className="pg-dispositivo__estado">
+          {t.vinculado ? (
+            <span className="vinculado">
+              <Icono src={iconoCheck} tam={12} /> Vinculado
+            </span>
+          ) : (
+            <span className="vinculado vinculado--no">Sin vincular</span>
+          )}
+          <small className="pg-senal">
             <span className={`punto ${t.servicioActivo ? 'punto--ok' : 'punto--off'}`} />
-            {t.servicioActivo ? 'Background activo' : 'Sin actividad 24 h'}
-          </dd>
-        </div>
-        <div>
-          <dt>HEARTBEAT</dt>
-          <dd>{t.heartbeat}</dd>
-        </div>
-        <div>
-          <dt>EVENTOS</dt>
-          <dd>{t.eventos} eventos</dd>
-        </div>
-      </dl>
-
-      <div className="pipeline">
-        {t.nodos.map((n, i) => (
-          <div className="pipeline__paso" key={n.titulo}>
-            {i > 0 && (
-              <span className="pipeline__flecha" aria-hidden="true">
-                <span className="pipeline__linea" />
-                <Icono src={iconoFlecha} tam={12.5} />
-              </span>
-            )}
-            <div className="pipeline__nodo">
-              <Icono src={[iconoMovil, iconoNube, iconoAnalytics][i]} tam={16} />
-              <b>{n.titulo}</b>
-              <small>{n.dato}</small>
-            </div>
-          </div>
-        ))}
+            Última señal: {t.heartbeat.toLowerCase()}
+          </small>
+        </span>
       </div>
+
       {/* Dos paneles para completar el centro de control de la sincronización */}
       <div className="pg-telemetria__paneles">
         <section className="pg-telemetria__panel" aria-label="Métricas de sincronización">
@@ -105,16 +75,22 @@ function TelemetryCard({ t, onRecargar }) {
               <dd className={t.servicioActivo ? 'pg-ok' : 'pg-apagado'}>{t.servicioActivo ? 'Activo' : 'Sin actividad en 24 h'}</dd>
             </div>
             <div>
-              <dt>Permiso de uso de apps</dt>
+              <dt className="pg-dt-ayuda">
+                Permiso de uso de apps
+                <Ayuda titulo="Permiso de uso de apps"
+                  que="Permiso necesario en Android para que la aplicación pueda medir los tiempos de pantalla." />
+              </dt>
               <dd className={t.permisoUso ? 'pg-ok' : 'pg-apagado'}>{t.permisoUso ? 'Concedido' : 'Sin datos aún'}</dd>
             </div>
           </dl>
-          <button type="button" className="pg-telemetria__boton" onClick={sincronizar} disabled={sincronizando || !onRecargar}>
+          <button type="button" className="pg-telemetria__boton" onClick={sincronizar} disabled={sincronizando || !onRecargar}
+            {...props(<span>Fuerza el envío inmediato de los últimos datos de uso desde tu celular hacia tus reportes.</span>)}>
             <Icono src={iconoActualizar} tam={14} />
             {sincronizando ? 'Sincronizando…' : 'Sincronizar ahora'}
           </button>
         </section>
       </div>
+      {globo}
     </Card>
   )
 }
@@ -800,7 +776,7 @@ function FrictionCard({ f }) {
 // ---------- Página ----------
 
 const TARJETAS = [
-  { id: 'telemetria', claves: 'telemetria android dispositivo heartbeat pipeline', C: TelemetryCard, prop: 't', dato: 'telemetria' },
+  { id: 'telemetria', claves: 'telemetria sincronizacion celular android dispositivo señal permisos', C: TelemetryCard, prop: 't', dato: 'telemetria' },
   { id: 'clusteres', claves: 'patrones sesiones rapidas largas cortas aperturas duracion clusteres', C: ClusterCard, prop: 'c', dato: 'clusteres' },
   { id: 'riesgo', claves: 'riesgo recaida hora tentacion recomendacion vulnerable', C: RiskCard, prop: 'r', dato: 'riesgo' },
   { id: 'semanal', claves: 'semanal habito tiempo objetivo plan', C: WeeklyCard, prop: 's', dato: 'semanal' },
