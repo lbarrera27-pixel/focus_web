@@ -101,8 +101,13 @@ function GraficaSemanas({ historial, umbral, factorActual }) {
   const { props, globo } = useGlobo()
   const n = historial.length
   const x = (i) => (n === 1 ? 50 : ((20 + (i * 480) / (n - 1)) / 520) * 100)
-  const curva = curvaSuave(historial.map((h, i) => [(x(i) / 100) * 520, y(h.probabilidad)]))
+  const pts = historial.map((h, i) => [(x(i) / 100) * 520, y(h.probabilidad)])
+  const curva = curvaSuave(pts)
+  // Área bajo la curva, teñida con el color de la zona actual
+  const area = n > 1 ? `${curva} L${pts[n - 1][0].toFixed(1)} ${y(0)} L${pts[0][0].toFixed(1)} ${y(0)} Z` : ''
   const ultima = n - 1
+  const zonaActual = zona(historial[ultima].probabilidad, umbral).id
+  const colorArea = { critica: '#f43f5e', atencion: '#f59e0b', segura: '#10b981' }[zonaActual]
   return (
     <figure className="rg-grafica" aria-label="Evolución de tus semanas">
       <ul className="rg-zonas">
@@ -118,17 +123,26 @@ function GraficaSemanas({ historial, umbral, factorActual }) {
           <svg viewBox={`0 0 520 ${ALTO_GRAF}`} preserveAspectRatio="none" aria-hidden="true">
             <defs>
               {/* Bandas pastel: verde abajo, amarillo en medio, rojo tenue arriba, con transición suave */}
+              {/* Bandas muy suaves con transiciones largas entre zonas */}
               <linearGradient id="rg-degradado" x1="0" x2="0" y1={y(1)} y2={y(0)} gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#fee2e2" stopOpacity="0.75" />
-                <stop offset={1 - ALTO - 0.02} stopColor="#fef2f2" stopOpacity="0.7" />
-                <stop offset={1 - ALTO + 0.02} stopColor="#fefce8" stopOpacity="0.8" />
-                <stop offset={1 - umbral - 0.02} stopColor="#fefce8" stopOpacity="0.8" />
-                <stop offset={1 - umbral + 0.02} stopColor="#f0fdf4" stopOpacity="0.8" />
-                <stop offset="1" stopColor="#dcfce7" stopOpacity="0.8" />
+                <stop offset="0" stopColor="#fff1f2" />
+                <stop offset={1 - ALTO - 0.06} stopColor="#fff5f5" />
+                <stop offset={1 - ALTO + 0.06} stopColor="#fffcf0" />
+                <stop offset={1 - umbral - 0.06} stopColor="#fffcf0" />
+                <stop offset={1 - umbral + 0.06} stopColor="#f3fdf7" />
+                <stop offset="1" stopColor="#ecfdf5" />
+              </linearGradient>
+              <linearGradient id="rg-area" x1="0" x2="0" y1={y(1)} y2={y(0)} gradientUnits="userSpaceOnUse">
+                <stop offset="0" stopColor={colorArea} stopOpacity="0.28" />
+                <stop offset="1" stopColor={colorArea} stopOpacity="0.02" />
               </linearGradient>
             </defs>
             <rect x="0" y={y(1)} width="520" height={y(0) - y(1)} fill="url(#rg-degradado)" />
-            {[0.2, 0.4, 0.6, 0.8].map((p) => <line key={p} className="rg-guia" x1="0" x2="520" y1={y(p)} y2={y(p)} />)}
+            {[0.2, 0.4, 0.8].map((p) => <line key={p} className="rg-guia" x1="0" x2="520" y1={y(p)} y2={y(p)} />)}
+            {/* Umbrales discontinuos entre zonas */}
+            <line className="rg-umbral-linea rg-umbral-linea--alto" x1="0" x2="520" y1={y(ALTO)} y2={y(ALTO)} />
+            <line className="rg-umbral-linea rg-umbral-linea--alerta" x1="0" x2="520" y1={y(umbral)} y2={y(umbral)} />
+            {n > 1 && <path d={area} fill="url(#rg-area)" />}
             {n > 1 && <path className="rg-serie" d={curva} />}
           </svg>
           {historial.map((h, i) => {

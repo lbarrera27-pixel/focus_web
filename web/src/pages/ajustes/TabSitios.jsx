@@ -262,9 +262,14 @@ export default function TabSitios({ usuario, locales, guardarSitios, ultimaSync 
         <p className="w-etiqueta">INTENTOS DE ESTA SEMANA</p>
         <div className="si-barras" role="img" aria-label={`Intentos por día: ${vista.dias.map((d) => `${d.etiqueta} ${d.intentos}`).join(', ')}`}>
           {vista.dias.map((d) => (
-            <div key={d.fecha} className={d.hoy ? 'si-barras__hoy' : ''}>
+            <div key={d.fecha} className={`${d.hoy ? 'si-barras__hoy' : ''}${d.intentos ? '' : ' si-barras__cero'}`}
+              title={`${d.etiqueta}: ${d.intentos ? plural(d.intentos, 'intento') : 'sin intentos'}`}>
               <b>{d.intentos}</b>
-              <span><i style={{ height: `${(d.intentos / vista.maxDia) * 100}%` }} /></span>
+              <span>
+                {d.intentos > 0
+                  ? <i style={{ height: `${Math.max(12, (d.intentos / vista.maxDia) * 100)}%` }} />
+                  : <em aria-hidden="true">✓</em>}
+              </span>
               <small>{d.etiqueta}</small>
             </div>
           ))}

@@ -194,3 +194,23 @@
 .rg-tendencia--estable { background: #f1f5f9; color: #475569; }
 .rg-diagnostico .rg-meta { border: 1px solid #a7f3d0; border-radius: 12px; }
 .rg-columna .rg-tarjeta { gap: 16px; }
+
+/* Tarjetas superiores centradas y equidistantes */
+.rg .w-fila > .w-kpi { align-items: center; justify-content: center; text-align: center; padding: 22px 20px; }
+.rg .rg-kpi__insignia { align-self: center; }
+
+/* Gráfica de evolución: umbrales discontinuos, área bajo la curva y nodos con anillo */
+.rg-umbral-linea { stroke-width: 1.2; stroke-dasharray: 6 5; vector-effect: non-scaling-stroke; opacity: 0.7; }
+.rg-umbral-linea--alto { stroke: #fb7185; }
+.rg-umbral-linea--alerta { stroke: #f59e0b; }
+.rg-serie { stroke: #1e293b; stroke-width: 2.75; }
+.rg-punto {
+  width: 16px; height: 16px; left: -8px; top: -8px; border-width: 3px; background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 1px 4px rgba(15, 23, 42, 0.18);
+}
+.rg-punto-grupo--critica .rg-punto { border-color: #e11d48; }
+.rg-punto-grupo--atencion .rg-punto { border-color: #d97706; }
+.rg-punto-grupo--segura .rg-punto { border-color: #059669; }
+.rg-punto:hover, .rg-punto:focus-visible { transform: scale(1.25); box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.95), 0 0 0 9px rgba(245, 158, 11, 0.22); }
+.rg-punto-grupo--fin .rg-punto { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 0 8px rgba(245, 158, 11, 0.18); }
+.rg-punto-valor { padding: 2px 8px; border-radius: 999px; background: #1e293b; color: #fff; font-size: 11px; bottom: 16px; }

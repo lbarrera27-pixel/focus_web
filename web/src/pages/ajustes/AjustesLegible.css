@@ -1,0 +1,251 @@
+/* Capa de legibilidad de Ajustes: el diseño original estaba a media escala (letras de 4–8 px).
+   Se aplica con la clase .aj-legible en la raíz de Ajustes. Generado a partir de Ajustes.css y Sitios.css. */
+.aj-legible .aj-panel__titulo { font-size: 18px; line-height: 24px; font-weight: 700; }
+.aj-legible .aj-panel__desc { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-nota { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-subtitulo { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-micro { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-chip-estado { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-pasos button { font-size: 14px; line-height: 20px; }
+.aj-legible .aj-nivel { font-size: 13px; }
+.aj-legible .aj-boton-punteado { font-size: 13px; line-height: 19px; }
+.aj-legible .aj-boton-punteado--chico { font-size: 12px; }
+.aj-legible .aj-boton-secundario { font-size: 13px; line-height: 19px; }
+.aj-legible .aj-boton-secundario--chico { font-size: 12px; }
+.aj-legible .aj-boton-primario { font-size: 13px; }
+.aj-legible .aj-boton-chico { font-size: 12px; }
+.aj-legible .aj-boton-blanco, .aj-legible  .aj-boton-rojo { font-size: 12px; }
+.aj-legible .aj-barra__titulo { font-size: 13px; line-height: 19px; }
+.aj-legible .aj-barra__estado small { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-nivel-fila__chip { font-size: 13px; }
+.aj-legible .aj-nivel-fila__texto b { font-size: 14px; }
+.aj-legible .aj-nivel-fila__texto small { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-nivel-fila__espera small { font-size: 11px; }
+.aj-legible .aj-nivel-fila__espera b { font-size: 13px; }
+.aj-legible .aj-progresion__titulo { font-size: 11px; }
+.aj-legible .aj-progresion__vacio { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-semana small { font-size: 11px; }
+.aj-legible .aj-semana > span:last-child { font-size: 12px; }
+.aj-legible .aj-temporizador__cabeza b { font-size: 13px; line-height: 19px; }
+.aj-legible .aj-temporizador__cabeza small { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-temporizador__escala small { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-ejercicios__cabeza small:last-child { font-size: 11px; }
+.aj-legible .aj-ejercicio b { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-ejercicio small { font-size: 10px; line-height: 14px; }
+.aj-legible .aj-ejercicio__num { font-size: 12px; }
+.aj-legible .aj-config-actual small { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-config-actual b { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-dia b { font-size: 14px; line-height: 20px; }
+.aj-legible .aj-dia small { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-horas label small { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-hora input { font-size: 14px; }
+.aj-legible .aj-horas .aj-chip-estado { font-size: 11px; }
+.aj-legible .aj-calendario__horas small { font-size: 10px; line-height: 14px; }
+.aj-legible .aj-bloque { font-size: 10px; line-height: 14px; }
+.aj-legible .aj-foco__resumen b { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-foco__resumen small { font-size: 11px; line-height: 16px; }
+.aj-legible .aj-buscar input { font-size: 12px; }
+.aj-legible .aj-filtro { font-size: 12px; }
+.aj-legible .aj-tabla__cabeza small { font-size: 11px; }
+.aj-legible .aj-fila__app b { font-size: 14px; }
+.aj-legible .aj-fila__app small { font-size: 11px; }
+.aj-legible .aj-categoria { font-size: 12px; }
+.aj-legible .aj-fila__limite b, .aj-legible  .aj-fila__uso b { font-size: 13px; }
+.aj-legible .aj-fila__limite .aj-pasos button { font-size: 14px; }
+.aj-legible .aj-stats small { font-size: 11px; }
+.aj-legible .aj-distribucion__fila b { font-size: 12px; }
+.aj-legible .aj-distribucion__fila strong, .aj-legible  .aj-top__fila strong { font-size: 13px; }
+.aj-legible .aj-top__fila b { font-size: 13px; }
+.aj-legible .aj-global small { font-size: 11px; }
+.aj-legible .aj-global__meta { font-size: 12px; }
+.aj-legible .aj-cat__texto b { font-size: 14px; }
+.aj-legible .aj-cat__texto small { font-size: 11px; }
+.aj-legible .aj-cat__valor { font-size: 14px; }
+.aj-legible .aj-gradual b { font-size: 14px; }
+.aj-legible .aj-gradual small { font-size: 12px; }
+.aj-legible .aj-semanal__cabeza small { font-size: 11px; }
+.aj-legible .aj-semanal__cabeza > span { font-size: 11px; }
+.aj-legible .aj-semanal__uso em { font-size: 12px; }
+.aj-legible .aj-semanal__dia b { font-size: 13px; }
+.aj-legible .aj-semanal__dia small { font-size: 12px; }
+.aj-legible .aj-hoy { font-size: 11px; }
+.aj-legible .aj-opcion__texto b { font-size: 14px; }
+.aj-legible .aj-opcion__texto small { font-size: 12px; }
+.aj-legible .aj-hora-chip { font-size: 13px; }
+.aj-legible .aj-a { font-size: 12px; }
+.aj-legible .aj-excepcion { font-size: 12px; }
+.aj-legible .aj-excepcion-form input { font-size: 12px; }
+.aj-legible .aj-pref__texto b { font-size: 14px; }
+.aj-legible .aj-pref__texto small { font-size: 12px; }
+.aj-legible .aj-bloque-gris__desc { font-size: 12px; }
+.aj-legible .aj-segmento { font-size: 13px; }
+.aj-legible .aj-retencion__op { font-size: 13px; }
+.aj-legible .aj-consentimiento__texto b { font-size: 14px; }
+.aj-legible .aj-consentimiento__texto small { font-size: 12px; }
+.aj-legible .aj-documento { font-size: 12px; line-height: 17px; }
+.aj-legible .aj-nunca li { font-size: 13px; }
+.aj-legible .aj-tus-datos > small:last-child { font-size: 11px; }
+.aj-legible .aj-boton-ancho { font-size: 12px; }
+.aj-legible .aj-institucion__uaq { font-size: 14px; }
+.aj-legible .aj-institucion b { font-size: 13px; }
+.aj-legible .aj-institucion small { font-size: 12px; }
+
+/* Alturas fijas del diseño anterior: ahora crecen con el texto */
+.aj-legible .aj-fila { height: auto; min-height: 68px; padding-top: 10px; padding-bottom: 10px; }
+.aj-legible .aj-fila__app { gap: 3px; }
+.aj-legible .aj-tabla__cabeza { padding-top: 18px; }
+.aj-legible .aj-buscar { height: 38px; width: 280px; border-radius: 10px; }
+.aj-legible .aj-buscar__icono { width: 30px; }
+.aj-legible .aj-filtro { padding: 8px 12px; border-radius: 10px; }
+.aj-legible .aj-nivel { padding: 4px 8px; border-radius: 6px; }
+.aj-legible .aj-categoria { padding: 4px 8px; }
+.aj-legible .aj-barra-uso { width: 100%; max-width: 140px; height: 6px; border-radius: 3px; }
+.aj-legible .aj-boton-config, .aj-legible .aj-boton-config img { width: 30px; height: 30px; }
+.aj-legible .aj-fila__limite .aj-pasos button { width: 26px; height: 26px; font-size: 14px; }
+.aj-legible .aj-pasos button { width: 30px; height: 30px; font-size: 15px; }
+.aj-legible .aj-stats > div { height: auto; min-height: 72px; }
+.aj-legible .aj-stats b { font-size: 22px; }
+.aj-legible .aj-distribucion__fila { height: auto; min-height: 54px; padding-top: 8px; padding-bottom: 8px; }
+.aj-legible .aj-top__fila { height: auto; min-height: 56px; padding-top: 8px; padding-bottom: 8px; }
+.aj-legible .aj-cat { height: auto; min-height: 62px; padding-top: 8px; padding-bottom: 8px; grid-template-columns: 32px minmax(0, 170px) minmax(0, 1fr) 54px auto; }
+.aj-legible .aj-pref { height: auto; min-height: 66px; padding-top: 8px; padding-bottom: 8px; }
+.aj-legible .aj-boton-punteado { height: 48px; }
+.aj-legible .aj-boton-punteado--chico, .aj-legible .aj-boton-secundario--chico, .aj-legible .aj-boton-chico { height: 34px; }
+.aj-legible .aj-boton-secundario, .aj-legible .aj-boton-primario { height: 42px; }
+.aj-legible .aj-boton-blanco, .aj-legible .aj-boton-rojo { height: 36px; width: auto; min-width: 170px; padding: 0 14px; }
+.aj-legible .aj-boton-ancho { height: 40px; }
+.aj-legible .aj-segmentado { width: auto; max-width: 460px; }
+.aj-legible .aj-segmento { height: 32px; }
+.aj-legible .aj-hora-chip { width: 72px; height: 30px; }
+.aj-legible .aj-excepcion-form input { height: 34px; }
+.aj-legible .aj-chip-estado__punto { width: 7px; height: 7px; }
+.aj-legible .aj-panel__cabeza { padding: 18px 20px 12px; }
+.aj-legible .aj-barra { height: 80px; }
+.aj-legible .aj-barra__titulo i { width: 8px; height: 8px; }
+.aj-legible .card__etiqueta { font-size: 11px; line-height: 15px; }
+.aj-legible .aj-distribucion__fila { grid-template-columns: 70px minmax(0, 1fr) auto; }
+.aj-legible .aj-encabezado .aj-chip, .aj-legible .aj-encabezado .chip, .aj-legible .aj-acciones .chip { font-size: 12px; line-height: 16px; }
+.aj-legible .aj-pestanas { overflow-y: hidden; }
+
+/* ---------- Reglas de fricción ---------- */
+.aj-legible .aj-grid--reglas { gap: 18px; }
+.aj-legible .aj-niveles { flex: 1; gap: 12px; padding: 0 20px; }
+.aj-legible .aj-nivel-fila {
+  flex: 1; align-items: center; gap: 18px; padding: 18px 20px; border-radius: 16px;
+  background: linear-gradient(90deg, var(--fondo-nivel) 0, #fff 38%); border: 1px solid var(--borde-suave);
+}
+.aj-legible .aj-nivel-fila__chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; width: 64px; height: 64px; padding: 0;
+  border-radius: 16px; background: #fff; color: var(--texto-nivel); box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+.aj-legible .aj-nivel-fila__chip small { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; }
+.aj-legible .aj-nivel-fila__chip b { font-size: 26px; line-height: 28px; }
+.aj-legible .aj-nivel-fila__texto { gap: 4px; }
+.aj-legible .aj-nivel-fila__texto b { font-size: 16px; line-height: 21px; }
+.aj-legible .aj-nivel-fila__texto small { font-size: 13px; line-height: 19px; }
+.aj-nivel-fila__intensidad { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.aj-nivel-fila__intensidad i { width: 22px; height: 6px; border-radius: 3px; background: #e2e8f0; }
+.aj-nivel-fila__intensidad i.aj-on { background: var(--texto-nivel); }
+.aj-nivel-fila__intensidad em { margin-left: 6px; font-style: normal; font-size: 11px; font-weight: 700; color: var(--texto-nivel); }
+.aj-legible .aj-nivel-fila__espera { align-items: center; padding: 8px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--borde-suave); }
+.aj-legible .aj-nivel-fila__espera b { font-size: 20px; line-height: 24px; }
+.aj-legible .aj-progresion { margin: 14px 20px 0; padding: 16px; border-radius: 14px; }
+.aj-legible .aj-semana { padding: 12px; border-radius: 12px; }
+
+.aj-legible .aj-panel--calibracion { height: auto; }
+.aj-legible .aj-temporizador { margin: 0 20px; padding: 16px 18px; border-radius: 16px; background: #fffdf5; border-color: #fde9b0; }
+.aj-legible .aj-temporizador__cabeza { grid-template-columns: 40px 1fr auto; gap: 12px; }
+.aj-legible .aj-temporizador__cabeza .aj-icono-caja { width: 40px; height: 40px; border-radius: 12px; }
+.aj-legible .aj-temporizador__cabeza strong { padding: 4px 12px; border-radius: 12px; background: #fef3c7; font-size: 24px; line-height: 32px; }
+.aj-legible .aj-rango { height: 10px; border-radius: 999px; }
+.aj-legible .aj-temporizador .aj-rango { margin: 18px 0 8px; }
+.aj-legible .aj-rango::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--ambar);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2); cursor: grab;
+}
+.aj-legible .aj-rango::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid var(--ambar); box-sizing: border-box; }
+.aj-legible .aj-rango--rojo::-webkit-slider-thumb { border-color: #ef4444; }
+.aj-legible .aj-ejercicios { padding: 16px 20px 0; }
+.aj-legible .aj-ejercicios__opciones { gap: 10px; margin-top: 10px; }
+.aj-legible .aj-ejercicio {
+  grid-template-columns: 1fr; align-content: start; gap: 10px; min-height: 112px; padding: 14px; border-radius: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.aj-legible .aj-ejercicio:hover { border-color: #fcd34d; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06); }
+.aj-legible .aj-ejercicio--sel { box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18); }
+.aj-legible .aj-ejercicio__num { width: 32px; height: 32px; border-radius: 10px; font-size: 14px; }
+.aj-legible .aj-ejercicio b { font-size: 14px; line-height: 19px; }
+.aj-legible .aj-ejercicio small { font-size: 12px; line-height: 16px; }
+.aj-legible .aj-ejercicio i { right: 12px; top: 12px; width: 16px; height: 16px; border-radius: 50%; border-width: 2px; }
+.aj-legible .aj-ejercicio--sel i { box-shadow: inset 0 0 0 3px #fff; }
+.aj-legible .aj-config-actual { margin: 14px 20px 18px; padding: 12px 14px; border-radius: 12px; }
+
+/* Modo Foco: reloj digital y calendario */
+.aj-legible .aj-foco { padding: 0 20px 18px; }
+.aj-legible .aj-dias { gap: 8px; }
+.aj-legible .aj-dia { height: 58px; border-radius: 12px; }
+.aj-legible .aj-dia b { font-size: 16px; line-height: 20px; }
+.aj-horas--reloj { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-top: 16px; }
+.aj-horas__flecha { font-size: 20px; color: #f59e0b; margin-top: 18px; }
+.aj-horas--reloj .aj-chip-estado { margin: 18px 0 0 auto; font-size: 13px; padding: 6px 12px; border-radius: 999px; }
+.aj-reloj { display: flex; flex-direction: column; gap: 6px; }
+.aj-reloj > small { font-size: 11px; font-weight: 800; letter-spacing: 0.6px; color: var(--texto-3); }
+.aj-reloj__pantalla {
+  display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 16px;
+  background: linear-gradient(160deg, #1e293b, #0f172a); box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.25), 0 4px 14px rgba(15, 23, 42, 0.18);
+}
+.aj-reloj__columna { display: flex; flex-direction: column; align-items: center; }
+.aj-reloj__columna button {
+  width: 44px; height: 18px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #f59e0b; font-size: 10px; line-height: 1; cursor: pointer;
+}
+.aj-reloj__columna button:hover { background: rgba(245, 158, 11, 0.15); }
+.aj-reloj__columna button:focus-visible, .aj-reloj__digitos:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+.aj-reloj__digitos {
+  min-width: 52px; text-align: center; border-radius: 8px;
+  font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 34px; line-height: 40px; font-weight: 700;
+  color: #fbbf24; text-shadow: 0 0 12px rgba(251, 191, 36, 0.45); font-variant-numeric: tabular-nums;
+}
+.aj-reloj__dos-puntos { font-family: ui-monospace, monospace; font-size: 30px; font-weight: 700; color: #fbbf24; animation: aj-parpadeo 1.6s steps(1) infinite; }
+@keyframes aj-parpadeo { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .aj-reloj__dos-puntos { animation: none; } }
+
+.aj-legible .aj-calendario { margin-top: 16px; padding: 12px; border-radius: 14px; background: #f8fafc; }
+.aj-legible .aj-calendario__horas { display: none; }
+.aj-legible .aj-calendario__dias { height: auto; gap: 8px; }
+.aj-legible .aj-calendario__dia { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 0; }
+.aj-calendario__nombre { text-align: center; font-size: 11px; font-weight: 700; color: var(--texto-3); }
+.aj-calendario__celda {
+  height: 92px; border-radius: 10px; border: 1px dashed #e2e8f0;
+  background: repeating-linear-gradient(180deg, transparent 0 22px, rgba(148, 163, 184, 0.12) 22px 23px);
+}
+.aj-legible .aj-bloque {
+  flex-direction: column; gap: 3px; height: 100%; border: 0; border-radius: 10px;
+  background: linear-gradient(180deg, #fde68a, #fbbf24); box-shadow: 0 3px 10px rgba(245, 158, 11, 0.25); color: #78350f;
+}
+.aj-legible .aj-bloque b { font-size: 11px; letter-spacing: 0.6px; }
+.aj-legible .aj-bloque small { font-size: 10px; font-weight: 600; }
+.aj-legible .aj-foco__resumen { padding-top: 14px; }
+.aj-legible .micro { font-size: 11px; line-height: 15px; font-weight: 800; letter-spacing: 0.6px; }
+
+/* ---------- Límite por día: barra de uso con degradado sobre una meta translúcida ---------- */
+.aj-legible .aj-semanal { height: 360px; padding: 18px 18px 14px; border-radius: 16px; background: #fff; }
+.aj-legible .aj-semanal__cabeza > span { gap: 6px; font-size: 12px; }
+.aj-legible .aj-semanal__punto { width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(180deg, #fbbf24, #f97316); }
+.aj-legible .aj-semanal__punto--limite { background: rgba(148, 163, 184, 0.18); border: 1px dashed #94a3b8; }
+.aj-legible .aj-semanal__barras { gap: 14px; padding: 28px 4px 0; }
+.aj-legible .aj-semanal__zona { border-bottom: 1px solid #e2e8f0; display: flex; justify-content: center; }
+.aj-legible .aj-semanal__limite {
+  left: 12%; right: 12%; border: 0; border-top: 2px dashed #94a3b8; border-radius: 10px 10px 4px 4px;
+  background: rgba(148, 163, 184, 0.14);
+}
+.aj-legible .aj-semanal__uso {
+  left: 28%; right: 28%; border-radius: 999px 999px 6px 6px; background: linear-gradient(180deg, #fbbf24, #f97316);
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
+}
+.aj-legible .aj-semanal__uso--excede { background: linear-gradient(180deg, #fb7185, #e11d48); box-shadow: 0 4px 10px rgba(225, 29, 72, 0.25); }
+.aj-legible .aj-semanal__uso em { top: -20px; left: -30px; right: -30px; font-size: 12px; font-weight: 800; }
+.aj-semanal__pendiente { position: absolute; bottom: 6px; font-size: 14px; color: #cbd5e1; }
+.aj-legible .aj-semanal__dia b { font-size: 13px; }
+.aj-legible .aj-semanal__dia small { font-size: 11px; }
+.aj-legible .aj-hoy { font-size: 10px; padding: 2px 8px; border-radius: 999px; }
+.aj-legible .aj-hora-chip { width: 104px; height: 32px; padding: 0 8px; }

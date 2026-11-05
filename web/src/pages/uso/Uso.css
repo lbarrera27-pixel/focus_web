@@ -61,3 +61,21 @@
 .us-vacio { flex: 1; display: grid; place-items: center; }
 .us-cargando { flex: 1; display: flex; flex-direction: column; gap: 20px; }
 .us-cargando .us-apps, .us-cargando .us-calor { gap: 14px; }
+
+/* Exportar destacado */
+.us-exportar { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Por categoría: barra apilada con presencia y una fila con barra propia por categoría */
+.us-apilada { width: 100%; height: 14px; gap: 3px; border-radius: 999px; overflow: visible; }
+.us-apilada > span { min-width: 6px; border-radius: 999px; }
+.us-categorias { gap: 14px; }
+.us-categorias li { flex-direction: column; align-items: stretch; gap: 6px; }
+.us-categorias__fila { display: flex; align-items: center; gap: 10px; }
+.us-categorias__fila i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; background: var(--c); }
+.us-categorias__nombre { flex: 1; font-weight: 600; color: var(--w-texto); }
+.us-categorias__fila b { min-width: 44px; text-align: right; }
+.us-categorias__pista { display: block; height: 6px; border-radius: 999px; background: #f1f5f9; overflow: hidden; }
+.us-categorias__pista > span { display: block; height: 100%; border-radius: 999px; background: var(--c); }
+/* Tarjetas superiores centradas */
+.us-kpis > .w-kpi { align-items: center; justify-content: center; text-align: center; }
+.us-kpis .w-display { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }

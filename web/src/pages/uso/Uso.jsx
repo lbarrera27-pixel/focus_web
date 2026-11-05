@@ -8,6 +8,7 @@ import { hora, ordenDias } from '../../data/preferencias.js'
 import iconoLuna from '../../assets/icons/w-luna.svg'
 import iconoReloj from '../../assets/icons/w-reloj-pico.svg'
 import iconoBurbuja from '../../assets/icons/w-uso.svg'
+import iconoDescargar from '../../assets/icons/w-descargar.svg'
 import './Uso.css'
 
 const COLORES_CATEGORIA = ['#b45309', '#0369a1', '#047857', '#94a3b8']
@@ -90,7 +91,10 @@ export default function Uso({ usuario, datos, error, periodo, onPeriodo, onExpor
             </button>
           ))}
         </div>
-        <button type="button" className="w-boton w-boton--secundario" onClick={onExportar} disabled={!datos}>Exportar</button>
+        <button type="button" className="w-boton w-boton--primario us-exportar" onClick={onExportar} disabled={!datos}>
+          <Icono src={iconoDescargar} tam={16} tinta="#0f172a" />
+          Exportar
+        </button>
       </Encabezado>
 
       {error && !datos ? (
@@ -140,15 +144,20 @@ export default function Uso({ usuario, datos, error, periodo, onPeriodo, onExpor
               <div className="w-divisor" />
               <p className="w-sobretitulo">POR CATEGORÍA</p>
               <span className="us-apilada" aria-hidden="true">
-                {uso.categorias.map((c, i) => <span key={c.id} style={{ flexGrow: c.min, background: COLORES_CATEGORIA[Math.min(i, 3)] }} />)}
+                {uso.categorias.map((c, i) => (
+                  <span key={c.id} style={{ flexGrow: c.min, background: COLORES_CATEGORIA[Math.min(i, 3)] }} title={`${c.nombre} · ${Math.round(c.pct * 100)} %`} />
+                ))}
               </span>
               <ul className="us-categorias">
                 {uso.categorias.map((c, i) => (
-                  <li key={c.id}>
-                    <i style={{ background: COLORES_CATEGORIA[Math.min(i, 3)] }} />
-                    <span>{c.nombre}</span>
-                    <span className="w-texto--3">{horas(c.min)}</span>
-                    <b>{Math.round(c.pct * 100)} %</b>
+                  <li key={c.id} style={{ '--c': COLORES_CATEGORIA[Math.min(i, 3)] }}>
+                    <span className="us-categorias__fila">
+                      <i />
+                      <span className="us-categorias__nombre">{c.nombre}</span>
+                      <span className="w-texto--3">{horas(c.min)}</span>
+                      <b>{Math.round(c.pct * 100)} %</b>
+                    </span>
+                    <span className="us-categorias__pista"><span style={{ width: `${c.pct * 100}%` }} /></span>
                   </li>
                 ))}
               </ul>

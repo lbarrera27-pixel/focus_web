@@ -217,3 +217,8 @@
   .mp-razon__texto { flex: 1 1 calc(100% - 50px); }
   .mp-razon__chips { flex-direction: row; align-items: center; gap: 8px; margin-left: 42px; }
 }
+
+/* Tarjetas superiores centradas */
+.mp > .w-fila:first-of-type > .w-kpi, .mp .w-fila > .w-kpi { align-items: center; justify-content: center; text-align: center; }
+.mp .mp-kpi__detalle { max-width: 36ch; }
+.mp .mp-progreso { width: 100%; max-width: 280px; }

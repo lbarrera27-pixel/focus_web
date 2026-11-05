@@ -14,6 +14,7 @@ import TabSitios from './TabSitios.jsx'
 import { useAvisos } from '../../components/web/Avisos.jsx'
 import { horas } from '../../data/plan.js'
 import './Ajustes.css'
+import './AjustesLegible.css'
 
 // Orden de las pestañas de "Apps y sitios" en Figma (e25–e28)
 const PESTANAS = [
@@ -221,7 +222,7 @@ export default function Ajustes({ usuario, datos, error, cargadoEn, onRecargar, 
   const props = { usuario, datos, locales, setLocales, borrador, setBorrador, original, onRecargar, onCuentaEliminada }
 
   return (
-    <div className="aj">
+    <div className="aj aj-legible">
       <header className="aj-encabezado">
         <div className="w-encabezado__titulos">
           <p className="w-sobretitulo">APPS Y SITIOS · {actual.titulo.toUpperCase()}</p>

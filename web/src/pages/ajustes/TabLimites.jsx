@@ -180,13 +180,14 @@ export default function TabLimites({ datos, locales, setLocales, borrador, setBo
               const alto = (v) => `${(v / maxBarra) * 100}%`
               return (
                 <div key={d.dia} className="aj-semanal__dia">
-                  <div className="aj-semanal__zona">
+                  <div className="aj-semanal__zona" title={`${d.dia}: ${d.futuro ? 'por registrar' : `${(d.minutos / 60).toFixed(1)} h`}${limite ? ` de ${etiquetaCorta(limite)}` : ''}`}>
                     {limite && <span className="aj-semanal__limite" style={{ height: alto(limite) }} />}
                     {!d.futuro && d.minutos > 0 && (
-                      <span className="aj-semanal__uso" style={{ height: alto(d.minutos), background: limite && d.minutos > limite ? '#ef4444' : '#f59e0b' }}>
+                      <span className={`aj-semanal__uso${limite && d.minutos > limite ? ' aj-semanal__uso--excede' : ''}`} style={{ height: alto(d.minutos) }}>
                         <em>{(d.minutos / 60).toFixed(1)} h</em>
                       </span>
                     )}
+                    {d.futuro && <span className="aj-semanal__pendiente">—</span>}
                   </div>
                   <b className={d.esHoy ? 'aj-ambar-texto' : ''}>{d.dia}</b>
                   <small>{limite ? etiquetaCorta(limite) : '—'}</small>

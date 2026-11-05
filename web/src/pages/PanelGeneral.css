@@ -305,3 +305,7 @@
 .pg-senal .punto { width: 7px; height: 7px; }
 .pg-telemetria__paneles { gap: 12px; padding-top: 12px; }
 .pg-dt-ayuda { display: flex; align-items: center; gap: 6px; }
+
+/* Tiempo vs. objetivo: la gráfica crece con la tarjeta y el resumen queda pegado abajo sin huecos */
+.pg-semana { flex: 1 1 auto; height: auto; min-height: 210px; margin-top: 14px; }
+.pg-semanal .pg-resumen { margin-top: 16px; margin-bottom: 20px; }

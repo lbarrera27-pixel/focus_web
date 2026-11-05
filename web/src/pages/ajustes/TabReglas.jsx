@@ -3,7 +3,6 @@ import Icono from '../../components/Icono.jsx'
 import iconoMas from '../../assets/icons/aj-mas.svg'
 import iconoTimer from '../../assets/icons/aj-timer.svg'
 import iconoConfig from '../../assets/icons/aj-config.svg'
-import iconoReloj from '../../assets/icons/aj-reloj.svg'
 import iconoFoco from '../../assets/icons/aj-foco.svg'
 import iconoCalendario from '../../assets/icons/aj-calendario.svg'
 import { Cabecera, Chip, ChipNivel, Interruptor, Nota, Pasos } from './Comunes.jsx'
@@ -35,6 +34,42 @@ const minutos = (hhmm) => {
   const [h, m] = hhmm.split(':').map(Number)
   return h * 60 + m
 }
+const aHhmm = (min) => {
+  const t = ((min % 1440) + 1440) % 1440
+  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
+}
+
+// Columna del reloj (horas o minutos). Fuera de RelojDigital para que no se vuelva a montar y conserve el foco.
+function ColumnaReloj({ texto, paso, nombre, etiqueta, mover }) {
+  const teclas = (e) => {
+    if (e.key === 'ArrowUp') { e.preventDefault(); mover(paso) }
+    if (e.key === 'ArrowDown') { e.preventDefault(); mover(-paso) }
+  }
+  return (
+    <span className="aj-reloj__columna">
+      <button type="button" aria-label={`Subir ${nombre} de ${etiqueta.toLowerCase()}`} onClick={() => mover(paso)}>▲</button>
+      <span className="aj-reloj__digitos" tabIndex={0} role="spinbutton" aria-label={`${nombre} de ${etiqueta.toLowerCase()}`}
+        aria-valuenow={Number(texto)} onKeyDown={teclas}>{texto}</span>
+      <button type="button" aria-label={`Bajar ${nombre} de ${etiqueta.toLowerCase()}`} onClick={() => mover(-paso)}>▼</button>
+    </span>
+  )
+}
+
+// Reloj digital: horas y minutos grandes con flechas; también responde a las flechas del teclado
+function RelojDigital({ etiqueta, valor, onCambio }) {
+  const [h, m] = valor.split(':')
+  const mover = (delta) => onCambio(aHhmm(minutos(valor) + delta))
+  return (
+    <div className="aj-reloj">
+      <small>{etiqueta}</small>
+      <div className="aj-reloj__pantalla">
+        <ColumnaReloj texto={h} paso={60} nombre="horas" etiqueta={etiqueta} mover={mover} />
+        <span className="aj-reloj__dos-puntos" aria-hidden="true">:</span>
+        <ColumnaReloj texto={m} paso={5} nombre="minutos" etiqueta={etiqueta} mover={mover} />
+      </div>
+    </div>
+  )
+}
 
 export default function TabReglas({ datos, locales, setLocales }) {
   const [editando, setEditando] = useState(false)
@@ -59,11 +94,18 @@ export default function TabReglas({ datos, locales, setLocales }) {
         />
         <div className="aj-niveles">
           {NIVELES.map((n) => (
-            <div key={n.nivel} className="aj-nivel-fila">
-              <span className="aj-nivel-fila__chip" style={{ background: n.fondo, color: n.texto }}>Nivel {n.nivel}</span>
+            <div key={n.nivel} className="aj-nivel-fila" style={{ '--fondo-nivel': n.fondo, '--texto-nivel': n.texto }}>
+              <span className="aj-nivel-fila__chip">
+                <small>NIVEL</small>
+                <b>{n.nivel}</b>
+              </span>
               <span className="aj-nivel-fila__texto">
                 <b>{n.titulo}</b>
                 <small>{n.desc}</small>
+                <span className="aj-nivel-fila__intensidad" aria-label={`Intensidad ${n.nivel} de 3`}>
+                  {[1, 2, 3].map((i) => <i key={i} className={i <= n.nivel ? 'aj-on' : ''} />)}
+                  <em>Intensidad {['baja', 'media', 'alta'][n.nivel - 1]}</em>
+                </span>
               </span>
               <span className="aj-nivel-fila__espera">
                 <small>ESPERA</small>
@@ -215,24 +257,12 @@ export default function TabReglas({ datos, locales, setLocales }) {
               })}
             </div>
 
-            <div className="aj-horas">
-              <label>
-                <small>HORA DE INICIO</small>
-                <span className="aj-hora">
-                  <Icono src={iconoReloj} tam={15} />
-                  <input type="time" value={foco.inicio} onChange={(e) => cambiar((l) => ((l.modoFoco.inicio = e.target.value), l))} />
-                </span>
-              </label>
-              <i className="aj-horas__guion" />
-              <label>
-                <small>HORA DE FIN</small>
-                <span className="aj-hora">
-                  <Icono src={iconoReloj} tam={15} />
-                  <input type="time" value={foco.fin} onChange={(e) => cambiar((l) => ((l.modoFoco.fin = e.target.value), l))} />
-                </span>
-              </label>
+            <div className="aj-horas aj-horas--reloj">
+              <RelojDigital etiqueta="HORA DE INICIO" valor={foco.inicio} onCambio={(v) => cambiar((l) => ((l.modoFoco.inicio = v), l))} />
+              <span className="aj-horas__flecha" aria-hidden="true">→</span>
+              <RelojDigital etiqueta="HORA DE FIN" valor={foco.fin} onCambio={(v) => cambiar((l) => ((l.modoFoco.fin = v), l))} />
               <span className={`aj-chip-estado ${horas > 0 ? 'aj-chip-estado--verde' : 'aj-chip-estado--rojo'}`}>
-                {horas > 0 ? `${Number.isInteger(horas) ? horas : horas.toFixed(1)}h por día` : 'Revisa las horas'}
+                {horas > 0 ? `${Number.isInteger(horas) ? horas : horas.toFixed(1)} h por día` : 'Revisa las horas'}
               </span>
             </div>
 
@@ -245,12 +275,16 @@ export default function TabReglas({ datos, locales, setLocales }) {
               <div className="aj-calendario__dias">
                 {DIAS.map((d) => (
                   <div key={d.corto} className="aj-calendario__dia">
-                    {foco.dias.includes(d.n) && horas > 0 && (
-                      <span className="aj-bloque">
-                        <Icono src={iconoFoco} tam={11} />
-                        FOCO
-                      </span>
-                    )}
+                    <small className="aj-calendario__nombre">{d.corto}</small>
+                    <span className="aj-calendario__celda">
+                      {foco.dias.includes(d.n) && horas > 0 && (
+                        <span className="aj-bloque">
+                          <Icono src={iconoFoco} tam={13} />
+                          <b>FOCO</b>
+                          <small>{foco.inicio}–{foco.fin}</small>
+                        </span>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>

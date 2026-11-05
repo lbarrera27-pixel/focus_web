@@ -449,7 +449,7 @@ export default function MiPlan({ usuario, datos, error, onRecargar }) {
         {cargando && !error ? (
           <span className="mp-calculando" role="status">Calculando con los datos de la semana…</span>
         ) : (
-          plan && <button type="button" className="w-boton w-boton--secundario" onClick={() => setEditando(true)}>Editar plan</button>
+          plan && <button type="button" className="w-boton w-boton--primario" onClick={() => setEditando(true)}>Editar plan</button>
         )}
       </Encabezado>
 
