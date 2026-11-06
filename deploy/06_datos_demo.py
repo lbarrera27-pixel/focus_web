@@ -4,8 +4,8 @@ Focus! - Paso 6 (opcional): crear una cuenta de demostración con datos de ejemp
 Crea el usuario y lo llena por medio de la API (no toca la base directamente), así sirve igual
 para la API local que para la de Azure:
   - 6 apps con límite de aperturas
-  - ~2 semanas de eventos de uso (más uso de noche y una tendencia a la baja)
-  - pausas de fricción de hoy, un plan con 3 ajustes semanales (reglas difusas del servidor),
+  - --dias de eventos de uso (default 14; más uso de noche y una tendencia a la baja)
+  - pausas de fricción de hoy, un plan con un ajuste por semana cerrada (reglas difusas del servidor),
     un dispositivo, sesiones de foco y dominios bloqueados
 
 Los eventos tienen fechas relativas al día en que se corre. Para que la cuenta no se vea vacía
@@ -14,6 +14,7 @@ semanas después (p. ej. el día de la entrega final), --refrescar rellena la MI
 
 Solo usa la biblioteca estándar de Python. Uso:
     python deploy/06_datos_demo.py --api https://focus-api-<sufijo>.azurewebsites.net --email profesora@focus.app
+    python deploy/06_datos_demo.py --api ... --email yo@focus.app --nombre "Mi Nombre" --dias 90 --modelo "POCO X7 Pro"
     python deploy/06_datos_demo.py --api https://focus-api-<sufijo>.azurewebsites.net --email profesora@focus.app --refrescar
 La contraseña se pide en pantalla (o se lee de la variable FOCUS_DEMO_PASSWORD).
 """
@@ -199,7 +200,7 @@ def refrescar(api: Api, args, password: str, azar: random.Random) -> None:
                              {"token": f"fcm-demo-{args.email}-{azar.randrange(16**12):012x}", "plataforma": "android"})
         activos = [token]
         print("Dispositivo: vinculado")
-    reportar_estado(api, azar, activos[-1]["numero"])
+    reportar_estado(api, azar, activos[-1]["numero"], args.modelo)
     _, sitios = api.pedir("GET", "/dominios")
     if sitios:
         subir_intentos(api, azar, dias=1)
@@ -215,12 +216,12 @@ def refrescar(api: Api, args, password: str, azar: random.Random) -> None:
     print("Sesión de foco de hoy: 1")
 
 
-def reportar_estado(api: Api, azar: random.Random, numero: int) -> None:
+def reportar_estado(api: Api, azar: random.Random, numero: int, modelo: str) -> None:
     """Lo que la app del teléfono reporta al abrirse: modelo, versión y batería."""
     bateria = azar.randint(35, 95)
     api.pedir("PUT", f"/tokens-dispositivo/{numero}/estado",
-              {"modelo": "Pixel 7 Pro", "version_app": "1.8", "bateria": bateria, "cargando": False})
-    print(f"Estado del teléfono: Pixel 7 Pro, batería {bateria} %")
+              {"modelo": modelo, "version_app": "1.8", "bateria": bateria, "cargando": False})
+    print(f"Estado del teléfono: {modelo}, batería {bateria} %")
 
 
 def subir_intentos(api: Api, azar: random.Random, dias: int) -> None:
@@ -252,18 +253,24 @@ def crear(api: Api, args, password: str, azar: random.Random) -> None:
     subir_eventos(api, eventos)
     subir_pausas_de_hoy(api, azar, eventos)
 
-    # Plan de 4 semanas con 3 ajustes; el cambio_pct lo calcula el servidor con sus reglas difusas
-    inicio_plan = date.today() - timedelta(days=21)
+    # Plan: empieza una semana después del primer día de uso (esa semana es el punto de partida) y tiene
+    # un ajuste por cada semana ya cerrada. El cambio_pct lo calcula el servidor con sus reglas difusas.
+    cerradas = max(3, (args.dias - 7) // 7)
+    inicio_plan = date.today() - timedelta(days=7 * cerradas)
     _, plan = api.pedir("POST", "/planes", {"fecha_inicio": inicio_plan.isoformat(), "limite_base": 240})
-    for semana, (meta, adherencia) in enumerate([(240, 0.62), (228, 0.74), (216, 0.86)], 1):
+    meta, adherencia = 240, 0.55
+    for semana in range(1, cerradas + 1):
         api.pedir("POST", f"/planes/{plan['numero']}/ajustes",
                   {"semana": semana, "uso_meta": meta, "adherencia": adherencia})
-    api.pedir("PUT", f"/planes/{plan['numero']}", {"semana_actual": 4})
-    print("Plan: 240 min/día, semana 4, 3 ajustes")
+        # Cada semana cumple un poco más y el límite baja, con algún tropiezo para que se vea real
+        adherencia = min(round(adherencia + azar.uniform(-0.04, 0.08), 2), 0.95)
+        meta = max(meta - azar.choice([0, 8, 12, 12]), 120)
+    api.pedir("PUT", f"/planes/{plan['numero']}", {"semana_actual": cerradas + 1})
+    print(f"Plan: empezó el {inicio_plan.isoformat()}, semana {cerradas + 1}, {cerradas} ajustes")
 
     _, token = api.pedir("POST", "/tokens-dispositivo",
                          {"token": f"fcm-demo-{args.email}-{azar.randrange(16**12):012x}", "plataforma": "android"})
-    reportar_estado(api, azar, token["numero"])
+    reportar_estado(api, azar, token["numero"], args.modelo)
     for duracion, completada in [(25, True), (50, True), (25, False)]:
         _, sesion = api.pedir("POST", "/sesiones-foco", {"duracion_min": duracion})
         if completada:
@@ -279,7 +286,9 @@ def main():
     p.add_argument("--api", required=True, help="URL de la API, p. ej. https://focus-api-<sufijo>.azurewebsites.net")
     p.add_argument("--email", required=True)
     p.add_argument("--nombre", default="Cuenta Demo")
-    p.add_argument("--dias", type=int, default=14, help="días de eventos de uso (default 14)")
+    p.add_argument("--dias", type=int, default=14,
+                   help="días de historial (default 14; p. ej. 90 = tres meses: más eventos y más semanas de plan)")
+    p.add_argument("--modelo", default="Pixel 7 Pro", help='modelo del teléfono que se muestra, p. ej. "POCO X7 Pro"')
     p.add_argument("--semilla", type=int, default=42)
     p.add_argument("--refrescar", action="store_true",
                    help="no crea la cuenta: rellena la existente hasta hoy (eventos, pausas y semanas del plan)")
