@@ -306,7 +306,7 @@ export default function Foqui({ usuario, datos, onNavegar }) {
             <div className="fq-sabe__titulo">
               <h2 className="w-titulo-3">Uso por día</h2>
               <Ayuda titulo="Uso por día" que="Muestra las horas y minutos que usaste el celular cada día de esta semana, comparados con tu límite diario."
-                accion="Pasa el ratón por un día para ver el detalle." />
+                accion="Toca o toca o pasa el ratón por un día para ver el detalle." />
             </div>
             {resumen && !sinNumeros ? <UsoPorDia dias={resumen.dias} limite={limite} />
               : sinNumeros ? <p className="w-cuerpo w-texto--3">Sin conexión: tu uso aparecerá aquí al reintentar.</p>

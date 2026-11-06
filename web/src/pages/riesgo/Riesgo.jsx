@@ -293,7 +293,7 @@ function ConDatos({ r, datos }) {
               <Ayuda
                 titulo="Evolución de tus semanas"
                 que="Calcula la probabilidad de exceder tu límite durante los próximos 7 días a partir de tus patrones de uso recientes."
-                accion="Pasa el ratón por un punto para ver su porcentaje y qué cambió esa semana."
+                accion="Toca o toca o pasa el ratón por un punto para ver su porcentaje y qué cambió esa semana."
               />
               <em className={`rg-insignia rg-insignia--${z.id} rg-titulo__estado`}>Ahora: {z.nombre}</em>
             </div>

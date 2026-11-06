@@ -48,11 +48,15 @@ export function useGlobo({ arriba = false } = {}) {
     const alTeclear = (e) => e.key === 'Escape' && setEstado(null)
     // Al desplazar (también cuando el foco lleva el elemento a la vista) el globo lo sigue
     const alMover = () => setEstado((e) => e && { ...e, ancla: e.elemento.getBoundingClientRect() })
+    // En pantallas táctiles no hay "salir con el ratón": un toque fuera del elemento cierra el globo
+    const alTocarFuera = (e) => setEstado((s) => (s && !s.elemento.contains(e.target) ? null : s))
     window.addEventListener('keydown', alTeclear)
     window.addEventListener('scroll', alMover, true)
+    document.addEventListener('pointerdown', alTocarFuera)
     return () => {
       window.removeEventListener('keydown', alTeclear)
       window.removeEventListener('scroll', alMover, true)
+      document.removeEventListener('pointerdown', alTocarFuera)
     }
   }, [abierto])
 
@@ -62,6 +66,8 @@ export function useGlobo({ arriba = false } = {}) {
     onMouseLeave: ocultar,
     onFocus: (e) => mostrar(e.currentTarget, contenido),
     onBlur: ocultar,
+    // Un toque (tap) también lo muestra
+    onClick: (e) => mostrar(e.currentTarget, contenido),
     'aria-describedby': estado ? id : undefined,
   })
 

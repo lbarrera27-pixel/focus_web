@@ -264,7 +264,7 @@ export default function Reportes({ usuario, datos, onNavegar }) {
             <div className="rp-subtitulo">
               <h3>Uso diario de esa semana</h3>
               <Ayuda titulo="Uso diario de esa semana" que="Horas de uso de cada día comparadas con el límite que tenías esa semana."
-                accion="Pasa el ratón por una barra para ver el detalle del día." />
+                accion="Toca o toca o pasa el ratón por una barra para ver el detalle del día." />
             </div>
             <UsoPorDia dias={actual.dias} limite={actual.limite} alto={190} />
             <ul className="ud__leyenda">

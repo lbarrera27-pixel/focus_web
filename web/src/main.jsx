@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import './tema-oscuro.css'
+import './movil.css'
 import { aplicarTema, leerTema } from './components/TemaInterruptor.jsx'
 
 // El tema guardado se aplica antes de pintar para que no parpadee

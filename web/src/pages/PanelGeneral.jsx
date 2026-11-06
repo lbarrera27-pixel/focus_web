@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Card, { Insignia } from '../components/Card.jsx'
 import Icono from '../components/Icono.jsx'
 import iconoTelefono from '../assets/icons/phone.svg'
@@ -262,11 +262,19 @@ const nivelReloj = (v) => NIVELES_RELOJ.find((n) => v <= n.hasta) ?? NIVELES_REL
 function RelojRiesgo({ valores, activa, onActiva }) {
   const pico = valores.indexOf(Math.max(...valores))
   const hayDatos = Math.max(...valores) > 0
+  const svg = useRef(null)
+  // Un toque fuera del reloj quita la hora elegida (en pantallas táctiles no hay mouseleave)
+  useEffect(() => {
+    if (activa == null) return
+    const fuera = (e) => !svg.current?.contains(e.target) && onActiva(null)
+    document.addEventListener('pointerdown', fuera)
+    return () => document.removeEventListener('pointerdown', fuera)
+  }, [activa, onActiva])
   const elegida = activa ?? pico
   const nivel = nivelReloj(valores[elegida])
   const anchoInsignia = 12 + nivel.nombre.length * 5.6
   return (
-    <svg viewBox="0 0 300 300" className="pg-reloj" role="list" aria-label="Reloj de 24 horas con el nivel de tentación de cada hora">
+    <svg ref={svg} viewBox="0 0 300 300" className="pg-reloj" role="list" aria-label="Reloj de 24 horas con el nivel de tentación de cada hora">
       {/* Guías: uso bajo y máximo */}
       <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.base} className="pg-reloj__guia" />
       <circle cx={RELOJ.c} cy={RELOJ.c} r={RELOJ.base + RELOJ.extra} className="pg-reloj__guia pg-reloj__guia--max" />
@@ -283,6 +291,7 @@ function RelojRiesgo({ valores, activa, onActiva }) {
               onMouseLeave={() => onActiva(null)}
               onFocus={() => onActiva(hh)}
               onBlur={() => onActiva(null)}
+              onClick={() => onActiva(hh)}
             />
             {/* Porcentaje visible en las horas que más destacan */}
             {v >= 50 && <text x={tx} y={ty + 3.5} textAnchor="middle" className="pg-reloj__valor" fill={n.texto} aria-hidden="true">{v}</text>}
@@ -371,7 +380,7 @@ function RiskCard({ r }) {
                 <span className="punto-color" style={{ background: '#dc2626' }} />
                 <span>
                   <b>{r.conDatos ? `Tu ventana más difícil: ${desde} a ${hasta}` : 'Aún no hay una hora difícil'}</b>
-                  <small>{r.conDatos ? 'Son las dos horas seguidas con más uso. Pasa el ratón por el reloj para ver cada hora.' : 'Se calcula con tu uso de las apps.'}</small>
+                  <small>{r.conDatos ? 'Son las dos horas seguidas con más uso. Toca o toca o pasa el ratón por el reloj para ver cada hora.' : 'Se calcula con tu uso de las apps.'}</small>
                 </span>
               </>
             ) : (
@@ -695,7 +704,7 @@ function UsageCard({ u }) {
               <Ayuda
                 titulo="Frecuencia de sesiones"
                 que="Muestra cuántas veces abriste el dispositivo en bloques de tiempo durante las últimas 12 horas para detectar picos de uso compulsivo."
-                accion="Si ves un pico, pasa el ratón por esa hora: si está por encima de tu promedio habitual, prueba una pausa antes de abrir apps a esa hora."
+                accion="Si ves un pico, toca o pasa el ratón por esa hora: si está por encima de tu promedio habitual, prueba una pausa antes de abrir apps a esa hora."
               />
             </span>
             <small>Aperturas por hora · últimas 12 horas con actividad</small>

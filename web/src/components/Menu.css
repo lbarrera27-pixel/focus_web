@@ -13,8 +13,8 @@
 .menu--contraido { width: 76px; padding-left: 16px; padding-right: 16px; align-items: center; }
 
 /* El contenido deja libre el ancho exacto de la barra fija */
-.menu + .contenido { margin-left: 248px; }
-.menu--contraido + .contenido { margin-left: 76px; }
+.menu ~ .contenido { margin-left: 248px; }
+.menu--contraido ~ .contenido { margin-left: 76px; }
 
 .menu__marca { display: flex; flex-direction: column; gap: 2px; padding: 0 8px 20px; white-space: nowrap; }
 .menu--contraido .menu__marca { padding: 0 0 20px; align-items: center; }

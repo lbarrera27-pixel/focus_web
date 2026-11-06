@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Menu, { SECCIONES_ESTUDIANTE } from './components/Menu.jsx'
+import NavMovil, { useEsMovil } from './components/NavMovil.jsx'
 import TopBar from './components/TopBar.jsx'
 import Acceso from './pages/acceso/Acceso.jsx'
 import PanelGeneral from './pages/PanelGeneral.jsx'
@@ -108,6 +109,7 @@ export default function App() {
   const [cargadoEn, setCargadoEn] = useState(null)
   const [menuContraido, setMenuContraido] = useState(leerMenuContraido)
   const estrecho = useAnchoEstrecho()
+  const esMovil = useEsMovil()
   // En pantallas angostas el menú empieza contraído; el botón lo abre solo mientras dure la visita
   const [abiertoEstrecho, setAbiertoEstrecho] = useState(false)
   // Cambios sin guardar de la sección activa ({ cambios, guardar }) y sección a la que se quiere ir (Figma e30)
@@ -383,8 +385,13 @@ export default function App() {
           onUsuario={() => setMenuCuenta((a) => !a)}
           usuarioAbierto={menuCuenta}
         >
-          {menuCuenta && <MenuUsuario usuario={usuario} perfil={perfilMenu} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
+          {menuCuenta && !esMovil && <MenuUsuario usuario={usuario} perfil={perfilMenu} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
         </Menu>
+        {/* En teléfonos: barra superior e inferior en lugar del menú lateral */}
+        <NavMovil activa={seccion} onNavegar={intentarNavegar} usuario={usuario}
+          onUsuario={() => setMenuCuenta((a) => !a)} usuarioAbierto={menuCuenta}>
+          {menuCuenta && esMovil && <MenuUsuario usuario={usuario} perfil={perfilMenu} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
+        </NavMovil>
         {/* Ajustes no se reinicia al cambiar las preferencias: es donde se cambian */}
         <main className="contenido" key={seccion === 'ajustes' ? 'ajustes' : `v${versionPrefs}`}>{contenido}</main>
       </div>

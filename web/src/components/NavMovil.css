@@ -1,0 +1,33 @@
+/* Navegación en teléfonos: oculta en pantallas de 768 px o más */
+.movil-cabecera, .movil-nav { display: none; }
+
+@media (max-width: 767px) {
+  .movil-cabecera {
+    position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 12px;
+    height: 56px; padding: 0 16px; background: #131929; border-bottom: 1px solid #1e293b;
+  }
+  .movil-cabecera__logo { flex: 1; font: 700 20px/1 'Plus Jakarta Sans', 'Inter', sans-serif; letter-spacing: -0.4px; color: #f8fafc; }
+  .movil-cabecera__logo span { color: #fbbf24; }
+  .movil-cabecera .menu__tema { padding: 0; margin: 0; }
+  .movil-cabecera__usuario {
+    display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%;
+    background: #f59e0b; font-size: 13px; font-weight: 700; color: #0f172a;
+  }
+  .movil-cabecera__usuario:focus-visible { outline: 2px solid #fbbf24; outline-offset: 2px; }
+  /* El menú de la cuenta se abre bajo la barra superior */
+  .movil-cabecera .dc-menu { position: fixed; top: 64px; right: 12px; left: auto; bottom: auto; width: min(320px, calc(100vw - 24px)); }
+
+  .movil-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: space-around;
+    height: calc(64px + env(safe-area-inset-bottom)); padding: 0 6px env(safe-area-inset-bottom);
+    background: #131929; border-top: 1px solid #1e293b; box-shadow: 0 -6px 18px rgba(2, 6, 23, 0.35);
+  }
+  .movil-nav__item {
+    position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px; background: none;
+  }
+  .movil-nav__item--activo { background: rgba(255, 255, 255, 0.08); }
+  .movil-nav__item--activo::after {
+    content: ''; position: absolute; bottom: -6px; left: 50%; width: 18px; height: 3px; margin-left: -9px; border-radius: 3px; background: var(--tono);
+  }
+  .movil-nav__item:focus-visible { outline: 2px solid #fbbf24; outline-offset: 1px; }
+}
