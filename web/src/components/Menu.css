@@ -77,3 +77,6 @@
 .menu__tema-mini { position: absolute; top: 4px; font-size: 11px; line-height: 16px; z-index: 1; pointer-events: none; }
 .menu__tema-switch[aria-checked='false'] .menu__tema-mini { right: 5px; }
 .menu__tema-switch[aria-checked='true'] .menu__tema-mini { left: 5px; }
+
+/* Foto de perfil en el avatar (las iniciales quedan como respaldo) */
+.menu__avatar.avatar-foto { padding: 0; object-fit: cover; background: #1c2638; }

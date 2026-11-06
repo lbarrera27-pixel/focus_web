@@ -210,11 +210,11 @@ export default function App() {
     }
   }, [usuario, aplicarPreferencias])
 
-  // El correo y la foto del menú se piden al abrirlo por primera vez
+  // El correo y la foto de perfil se piden al entrar: la foto se usa en el avatar del menú y en el de la cuenta
   useEffect(() => {
-    if (!menuCuenta || perfilMenu || !usuario || usuario.demo) return
+    if (perfilMenu || !usuario || usuario.demo) return
     api.usuario(usuario.id).then(setPerfilMenu).catch(() => {})
-  }, [menuCuenta, perfilMenu, usuario])
+  }, [perfilMenu, usuario])
 
   function elegirMenu(id) {
     setMenuCuenta(false)
@@ -380,17 +380,18 @@ export default function App() {
           activa={seccion}
           onNavegar={intentarNavegar}
           usuario={usuario}
+          foto={perfilMenu?.foto_url}
           contraido={estrecho ? !abiertoEstrecho : menuContraido}
           onContraer={estrecho ? () => setAbiertoEstrecho((a) => !a) : alternarMenu}
           onUsuario={() => setMenuCuenta((a) => !a)}
           usuarioAbierto={menuCuenta}
         >
-          {menuCuenta && !esMovil && <MenuUsuario usuario={usuario} perfil={perfilMenu} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
+          {menuCuenta && !esMovil && <MenuUsuario usuario={usuario} perfil={perfilMenu} semanas={datos?.ajustes?.length ?? 0} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
         </Menu>
         {/* En teléfonos: barra superior e inferior en lugar del menú lateral */}
-        <NavMovil activa={seccion} onNavegar={intentarNavegar} usuario={usuario}
+        <NavMovil activa={seccion} onNavegar={intentarNavegar} usuario={usuario} foto={perfilMenu?.foto_url}
           onUsuario={() => setMenuCuenta((a) => !a)} usuarioAbierto={menuCuenta}>
-          {menuCuenta && esMovil && <MenuUsuario usuario={usuario} perfil={perfilMenu} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
+          {menuCuenta && esMovil && <MenuUsuario usuario={usuario} perfil={perfilMenu} semanas={datos?.ajustes?.length ?? 0} onCerrar={() => setMenuCuenta(false)} onElegir={elegirMenu} />}
         </NavMovil>
         {/* Ajustes no se reinicia al cambiar las preferencias: es donde se cambian */}
         <main className="contenido" key={seccion === 'ajustes' ? 'ajustes' : `v${versionPrefs}`}>{contenido}</main>

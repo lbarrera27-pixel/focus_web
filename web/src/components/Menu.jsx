@@ -1,5 +1,6 @@
 // Barra lateral del portal nuevo (Figma "Web/Sidebar", rol Estudiante).
 // Cada sección tiene su tono (variables color/nav/*) y el menú se puede contraer a 76 px.
+import { useState } from 'react'
 import Icono from './Icono.jsx'
 import iconoInicio from '../assets/icons/w-inicio.svg'
 import iconoPlan from '../assets/icons/w-plan.svg'
@@ -33,8 +34,17 @@ export function iniciales(nombre = '') {
   return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?'
 }
 
+// Foto de perfil (la misma del menú de la cuenta); las iniciales quedan como respaldo si no hay foto o no carga
+export function AvatarUsuario({ nombre, foto, className }) {
+  const [fallo, setFallo] = useState(null)
+  if (foto && fallo !== foto) {
+    return <img className={`${className} avatar-foto`} src={foto} alt="" onError={() => setFallo(foto)} />
+  }
+  return <span className={className}>{iniciales(nombre)}</span>
+}
+
 // children: el menú de la cuenta (Figma e42), que se abre desde la tarjeta de usuario
-export default function Menu({ activa, onNavegar, usuario, contraido, onContraer, onUsuario, usuarioAbierto, children }) {
+export default function Menu({ activa, onNavegar, usuario, foto, contraido, onContraer, onUsuario, usuarioAbierto, children }) {
   return (
     <aside className={`menu${contraido ? ' menu--contraido' : ''}`}>
       <div className="menu__marca">
@@ -81,7 +91,7 @@ export default function Menu({ activa, onNavegar, usuario, contraido, onContraer
 
       <button type="button" className="menu__usuario" onClick={onUsuario} aria-haspopup="menu" aria-expanded={usuarioAbierto}
         title={contraido ? usuario.nombre : undefined}>
-        <span className="menu__avatar">{iniciales(usuario.nombre)}</span>
+        <AvatarUsuario className="menu__avatar" nombre={usuario.nombre} foto={foto} />
         {!contraido && (
           <span className="menu__usuario-texto">
             <b>{usuario.nombre}</b>

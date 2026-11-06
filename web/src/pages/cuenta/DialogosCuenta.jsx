@@ -31,7 +31,14 @@ const PALABRA = 'DESACTIVAR'
 
 // ---------- e42 · Menú de usuario ----------
 
-export function MenuUsuario({ usuario, perfil, onCerrar, onElegir }) {
+// Nivel de progreso según las semanas del plan que ya se cerraron
+function nivelProgreso(semanas) {
+  if (semanas >= 6) return 'Avanzado'
+  if (semanas >= 3) return 'Intermedio'
+  return 'Principiante'
+}
+
+export function MenuUsuario({ usuario, perfil, semanas = 0, onCerrar, onElegir }) {
   const caja = useRef(null)
 
   useEffect(() => {
@@ -61,7 +68,7 @@ export function MenuUsuario({ usuario, perfil, onCerrar, onElegir }) {
         <span className="dc-menu__texto">
           <b>{usuario.nombre}</b>
           <small>{usuario.demo ? 'demo@focus.app' : perfil?.email ?? ' '}</small>
-          <i>{usuario.demo ? 'Modo demostración' : `Participante · usuario ${usuario.id}`}</i>
+          <i className="dc-nivel">{usuario.demo ? 'Modo demostración' : `Nivel: ${nivelProgreso(semanas)}`}</i>
         </span>
       </div>
       <hr />

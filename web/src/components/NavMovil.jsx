@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Icono from './Icono.jsx'
 import TemaInterruptor from './TemaInterruptor.jsx'
-import { SECCIONES_ESTUDIANTE, iniciales } from './Menu.jsx'
+import { AvatarUsuario, SECCIONES_ESTUDIANTE } from './Menu.jsx'
 import './NavMovil.css'
 
 const CONSULTA = '(max-width: 767px)'
@@ -24,7 +24,7 @@ const TONOS = {
   violeta: '#c4b5fd', cian: '#67e8f9', indigo: '#a5b4fc', gris: '#e2e8f0',
 }
 
-export default function NavMovil({ activa, onNavegar, usuario, onUsuario, usuarioAbierto, children }) {
+export default function NavMovil({ activa, onNavegar, usuario, foto, onUsuario, usuarioAbierto, children }) {
   return (
     <>
       <header className="movil-cabecera">
@@ -32,7 +32,7 @@ export default function NavMovil({ activa, onNavegar, usuario, onUsuario, usuari
         <TemaInterruptor contraido />
         <button type="button" className="movil-cabecera__usuario" onClick={onUsuario} aria-haspopup="menu" aria-expanded={usuarioAbierto}
           aria-label={`Cuenta de ${usuario.nombre}`}>
-          {iniciales(usuario.nombre)}
+          <AvatarUsuario className="movil-cabecera__inicial" nombre={usuario.nombre} foto={foto} />
         </button>
         {children}
       </header>
