@@ -22,7 +22,7 @@ from app.config import CORS_ORIGINS
 from app.controllers import (
     app_controller, auth_controller, companero_controller, dominio_controller, estadisticas_controller,
     evento_controller, franja_controller, metricas_controller, pausa_controller, plan_controller, riesgo_controller,
-    salud_controller, sesion_controller, token_controller, usuario_controller,
+    salud_controller, sesion_controller, token_controller, usuario_controller, v1_controller,
 )
 from app.database import sincronizar_esquema
 from app.utils.errores import Conflicto, NoEncontrado
@@ -96,5 +96,6 @@ for modulo in (
     salud_controller, auth_controller, usuario_controller, app_controller, evento_controller,
     franja_controller, plan_controller, pausa_controller, dominio_controller, sesion_controller,
     token_controller, estadisticas_controller, riesgo_controller, companero_controller, metricas_controller,
+    v1_controller,
 ):
     app.include_router(modulo.router)
