@@ -1,0 +1,108 @@
+// Cliente de la API de Focus!
+// Las rutas privadas se identifican con el header X-Usuario-Id (ver app/dependencies.py).
+
+const BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
+
+export class ApiError extends Error {
+  constructor(status, detail) {
+    super(detail || `Error ${status}`)
+    this.status = status
+  }
+}
+
+async function pedir(ruta, { usuarioId, metodo = 'GET', cuerpo, reintentos = 2, senal } = {}) {
+  const headers = { Accept: 'application/json' }
+  if (usuarioId) headers['X-Usuario-Id'] = String(usuarioId)
+  // Con FormData (archivos) el navegador pone el Content-Type con su separador
+  const esArchivo = cuerpo instanceof FormData
+  if (cuerpo && !esArchivo) headers['Content-Type'] = 'application/json'
+
+  const resp = await fetch(BASE + ruta, {
+    method: metodo,
+    headers,
+    body: cuerpo ? (esArchivo ? cuerpo : JSON.stringify(cuerpo)) : undefined,
+    signal: senal,
+  })
+
+  // Azure SQL serverless responde 503 mientras despierta: se reintenta tras Retry-After
+  if (resp.status === 503 && reintentos > 0) {
+    const espera = Number(resp.headers.get('Retry-After')) || 30
+    await new Promise((r) => setTimeout(r, Math.min(espera, 30) * 1000))
+    return pedir(ruta, { usuarioId, metodo, cuerpo, senal, reintentos: reintentos - 1 })
+  }
+
+  if (resp.status === 204) return null
+  const datos = await resp.json().catch(() => null)
+  if (!resp.ok) {
+    const detalle = typeof datos?.detail === 'string' ? datos.detail : null
+    throw new ApiError(resp.status, detalle)
+  }
+  return datos
+}
+
+function consulta(params) {
+  const q = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) if (v != null) q.set(k, v)
+  const s = q.toString()
+  return s ? `?${s}` : ''
+}
+
+export const api = {
+  base: BASE,
+  login: (email, password) => pedir('/auth/login', { metodo: 'POST', cuerpo: { email, password } }),
+  // Responde 202 exista o no la cuenta
+  recuperar: (email) => pedir('/auth/recuperar', { metodo: 'POST', cuerpo: { email } }),
+  usuario: (id) => pedir('/usuarios/me', { usuarioId: id }),
+  estadisticas: (id, desde, hasta) => pedir(`/estadisticas${consulta({ desde, hasta })}`, { usuarioId: id }),
+  eventos: (id, desde, hasta) => pedir(`/eventos${consulta({ desde, hasta })}`, { usuarioId: id }),
+  apps: (id) => pedir('/apps', { usuarioId: id }),
+  pausas: (id) => pedir('/pausas', { usuarioId: id }),
+  tokens: (id) => pedir('/tokens-dispositivo', { usuarioId: id }),
+  // 404 cuando el usuario aún no tiene plan activo
+  planActivo: (id) => pedir('/planes/activo', { usuarioId: id }).catch((e) => {
+    if (e.status === 404) return null
+    throw e
+  }),
+  ajustes: (id, numero) => pedir(`/planes/${numero}/ajustes`, { usuarioId: id }),
+  // Regresión logística: probabilidad de pasarse del límite la semana siguiente (404 sin plan o sin ajustes)
+  riesgo: (id) => pedir('/riesgo', { usuarioId: id }).catch((e) => {
+    if (e.status === 404) return null
+    throw e
+  }),
+  crearApp: (id, app) => pedir('/apps', { usuarioId: id, metodo: 'POST', cuerpo: app }),
+  crearPlan: (id, plan) => pedir('/planes', { usuarioId: id, metodo: 'POST', cuerpo: plan }),
+  actualizarPlan: (id, numero, cambios) => pedir(`/planes/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  eliminarCuenta: (id) => pedir('/usuarios/me', { usuarioId: id, metodo: 'DELETE' }),
+  // Nombre, seudónimo o contraseña (el correo no se puede cambiar)
+  actualizarPerfil: (id, cambios) => pedir('/usuarios/me', { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  // Foto de perfil a Azure Blob Storage (JPG, PNG o WEBP de hasta 5 MB; 503 si el servidor no tiene almacenamiento)
+  subirFoto: (id, archivo) => {
+    const datos = new FormData()
+    datos.append('archivo', archivo)
+    return pedir('/usuarios/me/foto/archivo', { usuarioId: id, metodo: 'POST', cuerpo: datos, reintentos: 0 })
+  },
+  // Desvincular un teléfono: el token deja de estar activo
+  actualizarToken: (id, numero, cambios) => pedir(`/tokens-dispositivo/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  actualizarApp: (id, numero, cambios) => pedir(`/apps/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  // Foqui: sin `mensaje` saluda y explica la semana; la API no guarda la conversación
+  foqui: (id, mensaje, historial, senal) =>
+    pedir('/companero/mensaje', { usuarioId: id, metodo: 'POST', cuerpo: { mensaje, historial }, senal, reintentos: 0 }),
+  // Sitios bloqueados en el navegador del teléfono
+  dominios: (id) => pedir('/dominios', { usuarioId: id }),
+  crearDominio: (id, dominio) => pedir('/dominios', { usuarioId: id, metodo: 'POST', cuerpo: { dominio } }),
+  actualizarDominio: (id, numero, cambios) => pedir(`/dominios/${numero}`, { usuarioId: id, metodo: 'PUT', cuerpo: cambios }),
+  eliminarDominio: (id, numero) => pedir(`/dominios/${numero}`, { usuarioId: id, metodo: 'DELETE' }),
+  // Intentos de abrir sitios bloqueados: por sitio y por día (los últimos `dias`, incluido hoy)
+  intentosSitios: (id, dias = 7) => pedir(`/dominios/intentos${consulta({ dias })}`, { usuarioId: id }),
+  // Ajustes del portal (JSON libre por usuario); {} si nunca se han guardado
+  configuracion: (id) => pedir('/configuracion/me', { usuarioId: id }),
+  guardarConfiguracion: (id, datos) => pedir('/configuracion/me', { usuarioId: id, metodo: 'PUT', cuerpo: datos }),
+  // Sin cambio_pct: el servidor lo calcula con sus reglas difusas (409 si la semana ya existe)
+  crearAjuste: (id, numero, ajuste) => pedir(`/planes/${numero}/ajustes`, { usuarioId: id, metodo: 'POST', cuerpo: ajuste }),
+  // Estado del servidor y de la base de datos; también sirve para medir la latencia
+  salud: async () => {
+    const t0 = performance.now()
+    const datos = await pedir('/salud', { reintentos: 0 })
+    return { ...datos, latenciaMs: Math.round(performance.now() - t0) }
+  },
+}

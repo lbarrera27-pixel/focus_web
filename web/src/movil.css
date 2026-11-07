@@ -1,0 +1,128 @@
+/* Diseño adaptable del portal. El diseño base mide 1440 px; aquí se reacomoda para tablets y teléfonos.
+   Se carga al final (main.jsx) para ganarle a las reglas de cada pantalla. */
+
+html, body { overflow-x: hidden; }
+
+/* ---------- Tablet y laptops chicas (< 1200 px) ---------- */
+@media (max-width: 1199px) {
+  .app, .app--fluida { min-width: 0; }
+  .w-encabezado, .topbar { flex-wrap: wrap; row-gap: 12px; }
+  .topbar__titulos { min-width: 0; }
+  .topbar__acciones, .w-encabezado__acciones { flex-wrap: wrap; }
+
+  /* Inicio: dos columnas */
+  .panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panel__celda--clusteres, .panel__celda--riesgo, .panel__celda--uso { grid-column: 1 / -1; }
+
+  /* Rejillas de dos columnas con proporciones fijas: una sola columna */
+  .aj-grid--reglas, .aj-grid--apps, .aj-grid--limites, .aj-grid--privacidad { grid-template-columns: minmax(0, 1fr); }
+  .us-apps, .us-calor { min-width: 0; flex-basis: 100%; }
+  .fq-lateral { min-width: 0; }
+  .mp-registro, .ep-vista, .rg-medir { flex: 1 1 100% !important; }
+
+  /* Tablas anchas: se desplazan por dentro en lugar de cortarse */
+  .aj-panel { overflow-x: auto; }
+  .aj-tabla__cabeza, .aj-tabla { min-width: 720px; }
+}
+
+/* ---------- Teléfonos (< 768 px) ---------- */
+@media (max-width: 767px) {
+  /* Sin menú lateral: barras superior e inferior (NavMovil) */
+  .menu { display: none; }
+  .app { display: block; min-height: 100vh; }
+  .menu ~ .contenido, .menu--contraido ~ .contenido, .contenido { margin-left: 0; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+
+  /* Páginas */
+  .w-pagina { min-height: 0; padding: 16px; gap: 16px; }
+  .w-encabezado { align-items: flex-start; }
+  .w-encabezado h1, .w-encabezado .w-titulo-1 { font-size: 24px; line-height: 30px; }
+  .w-encabezado__acciones { width: 100%; }
+  .w-encabezado__acciones > * { flex: 1 1 auto; }
+  .topbar { padding: 16px; }
+  .topbar__acciones { width: 100%; }
+
+  /* Filas de tarjetas: se apilan; las de KPIs quedan en 2 columnas */
+  .w-fila { flex-direction: column; gap: 12px; }
+  .w-fila:has(> .w-kpi) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .w-fila:has(> .w-kpi) > .w-kpi { padding: 14px; }
+  .w-fila:has(> .w-kpi) .w-display { font-size: 22px; line-height: 28px; }
+  .w-kpi { white-space: normal; }
+
+  /* Inicio: una columna */
+  .panel { display: flex; flex-direction: column; gap: 14px; padding: 0 12px 16px; }
+  .panel__celda { width: 100%; }
+  .card--legible .clusteres, .card--legible .riesgo, .card--legible .uso, .clusteres, .riesgo, .uso { grid-template-columns: minmax(0, 1fr); }
+  .pg-telemetria__paneles { flex-direction: column; }
+  .pg-telemetria .dispositivo { grid-template-columns: 40px 1fr; }
+  .pg-dispositivo__estado { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; align-items: center; }
+
+  /* Reloj de 24 h: centrado, con la leyenda y la recomendación debajo */
+  .card--legible .pg-riesgo .riesgo__mapa.pg-reloj-caja { flex-direction: column; flex-wrap: nowrap; align-items: stretch; height: auto; }
+  .pg-riesgo .pg-reloj, .pg-reloj { flex: none; width: 100%; max-width: min(320px, 100%); min-width: 0; height: auto; margin: 0 auto; }
+  .pg-reloj-caja > .pg-reloj-lado, .pg-reloj-caja > .ventana { flex: none; width: 100%; margin: 0; grid-column: auto; }
+
+  /* Ninguna tarjeta más ancha que la pantalla */
+  .w-tarjeta, .card, .us-apps, .us-calor { min-width: 0; max-width: 100%; }
+  .us-cuerpo > * { width: 100%; }
+  .w-kpi .w-display { overflow-wrap: anywhere; white-space: normal; }
+  .pg-reloj-lado { width: 100%; }
+  .pg-recomendacion-corta { flex-direction: column; align-items: flex-start; }
+
+  /* Gráficas de barras: si no caben, se desplazan de lado dentro de su tarjeta */
+  .pg-semana, .ud, .us-mapa { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+  .pg-semana__area, .ud__area { min-width: 300px; }
+  .pg-semana__barra, .ud__barra { width: 12px; }
+  .us-mapa { padding-bottom: 4px; }
+  .us-mapa__fila { min-width: 520px; }
+
+  /* Leyendas envolventes y centradas */
+  .pg-patrones__leyenda, .ud__leyenda, .pg-semanal__leyenda, .rg-zonas, .mp-leyenda { flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+  /* Mi plan, Riesgo, Uso, Reportes, Foqui */
+  .mp-medidor__cuerpo { flex-direction: column; text-align: center; }
+  .mp-medidor__texto { align-items: center; }
+  .mp-razon__chips { margin-left: 0; }
+  .rg-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  .rg-columna .rg-grafica__cuerpo { min-height: 220px; }
+  .us-segmentado { width: 100%; overflow-x: auto; }
+  .us-segmentado button { flex: 1; padding: 8px 10px; }
+  .us-cuerpo { flex-direction: column; }
+  .us-apps, .us-calor { padding: 16px; }
+  .rp { height: auto; min-height: 0; }
+  .rp-fila { flex-direction: column; }
+  .rp-lista { flex-basis: auto; max-height: 300px; }
+  .rp-lectura { padding: 18px; }
+  .rp-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rp-acciones { flex-wrap: wrap; }
+  .fq { height: auto; min-height: 0; }
+  .fq-fila { flex-direction: column; }
+  .fq-chat { padding: 16px; }
+  .fq-mensajes { min-height: 360px; max-height: 60vh; }
+  .fq-lateral { overflow: visible; }
+
+  /* Apps y sitios */
+  .aj-encabezado { flex-wrap: wrap; padding: 16px; }
+  .aj-pestanas { margin: 0 16px; }
+  .aj-contenido { padding: 16px; }
+  .aj-grid { min-height: 0; }
+  .aj-filtros { flex-wrap: wrap; }
+  .aj-legible .aj-buscar { width: 100%; }
+  .aj-ejercicios__opciones { grid-template-columns: minmax(0, 1fr); }
+  .aj-legible .aj-ejercicio { min-height: 0; }
+  .aj-legible .aj-nivel-fila { flex-wrap: wrap; }
+  .aj-horas--reloj .aj-chip-estado { margin-left: 0; }
+  .aj-legible .aj-semanal__barras { gap: 6px; }
+  .aj-barra { position: sticky; bottom: calc(64px + env(safe-area-inset-bottom)); flex-wrap: wrap; height: auto; gap: 8px; padding: 10px 16px; }
+  .aj-barra__botones { width: 100%; }
+  .aj-barra__botones > * { flex: 1; }
+  .aj-opcion { flex-wrap: wrap; }
+
+  /* Avisos y diálogos dentro de la pantalla */
+  .w-avisos { left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); width: auto; }
+  .w-vacio { width: 100%; }
+  .w-velo { align-items: flex-end; padding: 0; }
+  .w-velo > * { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 90vh; overflow-y: auto; }
+
+  /* Áreas de toque cómodas */
+  .w-boton, .menu__item, .rg-accion, .rp-semana, .aj-filtro { min-height: 44px; }
+}

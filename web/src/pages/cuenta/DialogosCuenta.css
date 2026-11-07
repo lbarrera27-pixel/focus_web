@@ -1,0 +1,119 @@
+/* Cuenta (Figma e42–e47) */
+
+/* e42 · Menú de usuario: se abre a la derecha de la tarjeta de usuario de la barra lateral */
+.dc-menu {
+  position: absolute; left: calc(100% + 12px); bottom: 24px; z-index: 40;
+  display: flex; flex-direction: column; gap: 2px; width: 300px; padding: 8px 0;
+  border-radius: 16px; background: #fff; box-shadow: 0 24px 60px rgba(5, 13, 31, 0.28);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.dc-menu hr { height: 1px; margin: 0; border: 0; background: #e2e8f0; }
+.dc-menu__cuenta { display: flex; align-items: center; gap: 12px; padding: 8px 16px 12px; }
+.dc-menu__avatar {
+  display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+  background: #0a1832; object-fit: cover; font-size: 15.84px; font-weight: 700; color: #f59e0b;
+}
+.dc-menu__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.dc-menu__texto b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: #0f172a; }
+.dc-menu__texto small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #64748b; }
+.dc-menu__texto i { padding: 3px 8px; border-radius: 999px; background: #d1fae5; font-style: normal; font-size: 10px; font-weight: 600; color: #047857; }
+.dc-menu__opcion {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; border: 0; background: none;
+  text-align: left; font-size: 13px; font-weight: 500; color: #334155;
+}
+.dc-menu__opcion span { flex: 1; }
+.dc-menu__opcion:hover, .dc-menu__opcion:focus-visible { outline: none; background: #f8fafc; }
+.dc-menu__opcion--salir { font-weight: 600; color: #dc2626; }
+
+/* e43 · Mi perfil */
+.dc-perfil .w-dialogo__texto h2 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+.dc-perfil .w-dialogo__texto p { font-size: 13px; line-height: 18px; }
+.dc-perfil__formulario { display: flex; flex-direction: column; gap: 18px; }
+.dc-foto { display: flex; align-items: center; gap: 18px; padding: 16px; border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; }
+.dc-foto--encima { border-color: #f59e0b; background: #fffbeb; }
+.dc-foto__avatar { position: relative; flex-shrink: 0; width: 76px; height: 76px; }
+.dc-foto__avatar > img, .dc-foto__imagen { position: absolute; inset: 0; width: 76px; height: 76px; border-radius: 50%; object-fit: cover; }
+.dc-foto__avatar > b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; font-weight: 700; color: #f59e0b; }
+.dc-foto__avatar > i {
+  position: absolute; left: 52px; top: 50px; display: grid; place-items: center; width: 28px; height: 28px;
+  border: 2px solid #fff; border-radius: 14px; background: #f59e0b;
+}
+.dc-foto__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.dc-foto__texto > b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: #0f172a; }
+.dc-foto__texto > small { font-size: 12px; color: #64748b; }
+.dc-foto__botones { display: flex; gap: 8px; padding-top: 6px; }
+.dc-foto__botones button { padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 600; }
+.dc-foto__subir { border: 0; background: #0a1832; color: #fff; }
+.dc-foto__quitar { border: 1px solid #cbd5e1; background: none; color: #475569; }
+.dc-fila { display: flex; gap: 12px; }
+.dc-fila > * { flex: 1; min-width: 0; }
+.dc-campo { display: flex; flex-direction: column; gap: 7px; }
+.dc-campo > span { font-size: 13px; font-weight: 600; color: #334155; }
+.dc-campo input {
+  width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc;
+  font: inherit; font-size: 14px; color: #0f172a;
+}
+.dc-campo input:focus { outline: none; padding: 11.5px 13.5px; border: 1.5px solid #f59e0b; }
+.dc-campo > small { font-size: 12px; color: #64748b; }
+.dc-campo__fijo { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 12px; background: #f1f5f9; }
+.dc-campo__fijo span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 14px; color: #64748b; }
+.dc-campo__fijo small { font-size: 11px; color: #94a3b8; }
+.dc-datos { display: flex; gap: 10px; }
+.dc-datos > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: #f8fafc; white-space: nowrap; }
+.dc-datos small { font-size: 11px; color: #64748b; }
+.dc-datos b { overflow: hidden; text-overflow: ellipsis; font-size: 12px; font-weight: 600; color: #0f172a; }
+
+/* e44 · Desactivar cuenta */
+.dc-consecuencias { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 12px; background: #f8fafc; }
+.dc-consecuencias li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #334155; }
+.dc-campo--peligro input, .dc-campo--peligro input:focus { padding: 11px 14px; border: 1.5px solid #dc2626; font-weight: 600; }
+
+/* Ayuda */
+.dc-ayuda { display: flex; flex-direction: column; gap: 8px; }
+.dc-ayuda button {
+  display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 12px;
+  background: #fff; text-align: left;
+}
+.dc-ayuda button:hover { background: #f8fafc; }
+.dc-ayuda b { font-size: 13px; color: #0f172a; }
+.dc-ayuda small { font-size: 12px; color: #64748b; }
+
+/* e47 · Página no encontrada */
+.dc-404 { align-items: center; justify-content: center; }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .dc-menu { background: #182234; box-shadow: 0 24px 60px rgba(5, 13, 31, 0.28); }
+:root[data-tema='oscuro'] .dc-menu hr { background: #2b3a52; }
+:root[data-tema='oscuro'] .dc-menu__avatar { background: #0a1832; color: #f59e0b; }
+:root[data-tema='oscuro'] .dc-menu__texto b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .dc-menu__texto small { color: #94a3b8; }
+:root[data-tema='oscuro'] .dc-menu__texto i { background: hsla(149, 70%, 50%, 0.16); color: #6ef7d0; }
+:root[data-tema='oscuro'] .dc-menu__opcion { color: #334155; }
+:root[data-tema='oscuro'] .dc-menu__opcion:hover, :root[data-tema='oscuro'] .dc-menu__opcion:focus-visible { background: #182234; }
+:root[data-tema='oscuro'] .dc-menu__opcion--salir { color: #dc2626; }
+:root[data-tema='oscuro'] .dc-foto { border: 1px dashed hsla(213, 70%, 55%, 0.4); background: #182234; }
+:root[data-tema='oscuro'] .dc-foto--encima { border-color: #f59e0b; background: hsla(48, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .dc-foto__avatar > b { color: #f59e0b; }
+:root[data-tema='oscuro'] .dc-foto__avatar > i { border: 2px solid #2a3649; background: #f59e0b; }
+:root[data-tema='oscuro'] .dc-foto__texto > b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .dc-foto__texto > small { color: #94a3b8; }
+:root[data-tema='oscuro'] .dc-foto__subir { background: #0a1832; color: #fff; }
+:root[data-tema='oscuro'] .dc-foto__quitar { border: 1px solid hsla(213, 70%, 55%, 0.4); color: #cbd5e1; }
+:root[data-tema='oscuro'] .dc-campo > span { color: #334155; }
+:root[data-tema='oscuro'] .dc-campo input { border: 1px solid hsla(213, 70%, 55%, 0.4); background: #182234; color: #8ea4d7; }
+:root[data-tema='oscuro'] .dc-campo input:focus { border: 1.5px solid #f59e0b; }
+:root[data-tema='oscuro'] .dc-campo > small { color: #94a3b8; }
+:root[data-tema='oscuro'] .dc-campo__fijo { border: 1px solid hsla(213, 70%, 55%, 0.4); background: #1e293b; }
+:root[data-tema='oscuro'] .dc-campo__fijo span { color: #94a3b8; }
+:root[data-tema='oscuro'] .dc-campo__fijo small { color: #94a3b8; }
+:root[data-tema='oscuro'] .dc-datos > span { background: #182234; }
+:root[data-tema='oscuro'] .dc-datos small { color: #94a3b8; }
+:root[data-tema='oscuro'] .dc-datos b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .dc-consecuencias { background: #182234; }
+:root[data-tema='oscuro'] .dc-consecuencias li { color: #334155; }
+:root[data-tema='oscuro'] .dc-campo--peligro input, :root[data-tema='oscuro'] .dc-campo--peligro input:focus { border: 1.5px solid #dc2626; }
+:root[data-tema='oscuro'] .dc-ayuda button { border: 1px solid #2a3649; background: #182234; }
+:root[data-tema='oscuro'] .dc-ayuda button:hover { background: #182234; }
+:root[data-tema='oscuro'] .dc-ayuda b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .dc-ayuda small { color: #94a3b8; }
+/* ==== fin del tema oscuro ==== */

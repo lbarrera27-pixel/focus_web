@@ -26,6 +26,8 @@ az webapp deploy -g $Grupo -n $WebApp --src-path $zip --type zip --track-status 
 if ($LASTEXITCODE -ne 0) { throw "Fallo el despliegue" }
 # Si un arranque anterior fallo, Azure deja el sitio detenido
 az webapp start -g $Grupo -n $WebApp -o none
+# A veces el contenedor sigue con el codigo anterior: se reinicia para que tome el zip nuevo
+az webapp restart -g $Grupo -n $WebApp -o none
 
 $url = "https://$WebApp.azurewebsites.net"
 Write-Host "`nProbando $url/salud (la base serverless puede tardar ~1 min en despertar)..."

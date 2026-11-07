@@ -1,0 +1,20 @@
+/* Ajustes a mano del modo oscuro: lo que el generador no alcanza (colores puestos en el SVG o en JSX).
+   Se carga después de todas las hojas de estilo (ver main.jsx). */
+:root[data-tema='oscuro'] .rg-grafica__area svg > rect { opacity: 0.16; }
+:root[data-tema='oscuro'] .rg-serie { stroke: #e2e8f0; }
+:root[data-tema='oscuro'] .rg-punto { background: #182234; box-shadow: 0 0 0 4px rgba(24, 34, 52, 0.9), 0 1px 4px rgba(0, 0, 0, 0.4); }
+:root[data-tema='oscuro'] .rg-punto-valor { background: #f8fafc; color: #0f172a; }
+:root[data-tema='oscuro'] .ud__limite em, :root[data-tema='oscuro'] .pg-semana__meta-linea em { background: #182234; }
+:root[data-tema='oscuro'] .mp-anillo__pista { stroke: #1e293b; }
+:root[data-tema='oscuro'] .ayuda-globo { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); border: 1px solid #334155; }
+:root[data-tema='oscuro'] img[src$='.svg']:not(.menu img) { filter: none; }
+:root[data-tema='oscuro'] input, :root[data-tema='oscuro'] select, :root[data-tema='oscuro'] textarea { color-scheme: dark; }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'][data-tema='oscuro'] .rg-serie { stroke: #2a3649; }
+:root[data-tema='oscuro'][data-tema='oscuro'] .rg-punto { background: #182234; box-shadow: 0 0 0 4px rgba(24, 34, 52, 0.9), 0 1px 4px rgba(0, 0, 0, 0.4); }
+:root[data-tema='oscuro'][data-tema='oscuro'] .rg-punto-valor { background: #182234; color: #8ea4d7; }
+:root[data-tema='oscuro'][data-tema='oscuro'] .ud__limite em, :root[data-tema='oscuro'][data-tema='oscuro'] .pg-semana__meta-linea em { background: #182234; }
+:root[data-tema='oscuro'][data-tema='oscuro'] .mp-anillo__pista { stroke: #1e293b; }
+:root[data-tema='oscuro'][data-tema='oscuro'] .ayuda-globo { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); border: 1px solid #334155; }
+/* ==== fin del tema oscuro ==== */

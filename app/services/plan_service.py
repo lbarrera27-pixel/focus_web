@@ -1,11 +1,14 @@
 from datetime import datetime, time, timedelta
 
+import json
+
 from app.repositories.ajuste_repository import AjusteRepository
+from app.repositories.configuracion_repository import ConfiguracionRepository
 from app.repositories.pausa_repository import PausaRepository
 from app.repositories.plan_repository import PlanRepository
 from app.services.base import ServicioPorUsuario
 from app.utils.errores import Conflicto, NoEncontrado
-from app.utils.reglas_plan import calcular_cambio
+from app.utils.reglas_plan import aplicar_preferencias, calcular_cambio, nivel_adherencia
 
 
 def rango_semana(plan, semana: int) -> tuple[datetime, datetime]:
@@ -36,11 +39,25 @@ class AjusteService:
         self.repo = repo
         self.pausas = pausas
 
+    def preferencias(self, usuario_id: int) -> dict:
+        """Sensibilidad y "permitir relajar" que la persona guardó en Editar plan (o los valores por defecto)."""
+        config = ConfiguracionRepository(self.repo.db).obtener(usuario_id)
+        plan = json.loads(config.datos).get("plan", {}) if config else {}
+        return plan if isinstance(plan, dict) else {}
+
     def _cambio(self, plan, semana: int, adherencia: float) -> float:
-        """Cambio % con las reglas difusas, usando las pausas ignoradas de esa semana del plan."""
+        """Cambio % con las reglas difusas, usando las pausas ignoradas de esa semana del plan,
+        ajustado a la sensibilidad que eligió la persona."""
         total, ignoradas = self.pausas.contar_entre(plan.usuario_id, *rango_semana(plan, semana))
         cambio, _ = calcular_cambio(adherencia, ignoradas / total if total else 0.0)
-        return cambio
+        prefs = self.preferencias(plan.usuario_id)
+        anterior = self.repo.obtener(plan, semana - 1)
+        return aplicar_preferencias(
+            cambio,
+            sensibilidad=prefs.get("sensibilidad", "normal"),
+            permitir_relajar=prefs.get("permitir_relajar", True),
+            semana_anterior_baja=anterior is not None and nivel_adherencia(anterior.adherencia) == "baja",
+        )
 
     def listar(self, usuario_id: int, plan_numero: int):
         return self.repo.listar(self.planes.obtener(usuario_id, plan_numero))

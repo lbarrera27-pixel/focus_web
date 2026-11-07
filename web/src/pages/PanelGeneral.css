@@ -1,0 +1,412 @@
+/* Inicio: tarjetas rediseñadas con textos legibles (card--legible): patrones de uso, mapa de riesgo,
+   tiempo vs. objetivo y pausas preventivas. Las filas crecen con el contenido. */
+.panel { grid-template-rows: minmax(224px, auto) minmax(229px, auto) minmax(281px, auto); }
+
+.card--legible .card__header { padding: 16px 18px 10px; }
+.card--legible .card__etiqueta { font-size: 10px; line-height: 14px; letter-spacing: 0.8px; }
+.card--legible .card__titulo { font-size: 16px; line-height: 21px; font-weight: 600; }
+/* El título puede ocupar dos líneas: el "?" queda pegado al final del texto */
+.card--legible .card__titulo-fila { display: block; }
+.card--legible .card__titulo { display: inline; }
+.card--legible .card__titulo-fila .ayuda-boton { margin-left: 7px; vertical-align: 2px; }
+.card--legible .insignia { padding: 4px 10px; border-radius: 999px; font-size: 11px; line-height: 15px; }
+.card--legible .cifra-header b { font-size: 18px; line-height: 22px; }
+.card--legible .cifra-header small { font-size: 11px; line-height: 15px; }
+
+/* ---------- Patrones de uso ---------- */
+.card--legible .clusteres { grid-template-columns: minmax(0, 1fr) 270px; gap: 16px; padding: 0 18px 16px; }
+.card--legible .dispersion { height: 175px; }
+.card--legible .dispersion__eje { font-size: 13px; fill: #64748b; }
+.pg-punto { cursor: pointer; transition: opacity 0.15s; }
+.pg-punto:hover { stroke: #0f172a; stroke-width: 1.5; }
+.pg-elipse { cursor: help; transition: fill-opacity 0.15s; }
+.pg-elipse:hover { fill-opacity: 0.18; }
+.card--legible .leyenda-clusteres { gap: 6px; }
+.card--legible .leyenda-clusteres li {
+  grid-template-columns: 10px 1fr; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: help;
+  transition: background 0.15s;
+}
+.card--legible .leyenda-clusteres li:hover, .card--legible .leyenda-clusteres li:focus-visible { outline: none; background: #f8fafc; }
+.card--legible .leyenda-clusteres .punto-color { width: 10px; height: 10px; border-radius: 50%; }
+.card--legible .leyenda-clusteres b { font-size: 12px; line-height: 16px; color: #0f172a; }
+.card--legible .leyenda-clusteres small { font-size: 11px; line-height: 15px; color: #64748b; }
+.card--legible .leyenda-clusteres small strong { font-size: 11px; color: #0f172a; }
+
+/* ---------- Mapa de riesgo ---------- */
+.card--legible .riesgo { grid-template-columns: minmax(0, 1fr) 270px; gap: 16px; padding: 0 18px 16px; }
+.card--legible .escala { gap: 4px; }
+.card--legible .escala small { font-size: 10px; line-height: 14px; }
+.card--legible .escala span { width: 16px; height: 7px; }
+.card--legible .horas { grid-template-rows: 52px 52px; gap: 5px; padding-top: 8px; }
+.card--legible .hora { cursor: help; transition: transform 0.12s, box-shadow 0.12s; }
+.card--legible .hora:hover, .card--legible .hora:focus-visible { outline: none; transform: scale(1.06); box-shadow: 0 0 0 2px #0f172a; }
+.card--legible .hora b { font-size: 13px; line-height: 17px; }
+.card--legible .hora small { font-size: 10px; line-height: 13px; }
+.card--legible .ventana { gap: 8px; padding-top: 10px; }
+.card--legible .ventana b { font-size: 12px; line-height: 16px; color: #0f172a; }
+.card--legible .ventana small { font-size: 11px; line-height: 15px; }
+
+/* Reloj de 24 horas */
+/* El reloj y su leyenda alineados con el título de la tarjeta; la barra de estado ocupa todo el ancho */
+.card--legible .riesgo__mapa.pg-reloj-caja {
+  display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); align-items: center; column-gap: 20px; row-gap: 12px;
+}
+.pg-reloj-caja .ventana { grid-column: 1 / -1; }
+.pg-reloj { display: block; width: 100%; max-width: 300px; height: auto; overflow: visible; }
+.pg-reloj__guia { fill: none; stroke: #cbd5e1; stroke-dasharray: 2 4; }
+.pg-reloj__guia--max { stroke: #fca5a5; }
+/* Borde fino del color de cada nivel: las horas bajas se distinguen sobre el fondo blanco */
+.pg-reloj__sector { stroke-width: 1; cursor: pointer; outline: none; transform-origin: 150px 150px; transition: transform 0.15s ease-out, filter 0.15s ease-out; }
+.pg-reloj__sector:hover, .pg-reloj__sector:focus-visible, .pg-reloj__sector--activo {
+  stroke: #0f172a; stroke-width: 1.5; transform: scale(1.05); filter: drop-shadow(0 3px 5px rgba(15, 23, 42, 0.25));
+}
+.pg-reloj__valor { font: 700 9.5px 'Inter', system-ui, sans-serif; pointer-events: none; }
+.pg-reloj__hora { font: 700 11px 'Inter', system-ui, sans-serif; fill: #475569; }
+.pg-reloj__centro { fill: #fff; stroke: #e2e8f0; }
+.pg-reloj__centro-hora { font: 600 12px 'Inter', system-ui, sans-serif; fill: #334155; }
+.pg-reloj__centro-valor { font: 800 24px 'Inter', system-ui, sans-serif; }
+.pg-reloj__centro-riesgo { font: 700 11px 'Inter', system-ui, sans-serif; }
+.pg-reloj__centro-pie { font: 600 9.5px 'Inter', system-ui, sans-serif; fill: #64748b; letter-spacing: 0.3px; }
+.pg-reloj__insignia { font: 700 8.5px 'Inter', system-ui, sans-serif; }
+.pg-reloj-lado { display: flex; flex-direction: column; gap: 14px; }
+.pg-reloj-leyenda { display: flex; flex-direction: column; gap: 6px; }
+.pg-reloj-leyenda li { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; }
+.pg-reloj-leyenda i { width: 16px; height: 12px; border: 1px solid; border-radius: 4px; }
+.pg-reloj-leyenda b { color: #0f172a; }
+.pg-reloj-leyenda span { color: #64748b; font-variant-numeric: tabular-nums; }
+.pg-reloj-nota { font-size: 12px; line-height: 17px; color: #475569; }
+.pg-reloj-nota b { color: #0f172a; }
+.pg-reloj-estado { min-height: 50px; padding: 9px 12px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; }
+.pg-reloj-estado .punto-color { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Espaciado de la tarjeta del reloj: 1.5rem por dentro, aire alrededor del reloj y columnas equilibradas */
+.card--legible.card--riesgo { overflow: visible; }
+.card--legible.card--riesgo .card__header { padding: 1.5rem 1.5rem 0.75rem; }
+.card--legible.card--riesgo .riesgo { gap: 24px; padding: 0 1.5rem 1.5rem; align-items: stretch; }
+.card--legible .riesgo__mapa.pg-reloj-caja { column-gap: 28px; row-gap: 20px; }
+/* Aire para las horas guía y los segmentos al 100 % (y su elevación al pasar el ratón) */
+.pg-reloj { padding: 10px; box-sizing: content-box; max-width: 290px; }
+/* Leyenda a la derecha del reloj: pastillas sólidas bien separadas */
+.pg-reloj-lado { gap: 18px; }
+.pg-reloj-leyenda { gap: 10px; }
+.pg-reloj-leyenda li { grid-template-columns: 28px 1fr auto; gap: 10px; font-size: 13px; line-height: 18px; }
+.pg-reloj-leyenda i { width: 28px; height: 14px; border-radius: 999px; border-width: 1.5px; }
+/* Recomendación con la misma altura que el reloj y la barra de estado */
+.card--riesgo .pg-recomendacion { height: 100%; justify-content: space-between; }
+/* Alerta inferior con su punto destacado */
+.pg-reloj-estado { gap: 12px; padding: 12px 14px; }
+.pg-reloj-estado .punto-color { width: 12px; height: 12px; box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15); }
+@media (prefers-reduced-motion: reduce) { .pg-reloj__sector { transition: none; } }
+
+.pg-recomendacion {
+  display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid #fbe3a6; border-radius: 14px;
+  background: #fff7e6; font-size: 12px; line-height: 18px; color: #334155;
+}
+.pg-recomendacion__cabeza { display: flex; align-items: center; gap: 10px; }
+.pg-recomendacion__cabeza > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.pg-recomendacion__cabeza small { font-size: 10px; line-height: 14px; font-weight: 700; letter-spacing: 0.8px; color: #b45309; }
+.pg-recomendacion__cabeza b { font-size: 14px; line-height: 19px; color: #0f172a; }
+.pg-recomendacion__icono { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #0f172a; }
+.pg-recomendacion b { color: #0f172a; }
+.pg-recomendacion__sugerencia { padding: 10px 12px; border-radius: 10px; background: #fff; }
+.pg-recomendacion__pausa {
+  align-self: flex-start; padding: 5px 11px; border-radius: 999px; background: #d1fae5;
+  font-size: 11px; line-height: 15px; color: #047857;
+}
+.pg-recomendacion__pausa b { color: #065f46; }
+
+/* ---------- Tiempo vs. objetivo ---------- */
+/* Tarjeta semanal estilo minimalista: más aire, título grande y sombra suave */
+.pg-semanal { border-color: #f1f5f9; border-radius: 24px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
+.card--legible.pg-semanal .card__header { padding: 24px 24px 6px; }
+.card--legible.pg-semanal .card__etiqueta { font-size: 12px; line-height: 16px; letter-spacing: 0.05em; font-weight: 700; color: #d97706; }
+.card--legible.pg-semanal .card__titulo { font-size: 20px; line-height: 26px; font-weight: 700; color: #1e293b; }
+
+/* Insignia de rendimiento: verde si gastas menos que la meta */
+.pg-rendimiento { padding: 4px 12px; border-radius: 999px; font-size: 14px; line-height: 20px; font-weight: 700; white-space: nowrap; }
+.pg-rendimiento--bien { background: #ecfdf5; color: #059669; }
+.pg-rendimiento--mal { background: #fff1f2; color: #e11d48; }
+
+.pg-semanal__leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 4px 24px 0; }
+.pg-semanal__leyenda li { display: flex; align-items: center; gap: 7px; font-size: 12px; line-height: 16px; color: #64748b; }
+.pg-semanal__punto { width: 9px; height: 9px; border-radius: 50%; }
+.pg-semanal__punto--bien { background: #10b981; }
+.pg-semanal__punto--mal { background: #f43f5e; }
+.pg-semanal__linea { width: 18px; height: 0; border-top: 2px dashed #cbd5e1; }
+
+/* Gráfica: barras esbeltas y línea de meta horizontal */
+.pg-semana { display: flex; gap: 10px; height: 176px; margin: 18px 24px 0; }
+.pg-semana__eje { position: relative; flex: 0 0 26px; margin-bottom: 24px; }
+.pg-semana__eje span {
+  position: absolute; right: 0; transform: translateY(50%); white-space: nowrap;
+  font-size: 12px; line-height: 14px; color: #94a3b8; font-variant-numeric: tabular-nums;
+}
+.pg-semana__area { position: relative; flex: 1; min-width: 0; display: flex; justify-content: space-between; }
+.pg-semana__guias { position: absolute; inset: 0 0 24px; pointer-events: none; }
+.pg-semana__guia { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid #f1f5f9; }
+.pg-semana__meta-linea { position: absolute; left: 0; right: 0; z-index: 1; height: 0; border-top: 1.5px dashed #cbd5e1; }
+.pg-semana__meta-linea em {
+  position: absolute; right: 0; bottom: 3px; padding: 0 4px; border-radius: 4px; background: #fff;
+  font-style: normal; font-size: 10px; line-height: 13px; font-weight: 600; color: #94a3b8;
+}
+.pg-semana__col {
+  position: relative; z-index: 2; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; outline: none;
+}
+.pg-semana__pista { position: relative; flex: 1; width: 100%; display: flex; justify-content: center; }
+.pg-semana__barra {
+  position: absolute; bottom: 0; width: 18px; border-radius: 999px 999px 4px 4px;
+  transition: transform 0.2s ease-out, filter 0.2s ease-out, height 0.3s ease-out;
+}
+.pg-semana__barra--bien { background: linear-gradient(#34d399, #10b981); }
+.pg-semana__barra--mal { background: linear-gradient(#f43f5e, #e11d48); }
+.pg-semana__barra--hoy { background: linear-gradient(#e2e8f0, #cbd5e1); box-shadow: inset 0 0 0 1px #94a3b8; }
+.pg-semana__col:hover .pg-semana__barra, .pg-semana__col:focus-visible .pg-semana__barra, .pg-semana__col--activa .pg-semana__barra {
+  transform: translateY(-4px); filter: brightness(1.08) drop-shadow(0 4px 6px rgba(15, 23, 42, 0.15));
+}
+.pg-semana__col:focus-visible small { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: 4px; }
+.pg-semana__sin { position: absolute; bottom: 2px; font-size: 13px; font-weight: 700; color: #cbd5e1; }
+.pg-semana__col small { height: 16px; font-size: 12px; line-height: 16px; color: #64748b; }
+.pg-semana__hoy { font-weight: 700; color: #d97706 !important; }
+
+/* Globo de cada día */
+.pg-globo-dia { font-size: 12px; color: #94a3b8; }
+.pg-globo-uso { font-size: 18px; line-height: 22px; }
+.pg-globo-estado { font-weight: 700; }
+.pg-globo-estado--bien { color: #34d399; }
+.pg-globo-estado--mal { color: #fb7185; }
+.pg-globo-nota { font-size: 11px; color: #94a3b8; }
+
+/* Resumen inferior en pastilla */
+.pg-resumen {
+  display: flex; align-items: center; gap: 10px; margin: 18px 24px 24px; padding: 14px; border-radius: 16px;
+  font-size: 13px; line-height: 18px; color: #475569;
+}
+.pg-resumen--bien { background: rgba(236, 253, 245, 0.6); border: 1px solid #d1fae5; }
+.pg-resumen--bien b { color: #047857; }
+.pg-resumen--mal { background: #fff1f2; border: 1px solid #ffe4e6; }
+.pg-resumen--mal b { color: #be123c; }
+.pg-resumen--neutro { background: #f8fafc; border: 1px solid #f1f5f9; }
+@media (prefers-reduced-motion: reduce) { .pg-semana__barra { transition: none; } }
+
+/* ---------- Uso y frecuencia de sesiones ---------- */
+.card--legible .uso { grid-template-columns: 300px minmax(0, 1fr); gap: 24px; padding: 4px 18px 16px; }
+.card--legible .dona { width: 150px; height: 150px; border-radius: 75px; }
+.card--legible .dona__centro { width: 104px; height: 104px; border-radius: 52px; }
+.card--legible .dona__centro b { font-size: 18px; line-height: 23px; }
+.card--legible .dona__centro small { font-size: 11px; line-height: 15px; }
+.card--legible .leyenda-categorias { width: 120px; gap: 12px; }
+.card--legible .leyenda-categorias li { grid-template-columns: 10px 1fr auto; gap: 8px; font-size: 12px; line-height: 16px; }
+.card--legible .leyenda-categorias i { width: 10px; height: 10px; border-radius: 3px; }
+.card--legible .uso__frecuencia { padding-left: 24px; gap: 6px; }
+.card--legible .uso__frecuencia-cabeza { flex-wrap: wrap; gap: 4px 12px; }
+.card--legible .uso__frecuencia-cabeza small { font-size: 11px; line-height: 15px; color: #64748b; }
+.pg-subtitulo { display: flex; align-items: center; gap: 7px; }
+.pg-subtitulo b { font-size: 13px; line-height: 18px; color: #0f172a; }
+
+.pg-frecuencia__svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pg-frecuencia__guia { stroke: #94a3b8; stroke-opacity: 0.2; stroke-dasharray: 3 4; }
+.pg-frecuencia__base { stroke: #cbd5e1; }
+.pg-frecuencia__eje { font: 11px 'Inter', system-ui, sans-serif; fill: #64748b; font-variant-numeric: tabular-nums; }
+.pg-frecuencia__cursor { stroke: #f59e0b; stroke-opacity: 0.5; stroke-dasharray: 3 3; }
+.pg-frecuencia__punto { fill: #fff; stroke: #f59e0b; stroke-width: 2; transition: r 0.12s; }
+.pg-frecuencia__ultimo { fill: #fff; stroke: #f59e0b; stroke-width: 3; }
+.pg-frecuencia__insignia { fill: #0f172a; }
+.pg-frecuencia__insignia-texto { font: 700 11px 'Inter', system-ui, sans-serif; fill: #fff; }
+.pg-frecuencia__zona { fill: transparent; cursor: crosshair; outline: none; }
+.pg-frecuencia__zona:focus-visible { fill: rgba(245, 158, 11, 0.1); }
+.pg-comparacion { padding: 3px 8px; border-radius: 999px; font-weight: 700; text-align: center; }
+.pg-comparacion--normal { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+.pg-comparacion--alto { background: rgba(248, 113, 113, 0.2); color: #fca5a5; }
+.pg-comparacion--bajo { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+
+/* ---------- Pausas preventivas ---------- */
+.card--legible .prevenidas { column-gap: 12px; margin: 2px 18px 0; padding: 12px 14px; }
+.card--legible .prevenidas b { font-size: 34px; line-height: 40px; }
+.card--legible .prevenidas span { font-size: 13px; line-height: 18px; color: #0f172a; }
+.card--legible .prevenidas small { font-size: 11px; line-height: 15px; }
+.card--legible .niveles { gap: 6px; padding: 12px 12px 14px; }
+.card--legible .niveles li {
+  grid-template-columns: 30px minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 10px; padding: 7px 6px; border-radius: 10px; cursor: help;
+  transition: background 0.15s;
+}
+.card--legible .niveles li:hover, .card--legible .niveles li:focus-visible { outline: none; background: #f8fafc; }
+.card--legible .niveles__num { width: 30px; height: 30px; font-size: 13px; }
+.card--legible .niveles__nombre b { font-size: 12px; line-height: 16px; }
+.card--legible .niveles__nombre small { font-size: 11px; line-height: 15px; color: #64748b; }
+.card--legible .niveles__pista { height: 7px; background: #eef2f6; }
+.card--legible .niveles__cifra b { font-size: 12px; line-height: 16px; white-space: nowrap; }
+.card--legible .niveles__cifra small { font-size: 11px; line-height: 15px; color: #64748b; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card--legible .hora, .card--legible .leyenda-clusteres li, .card--legible .niveles li { transition: none; }
+}
+
+/* Tus patrones de uso: gráfica a todo el ancho y leyenda en pastillas debajo */
+.card--legible .clusteres.pg-patrones { display: flex; flex-direction: column; gap: 12px; padding: 0 18px 18px; }
+.card--legible .pg-patrones .dispersion { width: 100%; min-width: 0; height: auto; }
+.pg-patrones__leyenda { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 10px; }
+.pg-patrones__leyenda li {
+  display: flex; align-items: center; gap: 7px; padding: 5px 12px; border: 1px solid #e2e8f0; border-radius: 999px;
+  background: #fff; font-size: 12px; line-height: 16px; color: #334155; cursor: help; transition: background 0.15s;
+}
+.pg-patrones__leyenda li:hover, .pg-patrones__leyenda li:focus-visible { outline: none; background: #f8fafc; border-color: #cbd5e1; }
+.pg-patrones__leyenda i { width: 9px; height: 9px; border-radius: 50%; }
+.pg-patrones__leyenda b { color: #0f172a; }
+
+/* Mapa de riesgo en una sola columna: reloj + leyenda (se reacomodan con el ancho), estado y banner */
+.card--legible.card--riesgo .riesgo.pg-riesgo { display: flex; flex-direction: column; gap: 16px; }
+.card--legible .pg-riesgo .riesgo__mapa.pg-reloj-caja { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; min-width: 0; }
+.pg-riesgo .pg-reloj { flex: 0 1 290px; min-width: 220px; }
+.pg-riesgo .pg-reloj-lado { flex: 1 1 220px; min-width: 0; }
+.pg-riesgo .pg-reloj-caja .ventana { flex: 1 1 100%; }
+.pg-recomendacion-corta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border: 1px solid #fbe3a6;
+  border-radius: 14px; background: #fff7e6;
+}
+.pg-recomendacion-corta__icono { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px; background: #0f172a; }
+.pg-recomendacion-corta__texto { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12px; line-height: 17px; color: #334155; }
+.pg-recomendacion-corta__texto > b { font-size: 13px; line-height: 18px; color: #0f172a; }
+.pg-recomendacion-corta__texto b { color: #0f172a; }
+.pg-recomendacion-corta__pausa {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 999px; background: #d1fae5;
+  font-size: 12px; line-height: 16px; font-weight: 700; color: #047857; white-space: nowrap;
+}
+
+/* Telemetría: paneles de métricas y de conexión debajo del flujo */
+.pg-telemetria__paneles { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px 16px; }
+.pg-telemetria__panel {
+  flex: 1 1 170px; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px;
+  border: 1px solid #edf1f5; border-radius: 12px; background: #f8fafc;
+}
+.pg-telemetria__titulo { font-size: 10px; line-height: 14px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: #b45309; }
+.pg-telemetria__panel dl { display: flex; flex-direction: column; gap: 7px; }
+.pg-telemetria__panel dt { font-size: 11px; line-height: 14px; color: #64748b; }
+.pg-telemetria__panel dd { font-size: 12px; line-height: 16px; font-weight: 700; color: #0f172a; }
+.pg-telemetria__panel dd small { font-weight: 400; color: #64748b; }
+.pg-ok { color: #047857 !important; }
+.pg-apagado { color: #64748b !important; }
+.pg-telemetria__boton {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: auto; padding: 7px 12px;
+  border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; font-size: 12px; font-weight: 700; color: #0f172a; cursor: pointer;
+}
+.pg-telemetria__boton:hover:not(:disabled) { background: #f1f5f9; }
+.pg-telemetria__boton:disabled { opacity: 0.6; cursor: default; }
+.pg-telemetria__boton:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; }
+
+/* Telemetría compacta: dispositivo con última señal pegado a los dos paneles */
+.pg-telemetria .dispositivo { margin: 4px 16px 0; padding: 12px 14px; border-radius: 14px; gap: 12px; grid-template-columns: 40px 1fr auto; }
+.pg-telemetria .dispositivo__icono { width: 40px; height: 40px; border-radius: 12px; }
+.pg-telemetria .dispositivo__texto b { font-size: 14px; line-height: 19px; }
+.pg-telemetria .dispositivo__texto small { font-size: 12px; line-height: 16px; }
+.pg-telemetria .vinculado { padding: 4px 9px; border-radius: 999px; font-size: 11px; line-height: 15px; }
+.pg-dispositivo__estado { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.pg-senal { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; line-height: 15px; color: #64748b; white-space: nowrap; }
+.pg-senal .punto { width: 7px; height: 7px; }
+.pg-telemetria__paneles { gap: 12px; padding-top: 12px; }
+.pg-dt-ayuda { display: flex; align-items: center; gap: 6px; }
+
+/* Tiempo vs. objetivo: la gráfica crece con la tarjeta y el resumen queda pegado abajo sin huecos */
+.pg-semana { flex: 1 1 auto; height: auto; min-height: 210px; margin-top: 14px; }
+.pg-semanal .pg-resumen { margin-top: 16px; margin-bottom: 20px; }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .card--legible .dispersion__eje { fill: #64748b; }
+:root[data-tema='oscuro'] .pg-punto:hover { stroke: #0f172a; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres li:hover, :root[data-tema='oscuro'] .card--legible .leyenda-clusteres li:focus-visible { background: #182234; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres small { color: #94a3b8; }
+:root[data-tema='oscuro'] .card--legible .leyenda-clusteres small strong { color: #8ea4d7; }
+:root[data-tema='oscuro'] .card--legible .hora:hover, :root[data-tema='oscuro'] .card--legible .hora:focus-visible { box-shadow: 0 0 0 2px #0f172a; }
+:root[data-tema='oscuro'] .card--legible .ventana b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-reloj__guia { stroke: hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-reloj__guia--max { stroke: hsla(0, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-reloj__sector:hover, :root[data-tema='oscuro'] .pg-reloj__sector:focus-visible, :root[data-tema='oscuro'] .pg-reloj__sector--activo { stroke: #0f172a; }
+:root[data-tema='oscuro'] .pg-reloj__hora { fill: #475569; }
+:root[data-tema='oscuro'] .pg-reloj__centro { fill: #182234; stroke: #2a3649; }
+:root[data-tema='oscuro'] .pg-reloj__centro-hora { fill: #334155; }
+:root[data-tema='oscuro'] .pg-reloj__centro-pie { fill: #64748b; }
+:root[data-tema='oscuro'] .pg-reloj-leyenda b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-reloj-leyenda span { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-reloj-nota { color: #cbd5e1; }
+:root[data-tema='oscuro'] .pg-reloj-nota b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-reloj-estado { background: #182234; border: 1px solid #2a3649; }
+:root[data-tema='oscuro'] .pg-reloj-estado .punto-color { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15); }
+:root[data-tema='oscuro'] .pg-recomendacion { border: 1px solid hsla(43, 70%, 55%, 0.4); background: hsla(41, 70%, 50%, 0.16); color: #334155; }
+:root[data-tema='oscuro'] .pg-recomendacion__cabeza small { color: #f7a96e; }
+:root[data-tema='oscuro'] .pg-recomendacion__cabeza b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion__icono { background: #0f172a; }
+:root[data-tema='oscuro'] .pg-recomendacion b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion__sugerencia { background: #182234; }
+:root[data-tema='oscuro'] .pg-recomendacion__pausa { background: hsla(149, 70%, 50%, 0.16); color: #6ef7d0; }
+:root[data-tema='oscuro'] .pg-recomendacion__pausa b { color: #6ff6d0; }
+:root[data-tema='oscuro'] .pg-semanal { border-color: #2a3649; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05); }
+:root[data-tema='oscuro'] .card--legible.pg-semanal .card__etiqueta { color: #f7b76e; }
+:root[data-tema='oscuro'] .card--legible.pg-semanal .card__titulo { color: #9aaccb; }
+:root[data-tema='oscuro'] .pg-rendimiento--bien { background: #1e293b; color: #6ef7cd; }
+:root[data-tema='oscuro'] .pg-rendimiento--mal { background: #1e293b; color: #e11d48; }
+:root[data-tema='oscuro'] .pg-semanal__leyenda li { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semanal__punto--bien { background: #10b981; }
+:root[data-tema='oscuro'] .pg-semanal__punto--mal { background: #f43f5e; }
+:root[data-tema='oscuro'] .pg-semanal__linea { border-top: 2px dashed hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-semana__eje span { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__guia { border-top: 1px solid #2a3649; }
+:root[data-tema='oscuro'] .pg-semana__meta-linea { border-top: 1.5px dashed hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-semana__meta-linea em { background: #182234; color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__barra--bien { background: linear-gradient(#34d399, #10b981); }
+:root[data-tema='oscuro'] .pg-semana__barra--mal { background: linear-gradient(#f43f5e, #e11d48); }
+:root[data-tema='oscuro'] .pg-semana__barra--hoy { background: linear-gradient(#2b3a52, hsla(213, 70%, 50%, 0.16)); box-shadow: inset 0 0 0 1px #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__col:focus-visible small { outline: 2px solid #f59e0b; }
+:root[data-tema='oscuro'] .pg-semana__sin { color: #cbd5e1; }
+:root[data-tema='oscuro'] .pg-semana__col small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-semana__hoy { color: #f7b76e !important; }
+:root[data-tema='oscuro'] .pg-globo-dia { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-globo-estado--bien { color: #34d399; }
+:root[data-tema='oscuro'] .pg-globo-estado--mal { color: #fb7185; }
+:root[data-tema='oscuro'] .pg-globo-nota { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-resumen { color: #cbd5e1; }
+:root[data-tema='oscuro'] .pg-resumen--bien { background: rgba(30, 41, 59, 0.6); border: 1px solid hsla(149, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-resumen--bien b { color: #6ef7d0; }
+:root[data-tema='oscuro'] .pg-resumen--mal { background: #1e293b; border: 1px solid hsla(356, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-resumen--mal b { color: #f27392; }
+:root[data-tema='oscuro'] .pg-resumen--neutro { background: #182234; border: 1px solid #2a3649; }
+:root[data-tema='oscuro'] .card--legible .uso__frecuencia-cabeza small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-subtitulo b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-frecuencia__guia { stroke: #94a3b8; }
+:root[data-tema='oscuro'] .pg-frecuencia__base { stroke: hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-frecuencia__eje { fill: #64748b; }
+:root[data-tema='oscuro'] .pg-frecuencia__cursor { stroke: #f59e0b; }
+:root[data-tema='oscuro'] .pg-frecuencia__punto { fill: #182234; stroke: #f59e0b; }
+:root[data-tema='oscuro'] .pg-frecuencia__ultimo { fill: #182234; stroke: #f59e0b; }
+:root[data-tema='oscuro'] .pg-frecuencia__insignia { fill: #0f172a; }
+:root[data-tema='oscuro'] .pg-frecuencia__insignia-texto { fill: #182234; }
+:root[data-tema='oscuro'] .pg-frecuencia__zona:focus-visible { fill: rgba(245, 158, 11, 0.1); }
+:root[data-tema='oscuro'] .pg-comparacion--normal { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+:root[data-tema='oscuro'] .pg-comparacion--alto { background: rgba(248, 113, 113, 0.2); color: #fca5a5; }
+:root[data-tema='oscuro'] .pg-comparacion--bajo { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+:root[data-tema='oscuro'] .card--legible .prevenidas span { color: #8ea4d7; }
+:root[data-tema='oscuro'] .card--legible .niveles li:hover, :root[data-tema='oscuro'] .card--legible .niveles li:focus-visible { background: #182234; }
+:root[data-tema='oscuro'] .card--legible .niveles__nombre small { color: #94a3b8; }
+:root[data-tema='oscuro'] .card--legible .niveles__pista { background: #1e293b; }
+:root[data-tema='oscuro'] .card--legible .niveles__cifra small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-patrones__leyenda li { border: 1px solid #2a3649; background: #182234; color: #334155; }
+:root[data-tema='oscuro'] .pg-patrones__leyenda li:hover, :root[data-tema='oscuro'] .pg-patrones__leyenda li:focus-visible { background: #182234; border-color: hsla(213, 70%, 55%, 0.4); }
+:root[data-tema='oscuro'] .pg-patrones__leyenda b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta { border: 1px solid hsla(43, 70%, 55%, 0.4); background: hsla(41, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__icono { background: #0f172a; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__texto { color: #334155; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__texto > b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__texto b { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-recomendacion-corta__pausa { background: hsla(149, 70%, 50%, 0.16); color: #6ef7d0; }
+:root[data-tema='oscuro'] .pg-telemetria__panel { border: 1px solid #2a3649; background: #182234; }
+:root[data-tema='oscuro'] .pg-telemetria__titulo { color: #f7a96e; }
+:root[data-tema='oscuro'] .pg-telemetria__panel dt { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-telemetria__panel dd { color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-telemetria__panel dd small { color: #94a3b8; }
+:root[data-tema='oscuro'] .pg-ok { color: #6ef7d0 !important; }
+:root[data-tema='oscuro'] .pg-apagado { color: #94a3b8 !important; }
+:root[data-tema='oscuro'] .pg-telemetria__boton { border: 1px solid #2a3649; background: #182234; color: #8ea4d7; }
+:root[data-tema='oscuro'] .pg-telemetria__boton:hover:not(:disabled) { background: #1e293b; }
+:root[data-tema='oscuro'] .pg-telemetria__boton:focus-visible { outline: 2px solid #f59e0b; }
+:root[data-tema='oscuro'] .pg-senal { color: #94a3b8; }
+/* ==== fin del tema oscuro ==== */

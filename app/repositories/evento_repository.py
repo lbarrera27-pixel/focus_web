@@ -22,9 +22,12 @@ class EventoRepository(RepositorioPorUsuario[EventoUso]):
             consulta = consulta.filter(EventoUso.inicio < hasta)
         return consulta.order_by(EventoUso.numero).all()
 
-    def resumen(self, usuario_id: int, desde: datetime | None, hasta: datetime | None) -> tuple[int, int]:
+    def resumen(self, usuario_id: int, desde: datetime | None, hasta: datetime | None,
+                app_id: int | None = None) -> tuple[int, int]:
         consulta = self.db.query(func.count(EventoUso.id), func.coalesce(func.sum(EventoUso.duracion_seg), 0)) \
             .filter(EventoUso.usuario_id == usuario_id)
+        if app_id is not None:
+            consulta = consulta.filter(EventoUso.app_id == app_id)
         if desde is not None:
             consulta = consulta.filter(EventoUso.inicio >= desde)
         if hasta is not None:

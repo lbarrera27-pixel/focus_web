@@ -1,0 +1,55 @@
+/* Gráfica de uso por día (compartida por Foqui y Reportes) */
+.ud { display: flex; gap: 8px; height: 170px; }
+.ud__eje { position: relative; flex: 0 0 22px; margin-bottom: 22px; }
+.ud__eje span { position: absolute; right: 0; transform: translateY(50%); font-size: 11px; line-height: 14px; color: var(--w-texto-3); }
+.ud__area { position: relative; flex: 1; display: flex; gap: 6px; min-width: 0; }
+.ud__guias { position: absolute; inset: 0 0 22px 0; pointer-events: none; }
+.ud__guias i { position: absolute; left: 0; right: 0; height: 0; border-top: 1px solid #e2e8f0; }
+.ud__limite { position: absolute; left: 0; right: 0; height: 0; border-top: 1.5px dashed #94a3b8; z-index: 1; }
+.ud__limite em { position: absolute; right: 0; top: -16px; font-style: normal; font-size: 10px; font-weight: 700; color: #64748b; background: var(--w-superficie); padding: 0 3px; }
+.ud__col { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; border-radius: 10px; outline: none; cursor: default; }
+.ud__col:hover .ud__pista, .ud__col:focus-visible .ud__pista { background: rgba(148, 163, 184, 0.12); }
+.ud__col:focus-visible { box-shadow: 0 0 0 2px #f59e0b; }
+.ud__pista { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; border-radius: 10px; transition: background 0.15s; }
+.ud__barra { width: 14px; min-height: 4px; border-radius: 8px 8px 3px 3px; background: #10b981; transition: filter 0.15s; }
+.ud__col--mal .ud__barra { background: #ef4444; }
+.ud__col--bien { color: #10b981; }
+.ud__col--mal { color: #ef4444; }
+.ud__col:hover .ud__barra { filter: brightness(1.08); }
+.ud__cero { width: 14px; height: 3px; border-radius: 2px; background: #cbd5e1; }
+.ud__col--futuro .ud__pista {
+  align-items: center; border: 1px dashed #cbd5e1;
+  background: repeating-linear-gradient(135deg, transparent 0 5px, rgba(148, 163, 184, 0.12) 5px 7px);
+}
+.ud__pendiente { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; font-weight: 600; letter-spacing: 0.4px; color: #94a3b8; }
+.ud__col small { font-size: 11px; line-height: 16px; color: var(--w-texto-3); }
+.ud__col--hoy small { font-weight: 800; color: var(--w-texto); }
+.ud__nota { font-weight: 600; }
+.ud__nota--mal { color: #fda4af; }
+.ud__nota--bien { color: #6ee7b7; }
+.ud__leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; }
+.ud__leyenda li { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--w-texto-2); }
+.ud__leyenda i { width: 10px; height: 10px; border-radius: 3px; }
+.ud__punto--bien { background: #10b981; }
+.ud__punto--mal { background: #ef4444; }
+.ud__punto--futuro { border: 1px dashed #94a3b8; background: repeating-linear-gradient(135deg, transparent 0 2px, rgba(148, 163, 184, 0.3) 2px 3px); }
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .ud__guias i { border-top: 1px solid #2a3649; }
+:root[data-tema='oscuro'] .ud__limite { border-top: 1.5px dashed #94a3b8; }
+:root[data-tema='oscuro'] .ud__limite em { color: #94a3b8; }
+:root[data-tema='oscuro'] .ud__col:hover .ud__pista, :root[data-tema='oscuro'] .ud__col:focus-visible .ud__pista { background: rgba(148, 163, 184, 0.12); }
+:root[data-tema='oscuro'] .ud__col:focus-visible { box-shadow: 0 0 0 2px #f59e0b; }
+:root[data-tema='oscuro'] .ud__barra { background: #10b981; }
+:root[data-tema='oscuro'] .ud__col--mal .ud__barra { background: #ef4444; }
+:root[data-tema='oscuro'] .ud__col--bien { color: #72f3c8; }
+:root[data-tema='oscuro'] .ud__col--mal { color: #ef4444; }
+:root[data-tema='oscuro'] .ud__cero { background: hsla(213, 70%, 50%, 0.16); }
+:root[data-tema='oscuro'] .ud__col--futuro .ud__pista { border: 1px dashed hsla(213, 70%, 55%, 0.4); background: repeating-linear-gradient(135deg, transparent 0 5px, rgba(148, 163, 184, 0.12) 5px 7px); }
+:root[data-tema='oscuro'] .ud__pendiente { color: #94a3b8; }
+:root[data-tema='oscuro'] .ud__nota--mal { color: #fda4af; }
+:root[data-tema='oscuro'] .ud__nota--bien { color: #6ee7b7; }
+:root[data-tema='oscuro'] .ud__punto--bien { background: #10b981; }
+:root[data-tema='oscuro'] .ud__punto--mal { background: #ef4444; }
+:root[data-tema='oscuro'] .ud__punto--futuro { border: 1px dashed #94a3b8; background: repeating-linear-gradient(135deg, transparent 0 2px, rgba(148, 163, 184, 0.3) 2px 3px); }
+/* ==== fin del tema oscuro ==== */

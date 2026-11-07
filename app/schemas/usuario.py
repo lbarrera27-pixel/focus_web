@@ -20,6 +20,10 @@ class LoginEntrada(BaseModel):
     password: str = Field(..., examples=["secreto123"])
 
 
+class RecuperarEntrada(BaseModel):
+    email: str = Field(..., pattern=PATRON_EMAIL, examples=["dazai@focus.app"])
+
+
 class UsuarioActualizar(BaseModel):
     nombre: Optional[str] = Field(None, min_length=1, max_length=120)
     seudonimo: Optional[str] = Field(None, max_length=60)

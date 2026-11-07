@@ -1,0 +1,1044 @@
+{
+  "info": {
+    "_postman_id": "a9dbe961-9cca-4fe1-ab7a-1b95eb16cf6c",
+    "name": "Focus! API · rutas nuevas",
+    "description": "Solo las rutas que se agregaron o que usa el portal nuevo.\n\n1. En la pestaña **Variables** deja `baseUrl` en la API de Azure (o cámbiala a `http://127.0.0.1:8000` para la API local).\n2. **Run collection**: crea un usuario de prueba, recorre todo y al final lo desactiva.\n3. El header `X-Usuario-Id` se agrega solo a cada petición con el usuario creado en *POST /auth/registro*.\n4. *POST /usuarios/me/foto/archivo* necesita que elijas una imagen en Body → form-data; en el Runner sale 422 si no la eliges.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Agrega X-Usuario-Id a todas las peticiones, salvo las marcadas con X-Sin-Usuario (salud y registro).",
+          "const sinUsuario = pm.request.headers.has('X-Sin-Usuario');",
+          "pm.request.headers.remove('X-Sin-Usuario');",
+          "if (!sinUsuario) pm.request.headers.upsert({ key: 'X-Usuario-Id', value: String(pm.collectionVariables.get('usuarioId')) });"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://focus-api-luisbb27.azurewebsites.net"
+    },
+    {
+      "key": "usuarioId",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "tokenNumero",
+      "value": "1"
+    },
+    {
+      "key": "dominioNumero",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Preparación",
+      "description": "Despierta la base y crea un usuario de prueba.",
+      "item": [
+        {
+          "name": "GET /salud",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const intentos = Number(pm.collectionVariables.get('intentosSalud') || 0);",
+                  "if (pm.response.code === 503 && intentos < 5) {",
+                  "  // La base está despertando: se repite esta misma petición después de 30 s",
+                  "  pm.collectionVariables.set('intentosSalud', intentos + 1);",
+                  "  postman.setNextRequest('GET /salud');",
+                  "  setTimeout(() => {}, 30000);",
+                  "  return;",
+                  "}",
+                  "pm.collectionVariables.set('intentosSalud', 0);",
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.eql(200));",
+                  "pm.test('BD conectada', () => pm.expect(pm.response.json().base_datos).to.eql('ok'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Sin-Usuario",
+                "value": "1"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/salud",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "salud"
+              ]
+            },
+            "description": "Si la base serverless está dormida responde 503: en el Runner espera 30 s y reintenta solo (hasta 5 veces)."
+          }
+        },
+        {
+          "name": "POST /auth/registro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "pm.collectionVariables.set('usuarioId', pm.response.json().id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('email', 'postman' + Date.now() + '@focus.app');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Sin-Usuario",
+                "value": "1"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registro"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"nombre\": \"Prueba Postman\",\n  \"password\": \"secreto123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 Nueva · Estado del teléfono",
+      "description": "Tabla ESTADO_DISPOSITIVO: lo que reporta la app del teléfono (modelo, versión y batería).",
+      "item": [
+        {
+          "name": "POST /tokens-dispositivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "pm.collectionVariables.set('tokenNumero', pm.response.json().numero);",
+                  "pm.test('Aún sin estado', () => pm.expect(pm.response.json().estado).to.eql(null));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-postman-{{$guid}}\",\n  \"plataforma\": \"android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /tokens-dispositivo/{numero}/estado (sin reportar → 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/{{tokenNumero}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "{{tokenNumero}}",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT /tokens-dispositivo/{numero}/estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Guarda la batería', () => pm.expect(pm.response.json().bateria).to.eql(78));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/{{tokenNumero}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "{{tokenNumero}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modelo\": \"Pixel 7 Pro\",\n  \"version_app\": \"1.8\",\n  \"bateria\": 78,\n  \"cargando\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Lo manda la app al abrirse y cada cierto tiempo. Los campos que no se envían se conservan."
+          }
+        },
+        {
+          "name": "PUT /tokens-dispositivo/{numero}/estado (parcial)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Conserva el modelo', () => pm.expect(pm.response.json().modelo).to.eql('Pixel 7 Pro'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/{{tokenNumero}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "{{tokenNumero}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bateria\": 64,\n  \"cargando\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /tokens-dispositivo/{numero}/estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/{{tokenNumero}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "{{tokenNumero}}",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /tokens-dispositivo (incluye estado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Trae el estado', () => pm.expect(pm.response.json()[0].estado.version_app).to.eql('1.8'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Nueva · Intentos de sitios bloqueados",
+      "description": "Tabla INTENTO_SITIO: cada vez que el navegador del teléfono detiene un sitio bloqueado.",
+      "item": [
+        {
+          "name": "POST /dominios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+                  "pm.collectionVariables.set('dominioNumero', pm.response.json().numero);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dominios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dominio\": \"tiktok.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /dominios/{numero}/intentos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/{{dominioNumero}}/intentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "{{dominioNumero}}",
+                "intentos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /dominios/{numero}/intentos (con hora)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/{{dominioNumero}}/intentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "{{dominioNumero}}",
+                "intentos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{$isoTimestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Si el teléfono estuvo sin internet manda la hora real del intento (UTC)."
+          }
+        },
+        {
+          "name": "GET /dominios/intentos?dias=7",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Cuenta los 2 intentos', () => pm.expect(pm.response.json().por_dominio[0].intentos).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/intentos?dias=7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "intentos"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "7"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Las usa el portal nuevo",
+      "description": "Rutas que el portal web usa en Ajustes, Foqui y Riesgo.",
+      "item": [
+        {
+          "name": "PUT /configuracion/me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cuenta\": {\n    \"preferencias\": {\n      \"zona\": \"America/Mexico_City\",\n      \"semana\": \"lunes\",\n      \"hora\": \"24\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ajustes del portal (JSON libre por usuario). Reemplaza todo el JSON."
+          }
+        },
+        {
+          "name": "GET /configuracion/me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Guarda las preferencias', () => pm.expect(pm.response.json().cuenta.preferencias.hora).to.eql('24'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/configuracion/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "configuracion",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT /usuarios/me (nombre)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Prueba Postman Editada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /usuarios/me/foto/archivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const archivo = pm.request.body.formdata.find((p) => p.key === 'archivo');",
+                  "const elegido = archivo && archivo.src && String(archivo.src).length > 0;",
+                  "if (!elegido) {",
+                  "  pm.test.skip('Elige una imagen en Body → form-data para probar la subida', () => {});",
+                  "} else {",
+                  "  pm.test('Status 201', () => pm.expect(pm.response.code).to.eql(201));",
+                  "  pm.test('Guarda el enlace de la foto', () => pm.expect(pm.response.json().foto_url).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me/foto/archivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me",
+                "foto",
+                "archivo"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "En Body → form-data elige una imagen JPG, PNG o WEBP (máx. 5 MB) antes de enviarla. Sube a Azure Blob Storage."
+          }
+        },
+        {
+          "name": "GET /riesgo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 o 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/riesgo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "riesgo"
+              ]
+            },
+            "description": "404 mientras el usuario no tiene plan con ajustes."
+          }
+        },
+        {
+          "name": "POST /companero/mensaje",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.test('Foqui responde', () => pm.expect(pm.response.json().mensaje).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/companero/mensaje",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "companero",
+                "mensaje"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mensaje\": \"Resúmeme mi semana\",\n  \"historial\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "fuente = llm si la API tiene ANTHROPIC_API_KEY; respaldo si no."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Casos de error",
+      "description": "Validaciones de las rutas nuevas.",
+      "item": [
+        {
+          "name": "PUT estado con batería 120 → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422', () => pm.expect(pm.response.code).to.be.oneOf([422]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/{{tokenNumero}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "{{tokenNumero}}",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bateria\": 120\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PUT estado de un teléfono que no existe → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/999/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "999",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bateria\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST intento en un sitio que no existe → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/999/intentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "999",
+                "intentos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /dominios/intentos?dias=0 → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422', () => pm.expect(pm.response.code).to.be.oneOf([422]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/intentos?dias=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "intentos"
+              ],
+              "query": [
+                {
+                  "key": "dias",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Limpieza (correr al final)",
+      "description": "Borra lo que creó la colección y desactiva el usuario de prueba.",
+      "item": [
+        {
+          "name": "DELETE /dominios/{numero}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.expect(pm.response.code).to.be.oneOf([204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dominios/{{dominioNumero}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dominios",
+                "{{dominioNumero}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE /tokens-dispositivo/{numero} (borra también su estado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.expect(pm.response.code).to.be.oneOf([204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tokens-dispositivo/{{tokenNumero}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tokens-dispositivo",
+                "{{tokenNumero}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE /usuarios/me (desactiva el usuario)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.expect(pm.response.code).to.be.oneOf([204]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

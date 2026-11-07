@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from app.utils.reglas_plan import calcular_cambio
+from app.utils.reglas_plan import aplicar_preferencias, calcular_cambio
 
 RAIZ = Path(__file__).resolve().parent.parent
 ADHERENCIAS = [i / 100 for i in range(101)]
@@ -53,3 +53,17 @@ def test_la_funcion_serverless_usa_las_mismas_reglas():
     original = (RAIZ / "app" / "utils" / "reglas_plan.py").read_bytes()
     copia = (RAIZ / "serverless" / "reglas_plan.py").read_bytes()
     assert copia == original, "Copia app/utils/reglas_plan.py a serverless/reglas_plan.py"
+
+
+@pytest.mark.parametrize("cambio, prefs, esperado", [
+    (-10.0, {}, -10.0),                                            # normal: igual que las reglas
+    (-10.0, {"sensibilidad": "suave"}, -5.0),
+    (-10.0, {"sensibilidad": "estricta"}, -15.0),
+    (5.0, {"permitir_relajar": False}, 0.0),                       # no relaja si se desactivó
+    (5.0, {"sensibilidad": "estricta"}, 0.0),                      # estricta: una semana mala no basta
+    (5.0, {"sensibilidad": "estricta", "semana_anterior_baja": True}, 5.0),
+    (5.0, {"sensibilidad": "suave"}, 5.0),
+])
+def test_preferencias_del_plan(cambio, prefs, esperado):
+    assert aplicar_preferencias(cambio, **prefs) == esperado
+
