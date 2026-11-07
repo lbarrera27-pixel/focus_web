@@ -43,4 +43,7 @@ class UsuarioRespuesta(Respuesta):
 class LoginRespuesta(BaseModel):
     usuario_id: int
     nombre: str
-    header: str = Field(..., description="Header que debe enviarse en las demás rutas")
+    header: str = Field(..., description="Header del modo anterior (X-Usuario-Id)")
+    access_token: str = Field(..., description="JWT para Authorization: Bearer <token>")
+    token_type: str = "bearer"
+    expira_en: int = Field(..., description="Segundos de vigencia del token")

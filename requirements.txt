@@ -6,6 +6,7 @@ pydantic>=2.7
 python-dotenv>=1.0
 python-multipart>=0.0.9
 bcrypt>=4.1
+PyJWT>=2.8
 pyodbc>=5.1
 azure-storage-blob>=12.20
 anthropic>=2.0

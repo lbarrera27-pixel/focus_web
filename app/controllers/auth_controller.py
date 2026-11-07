@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.repositories.usuario_repository import UsuarioRepository
+from app.seguridad import crear_token
 from app.schemas.usuario import LoginEntrada, LoginRespuesta, UsuarioRegistro, UsuarioRespuesta
 from app.services.usuario_service import CredencialesInvalidas, UsuarioService
 
@@ -24,4 +25,8 @@ def login(datos: LoginEntrada, service: UsuarioService = Depends(get_service)):
         usuario = service.login(datos.email, datos.password)
     except CredencialesInvalidas:
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
-    return {"usuario_id": usuario.id, "nombre": usuario.nombre, "header": f"X-Usuario-Id: {usuario.id}"}
+    token, vigencia = crear_token(usuario.id)
+    return {
+        "usuario_id": usuario.id, "nombre": usuario.nombre, "header": f"X-Usuario-Id: {usuario.id}",
+        "access_token": token, "token_type": "bearer", "expira_en": vigencia,
+    }

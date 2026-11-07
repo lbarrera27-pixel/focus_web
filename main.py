@@ -21,7 +21,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from app.config import CORS_ORIGINS
 from app.controllers import (
     app_controller, auth_controller, companero_controller, dominio_controller, estadisticas_controller,
-    evento_controller, franja_controller, pausa_controller, plan_controller, riesgo_controller,
+    evento_controller, franja_controller, metricas_controller, pausa_controller, plan_controller, riesgo_controller,
     salud_controller, sesion_controller, token_controller, usuario_controller,
 )
 from app.database import sincronizar_esquema
@@ -43,7 +43,8 @@ app = FastAPI(
     version="2.0.0",
     description=(
         "Backend de Focus!, app Android para reducir gradualmente el tiempo en pantalla.\n\n"
-        "**Identificación:** las rutas privadas requieren el header `X-Usuario-Id`. "
+        "**Identificación:** las rutas privadas requieren `Authorization: Bearer <token>` (de `POST /auth/login`) "
+        "o, en el modo anterior, el header `X-Usuario-Id`. "
         "Los números en las rutas son relativos a ese usuario: "
         "`GET /pausas/7` con `X-Usuario-Id: 1` devuelve la 7.ª pausa del usuario 1."
     ),
@@ -94,6 +95,6 @@ def inicio():
 for modulo in (
     salud_controller, auth_controller, usuario_controller, app_controller, evento_controller,
     franja_controller, plan_controller, pausa_controller, dominio_controller, sesion_controller,
-    token_controller, estadisticas_controller, riesgo_controller, companero_controller,
+    token_controller, estadisticas_controller, riesgo_controller, companero_controller, metricas_controller,
 ):
     app.include_router(modulo.router)

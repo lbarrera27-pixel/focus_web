@@ -43,5 +43,11 @@ AZURE_STORAGE_CONTAINER = os.getenv("AZURE_STORAGE_CONTAINER", "fotos")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 COMPANERO_MODELO = os.getenv("COMPANERO_MODELO", "claude-haiku-5-5")
 
+# JWT (app Android y portal web). En Azure define JWT_SECRET con una cadena larga y aleatoria.
+JWT_SECRET = os.getenv("JWT_SECRET")
+JWT_DIAS = int(os.getenv("JWT_DIAS", "30"))
+# Modo anterior de identificación (header X-Usuario-Id). Ponlo en "false" cuando todos los clientes usen JWT.
+PERMITIR_X_USUARIO_ID = os.getenv("PERMITIR_X_USUARIO_ID", "true").lower() != "false"
+
 # Orígenes permitidos por CORS (separados por coma). "*" = cualquiera.
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
