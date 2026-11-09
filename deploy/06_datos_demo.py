@@ -50,11 +50,12 @@ class Api:
     def __init__(self, base: str):
         self.base = base.rstrip("/")
         self.usuario_id = None
+        self.token = None
 
     def pedir(self, metodo: str, ruta: str, cuerpo=None, esperado=(200, 201)):
         headers = {"Accept": "application/json"}
-        if self.usuario_id:
-            headers["X-Usuario-Id"] = str(self.usuario_id)
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
         datos = None
         if cuerpo is not None:
             headers["Content-Type"] = "application/json"
@@ -81,6 +82,8 @@ def iniciar_sesion(api: Api, email: str, nombre: str, password: str) -> None:
                           {"email": email, "nombre": nombre, "password": password}, esperado=(201, 409))
     if status == 201:
         api.usuario_id = r["id"]
+        _, r = api.pedir("POST", "/auth/login", {"email": email, "password": password})
+        api.token = r["access_token"]
         print(f"Cuenta creada: {email} (id {api.usuario_id})")
         return
     # Ya existía: solo se continúa si la contraseña es correcta y la cuenta está vacía
@@ -88,7 +91,7 @@ def iniciar_sesion(api: Api, email: str, nombre: str, password: str) -> None:
     if status == 401:
         sys.exit(f"La cuenta {email} ya existe y la contraseña no coincide. Escribe la contraseña de esa cuenta "
                  "o usa otro --email para crear una cuenta nueva.")
-    api.usuario_id = r["usuario_id"]
+    api.usuario_id, api.token = r["usuario_id"], r["access_token"]
     _, apps = api.pedir("GET", "/apps")
     if apps:
         sys.exit(f"La cuenta {email} ya tiene datos; usa otro correo para no duplicarlos.")
@@ -99,7 +102,7 @@ def entrar(api: Api, email: str, password: str) -> None:
     status, r = api.pedir("POST", "/auth/login", {"email": email, "password": password}, esperado=(200, 401))
     if status == 401:
         sys.exit(f"No se pudo entrar con {email}: correo o contraseña incorrectos (o la cuenta no existe).")
-    api.usuario_id = r["usuario_id"]
+    api.usuario_id, api.token = r["usuario_id"], r["access_token"]
     print(f"Sesión iniciada: {email} (id {api.usuario_id})")
 
 

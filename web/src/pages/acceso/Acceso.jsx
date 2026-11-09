@@ -135,7 +135,7 @@ function IniciarSesion({ email, setEmail, onEntrar, onOlvide }) {
     setCargando(true)
     try {
       const r = await api.login(email.trim(), password)
-      onEntrar({ id: r.usuario_id, nombre: r.nombre, email: email.trim() }, recordar)
+      onEntrar({ id: r.usuario_id, nombre: r.nombre, email: email.trim(), token: r.access_token }, recordar)
     } catch (err) {
       setError(
         err.status === 401

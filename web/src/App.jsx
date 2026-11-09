@@ -23,7 +23,7 @@ import { cargarPanel, construirPanel } from './data/panel.js'
 import { datosDemo } from './data/demo.js'
 import { csvDeDatos } from './data/ajustes.js'
 import { cargarPreferencias, establecerPreferencias } from './data/preferencias.js'
-import { api } from './api.js'
+import { api, establecerToken } from './api.js'
 
 const CLAVE_SESION = 'focus.usuario'
 const CLAVE_MENU = 'focus.menuContraido'
@@ -62,7 +62,11 @@ function leerMenuContraido() {
 // "Mantener la sesión iniciada" guarda la sesión en localStorage; si no, solo dura la pestaña (sessionStorage)
 function leerSesion() {
   try {
-    return JSON.parse(localStorage.getItem(CLAVE_SESION) ?? sessionStorage.getItem(CLAVE_SESION))
+    const u = JSON.parse(localStorage.getItem(CLAVE_SESION) ?? sessionStorage.getItem(CLAVE_SESION))
+    // Las sesiones guardadas antes de usar JWT no traen token: hay que volver a entrar
+    if (!u || (!u.demo && !u.token)) return null
+    establecerToken(u.token)
+    return u
   } catch {
     return null
   }
@@ -156,7 +160,11 @@ export default function App() {
   }
 
   const entrar = (u, recordar = true) => {
+    establecerToken(u.token)
     try {
+      // Una sola copia: localStorage tiene prioridad y una sesión vieja taparía a la nueva
+      localStorage.removeItem(CLAVE_SESION)
+      sessionStorage.removeItem(CLAVE_SESION)
       ;(recordar ? localStorage : sessionStorage).setItem(CLAVE_SESION, JSON.stringify(u))
     } catch {
       // sin almacenamiento: la sesión solo dura mientras la página esté abierta
@@ -173,6 +181,7 @@ export default function App() {
     setUsuario(u)
   }
   const salir = useCallback(() => {
+    establecerToken(null)
     try {
       localStorage.removeItem(CLAVE_SESION)
       sessionStorage.removeItem(CLAVE_SESION)

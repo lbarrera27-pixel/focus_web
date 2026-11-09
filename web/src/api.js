@@ -1,7 +1,14 @@
 // Cliente de la API de Focus!
-// Las rutas privadas se identifican con el header X-Usuario-Id (ver app/dependencies.py).
+// Las rutas privadas se identifican con el JWT de /auth/login (ver app/dependencies.py).
 
 const BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
+
+let tokenSesion = null
+
+// App.jsx lo fija al leer la sesión guardada, al entrar y al salir
+export function establecerToken(token) {
+  tokenSesion = token ?? null
+}
 
 export class ApiError extends Error {
   constructor(status, detail) {
@@ -12,7 +19,7 @@ export class ApiError extends Error {
 
 async function pedir(ruta, { usuarioId, metodo = 'GET', cuerpo, reintentos = 2, senal } = {}) {
   const headers = { Accept: 'application/json' }
-  if (usuarioId) headers['X-Usuario-Id'] = String(usuarioId)
+  if (usuarioId && tokenSesion) headers.Authorization = `Bearer ${tokenSesion}`
   // Con FormData (archivos) el navegador pone el Content-Type con su separador
   const esArchivo = cuerpo instanceof FormData
   if (cuerpo && !esArchivo) headers['Content-Type'] = 'application/json'
