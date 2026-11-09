@@ -52,6 +52,8 @@ export const api = {
   login: (email, password) => pedir('/auth/login', { metodo: 'POST', cuerpo: { email, password } }),
   // Responde 202 exista o no la cuenta
   recuperar: (email) => pedir('/auth/recuperar', { metodo: 'POST', cuerpo: { email } }),
+  // Crea la contraseña nueva con el enlace del correo (400 si no es válido o caducó)
+  restablecer: (token, password) => pedir('/auth/restablecer', { metodo: 'POST', cuerpo: { token, password } }),
   usuario: (id) => pedir('/usuarios/me', { usuarioId: id }),
   estadisticas: (id, desde, hasta) => pedir(`/estadisticas${consulta({ desde, hasta })}`, { usuarioId: id }),
   eventos: (id, desde, hasta) => pedir(`/eventos${consulta({ desde, hasta })}`, { usuarioId: id }),

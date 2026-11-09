@@ -16,9 +16,10 @@ from app.models.configuracion_usuario import ConfiguracionUsuario
 from app.models.intento_sitio import IntentoSitio
 from app.models.estado_dispositivo import EstadoDispositivo
 from app.models.metrica_diaria import MetricaDiaria
+from app.models.token_recuperacion import TokenRecuperacion
 
 __all__ = [
     "Usuario", "App", "Franja", "EventoUso", "Plan", "AjustePlan",
     "Pausa", "DominioBloqueado", "SesionFoco", "TokenDispositivo", "ConfiguracionUsuario", "IntentoSitio",
-    "EstadoDispositivo", "MetricaDiaria",
+    "EstadoDispositivo", "MetricaDiaria", "TokenRecuperacion",
 ]

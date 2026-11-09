@@ -313,6 +313,82 @@ function Recuperar({ email, setEmail, onVolver, onEnviado }) {
   )
 }
 
+// ---------- Crear contraseña nueva (enlace del correo: #/restablecer?token=...) ----------
+function tokenDelEnlace() {
+  const hash = window.location.hash
+  if (!hash.startsWith('#/restablecer')) return null
+  return new URLSearchParams(hash.split('?')[1] ?? '').get('token') ?? ''
+}
+
+function Restablecer({ token, onListo, onPedirOtro }) {
+  const [password, setPassword] = useState('')
+  const [confirmar, setConfirmar] = useState('')
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState('')
+  const [caducado, setCaducado] = useState(!token)
+  const [listo, setListo] = useState(false)
+
+  async function enviar(e) {
+    e.preventDefault()
+    if (password.length < 8) return setError('Usa al menos 8 caracteres.')
+    if (password !== confirmar) return setError('Las contraseñas no coinciden.')
+    setError('')
+    setCargando(true)
+    try {
+      await api.restablecer(token, password)
+      setListo(true)
+    } catch (err) {
+      if (err.status === 400) setCaducado(true)
+      else setError(err.status ? err.message : `No se pudo conectar con la API (${api.base}).`)
+    } finally {
+      setCargando(false)
+    }
+  }
+
+  if (listo || caducado) {
+    return (
+      <div className="ac-formulario ac-formulario--enviado">
+        <span className="ac-icono-grande ac-icono-grande--ambar">
+          <img src={iconoCandadoGrande} alt="" width={26} height={26} />
+        </span>
+        <div className="ac-titulos">
+          <h1 tabIndex={-1}>{listo ? 'Contraseña actualizada' : 'Este enlace ya no sirve'}</h1>
+          <p>{listo
+            ? 'Ya puedes entrar con tu contraseña nueva en la web y en la app.'
+            : 'Los enlaces son de un solo uso y caducan a los 30 minutos. Pide uno nuevo.'}</p>
+        </div>
+        <button type="button" className="ac-boton-primario ac-boton-primario--plano" onClick={listo ? onListo : onPedirOtro}>
+          {listo ? 'Iniciar sesión' : 'Pedir otro enlace'}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <form className="ac-formulario ac-formulario--recuperar" onSubmit={enviar} noValidate>
+      <span className="ac-icono-grande ac-icono-grande--ambar">
+        <img src={iconoCandadoGrande} alt="" width={26} height={26} />
+      </span>
+      <div className="ac-titulos">
+        <h1 tabIndex={-1}>Crea tu nueva contraseña</h1>
+        <p>Debe tener al menos 8 caracteres.</p>
+      </div>
+      <Campo id="ac-nueva" etiqueta="Contraseña nueva" icono={iconoCandado}>
+        <input id="ac-nueva" type="password" autoComplete="new-password" required value={password} disabled={cargando}
+          onChange={(e) => setPassword(e.target.value)} />
+      </Campo>
+      <Campo id="ac-confirmar" etiqueta="Confirma tu contraseña" icono={iconoCandado} error={!!error} ayuda={error || null}>
+        <input id="ac-confirmar" type="password" autoComplete="new-password" required value={confirmar} disabled={cargando}
+          aria-invalid={!!error || undefined} aria-describedby={error ? 'ac-confirmar-ayuda' : undefined}
+          onChange={(e) => setConfirmar(e.target.value)} />
+      </Campo>
+      <button type="submit" className="ac-boton-primario ac-boton-primario--plano" disabled={cargando}>
+        {cargando ? 'Guardando…' : 'Guardar contraseña'}
+      </button>
+    </form>
+  )
+}
+
 // ---------- e5 ----------
 function Enviado({ email, onVolver }) {
   const [espera, setEspera] = useState(ESPERA_REENVIO)
@@ -368,7 +444,13 @@ function Enviado({ email, onVolver }) {
 }
 
 export default function Acceso({ onEntrar }) {
-  const [vista, setVista] = useState('login')
+  const [token] = useState(tokenDelEnlace)
+  const [vista, setVista] = useState(token === null ? 'login' : 'restablecer')
+  // Sale de la dirección con el enlace: el token no se queda en la barra ni en pantallas siguientes
+  const salirDelEnlace = (siguiente) => {
+    window.location.hash = '/inicio'
+    setVista(siguiente)
+  }
   const [email, setEmail] = useState('')
   const panel = useRef(null)
   const primera = useRef(true)
@@ -399,6 +481,9 @@ export default function Acceso({ onEntrar }) {
         )}
         {vista === 'recuperar' && (
           <Recuperar email={email} setEmail={setEmail} onVolver={() => setVista('login')} onEnviado={() => setVista('enviado')} />
+        )}
+        {vista === 'restablecer' && (
+          <Restablecer token={token} onListo={() => salirDelEnlace('login')} onPedirOtro={() => salirDelEnlace('recuperar')} />
         )}
         {vista === 'enviado' && <Enviado email={email} onVolver={() => setVista('login')} />}
         <Pie />

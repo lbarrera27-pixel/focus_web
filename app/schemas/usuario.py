@@ -24,6 +24,11 @@ class RecuperarEntrada(BaseModel):
     email: str = Field(..., pattern=PATRON_EMAIL, examples=["dazai@focus.app"])
 
 
+class RestablecerEntrada(BaseModel):
+    token: str = Field(..., min_length=20, max_length=200)
+    password: str = Field(..., min_length=8, max_length=72, examples=["NuevaClave123"])
+
+
 class UsuarioActualizar(BaseModel):
     nombre: Optional[str] = Field(None, min_length=1, max_length=120)
     seudonimo: Optional[str] = Field(None, max_length=60)

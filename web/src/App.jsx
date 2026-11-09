@@ -255,7 +255,8 @@ export default function App() {
 
   const panel = useMemo(() => (datos ? construirPanel(datos) : null), [datos])
 
-  if (!usuario) return <Acceso onEntrar={entrar} />
+  // El enlace del correo para crear contraseña se atiende aunque haya una sesión abierta
+  if (!usuario || window.location.hash.startsWith('#/restablecer')) return <Acceso onEntrar={entrar} />
 
   const textoEstado = estado.error
     ? { texto: `Error: ${estado.error}`, error: true }

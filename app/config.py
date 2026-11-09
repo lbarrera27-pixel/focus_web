@@ -49,6 +49,16 @@ JWT_DIAS = int(os.getenv("JWT_DIAS", "30"))
 # Modo anterior de identificación (header X-Usuario-Id). Ponlo en "false" cuando todos los clientes usen JWT.
 PERMITIR_X_USUARIO_ID = os.getenv("PERMITIR_X_USUARIO_ID", "true").lower() != "false"
 
+# Recuperación de contraseña. SMTP_HOST y SMTP_REMITENTE activan el envío del correo.
+SMTP_HOST = os.getenv("SMTP_HOST")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USUARIO = os.getenv("SMTP_USUARIO")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+SMTP_REMITENTE = os.getenv("SMTP_REMITENTE")
+RECUPERACION_MINUTOS = int(os.getenv("RECUPERACION_MINUTOS", "30"))
+# Portal web: ahí abre el enlace para crear la contraseña nueva
+PORTAL_URL = os.getenv("PORTAL_URL", "https://green-moss-07816e210.4.azurestaticapps.net").rstrip("/")
+
 # Orígenes permitidos por CORS (separados por coma). "*" = cualquiera.
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
 
