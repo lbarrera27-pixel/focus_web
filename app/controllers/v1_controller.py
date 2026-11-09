@@ -132,7 +132,8 @@ def resumen(
             .where(MetricaDiaria.usuario_id == u.id, MetricaDiaria.fecha <= hoy)
             .group_by(MetricaDiaria.fecha)
         ).all())
-        d = hoy
+        # Si hoy aún no se ha sincronizado, la racha sigue viva y se cuenta desde ayer
+        d = hoy if hoy in historial else hoy - timedelta(days=1)
         while d in historial and historial[d] <= meta:
             racha += 1
             d -= timedelta(days=1)

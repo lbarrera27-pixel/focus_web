@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a9dbe961-9cca-4fe1-ab7a-1b95eb16cf6c",
     "name": "Focus! API · rutas nuevas",
-    "description": "Solo las rutas que se agregaron o que usa el portal nuevo.\n\n1. En la pestaña **Variables** deja `baseUrl` en la API de Azure (o cámbiala a `http://127.0.0.1:8000` para la API local).\n2. **Run collection**: crea un usuario de prueba, recorre todo y al final lo desactiva.\n3. El header `X-Usuario-Id` se agrega solo a cada petición con el usuario creado en *POST /auth/registro*.\n4. *POST /usuarios/me/foto/archivo* necesita que elijas una imagen en Body → form-data; en el Runner sale 422 si no la eliges.",
+    "description": "Solo las rutas que se agregaron o que usa el portal nuevo.\n\n1. En la pestaña **Variables** deja `baseUrl` en la API de Azure (o cámbiala a `http://127.0.0.1:8000` para la API local).\n2. **Run collection**: crea un usuario de prueba, recorre todo y al final lo desactiva.\n3. El header `Authorization` se agrega solo a cada petición con el token del usuario creado en *POST /auth/registro*.\n4. *POST /usuarios/me/foto/archivo* necesita que elijas una imagen en Body → form-data; en el Runner sale 422 si no la eliges.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -11,10 +11,10 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Agrega X-Usuario-Id a todas las peticiones, salvo las marcadas con X-Sin-Usuario (salud y registro).",
+          "// Agrega el token JWT a todas las peticiones, salvo las marcadas con X-Sin-Usuario (salud y registro).",
           "const sinUsuario = pm.request.headers.has('X-Sin-Usuario');",
           "pm.request.headers.remove('X-Sin-Usuario');",
-          "if (!sinUsuario) pm.request.headers.upsert({ key: 'X-Usuario-Id', value: String(pm.collectionVariables.get('usuarioId')) });"
+          "if (!sinUsuario) pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('token') });"
         ]
       }
     }
@@ -39,6 +39,10 @@
     {
       "key": "dominioNumero",
       "value": "1"
+    },
+    {
+      "key": "token",
+      "value": ""
     }
   ],
   "item": [
@@ -98,7 +102,9 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status 201', () => pm.expect(pm.response.code).to.be.oneOf([201]));",
-                  "pm.collectionVariables.set('usuarioId', pm.response.json().id);"
+                  "pm.collectionVariables.set('usuarioId', pm.response.json().id);",
+                  "// Inicia sesión con la cuenta recién creada y guarda su token",
+                  "pm.sendRequest({ url: pm.variables.get('baseUrl') + '/auth/login', method: 'POST', header: { 'Content-Type': 'application/json' }, body: { mode: 'raw', raw: JSON.stringify({ email: pm.collectionVariables.get('email'), password: 'secreto123' }) } }, (err, res) => pm.collectionVariables.set('token', res.json().access_token));"
                 ]
               }
             },

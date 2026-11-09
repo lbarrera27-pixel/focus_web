@@ -84,6 +84,11 @@ def test_resumen_con_metricas_y_plan(client, auth):
     assert s["racha_dias"] == 3                             # 40, 50 y 95 ≤ 100
     assert s["riesgo"] is None and "ajustes" in s["riesgo_motivo"]
 
+    # Hoy aún sin sincronizar: la racha sigue viva desde ayer; con un día entero sin datos, se corta
+    siguiente = client.get("/api/v1/users/me/summary?fecha=2026-11-07", headers=auth).json()
+    assert siguiente["racha_dias"] == 3
+    assert client.get("/api/v1/users/me/summary?fecha=2026-11-08", headers=auth).json()["racha_dias"] == 0
+
 
 def test_resumen_requiere_identificacion(client):
     assert client.get("/api/v1/users/me/summary").status_code == 422

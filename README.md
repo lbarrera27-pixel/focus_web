@@ -87,8 +87,8 @@ flowchart LR
     LLM["🤖 Claude<br/>(Compañero Foqui)"]
 
     WEB -.->|se sirve desde| SWA
-    WEB -->|HTTPS + X-Usuario-Id| API
-    AND -->|HTTPS + X-Usuario-Id| API
+    WEB -->|HTTPS + JWT| API
+    AND -->|HTTPS + JWT| API
     AND -->|HTTPS| FUNC
     API --> SQL
     API --> BLOB
@@ -118,7 +118,7 @@ focus_web/
 ├── app/
 │   ├── config.py                  variables de entorno (BD, Blob, CORS, LLM)
 │   ├── database.py                engine, sesión y sincronización del esquema
-│   ├── dependencies.py            usuario_actual(): lee el header X-Usuario-Id
+│   ├── dependencies.py            usuario_actual(): valida el token JWT
 │   ├── controllers/               rutas (un controlador por tabla, más riesgo y compañero)
 │   ├── services/                  reglas de negocio
 │   ├── repositories/              acceso a datos (única capa que usa SQLAlchemy)
@@ -137,7 +137,7 @@ focus_web/
 │   ├── package.json, vite.config.js, index.html, .env.example
 │   └── src/
 │       ├── App.jsx, main.jsx
-│       ├── api.js                 cliente de la API (header X-Usuario-Id)
+│       ├── api.js                 cliente de la API (token JWT)
 │       ├── components/            Sidebar, TopBar, Card, Icono
 │       ├── data/                  lógica de cada pantalla (panel, telemetría, análisis, clústeres, ajustes)
 │       ├── pages/                 Login, Panel General, Telemetría, Análisis, Clústeres
@@ -191,7 +191,7 @@ pytest -q
 ## 🖥️ Portal web
 
 Panel de investigación hecho con **React + Vite** a partir del diseño de Figma (página *web*).
-Inicia sesión con `/auth/login` y manda `X-Usuario-Id` en cada petición.
+Inicia sesión con `/auth/login` y manda el token en `Authorization: Bearer` en cada petición.
 
 | Sección | Qué muestra | API que usa |
 |---|---|---|
@@ -254,21 +254,24 @@ los ajustes de las semanas que pasaron (sin duplicar nada si ya estaba al día).
 
 1. Importa `postman/Focus_API_v2.postman_collection.json`.
 2. En la pestaña **Variables** cambia `baseUrl` y `funcUrl` por las URLs de Azure.
-3. **Run collection**: el registro guarda `usuarioId` y el header `X-Usuario-Id` se agrega solo
+3. **Run collection**: el registro inicia sesión, guarda el token y el header `Authorization` se agrega solo
    a cada petición. Incluye casos de error (401, 404, 409, 422).
 4. Para la foto con Blob Storage: en *POST /usuarios/me/foto/archivo* → Body → form-data → elige una imagen.
 
 ## 🔌 API: identificación y rutas
 
-Las rutas privadas requieren el header **`X-Usuario-Id`** (lo devuelve `POST /auth/login`). Los números
-de las rutas son **relativos a ese usuario**, no ids globales:
+Las rutas privadas requieren el header **`Authorization: Bearer <token>`** (`access_token` de
+`POST /auth/login`). Los números de las rutas son **relativos a ese usuario**, no ids globales:
 
 | Petición | Resultado |
 |---|---|
-| `GET /pausas/7` + `X-Usuario-Id: 1` | 7.ª pausa del usuario 1 |
-| `GET /pausas/7` + `X-Usuario-Id: 2` | 7.ª pausa del usuario 2 (otro registro) |
-| `GET /pausas/7` sin header | `422` |
-| `GET /pausas/7` + `X-Usuario-Id: 999` | `401` (usuario inexistente o inactivo) |
+| `GET /pausas/7` con el token del usuario 1 | 7.ª pausa del usuario 1 |
+| `GET /pausas/7` con el token del usuario 2 | 7.ª pausa del usuario 2 (otro registro) |
+| `GET /pausas/7` sin token | `422` |
+| `GET /pausas/7` con un token inválido o vencido, o de un usuario inactivo | `401` |
+
+El header anterior `X-Usuario-Id` está **desactivado en producción** (`PERMITIR_X_USUARIO_ID=false`)
+y responde `401`. Sin esa variable sigue aceptándose, solo para pruebas locales.
 
 Cada tabla del usuario tiene `id` (clave primaria global) y `numero` (consecutivo por usuario,
 `UNIQUE(usuario_id, numero)`).
@@ -474,7 +477,7 @@ Une la **lógica difusa** (decide el ajuste) y la **regresión logística de rie
 **LLM (Claude)** que solo lo explica en lenguaje cercano. No decide límites ni fricción.
 
 ```json
-// Petición (header X-Usuario-Id). Sin "mensaje", Foqui saluda y explica la semana.
+// Petición (header Authorization: Bearer). Sin "mensaje", Foqui saluda y explica la semana.
 { "mensaje": "¿Por qué bajó mi límite?", "historial": [{ "rol": "foqui", "texto": "¡Hola, Dani!" }] }
 
 // Respuesta
