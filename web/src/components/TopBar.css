@@ -1,0 +1,80 @@
+/* Barra superior de Inicio en tamaño grande: títulos, estado, periodo, buscador y Exportar con más presencia.
+   Solo aplica a .topbar--grande; las barras de las otras pantallas no cambian. */
+
+.topbar--grande {
+  flex-wrap: wrap; align-items: center; gap: 16px 24px;
+  padding: 24px 32px; border-bottom: 1px solid var(--borde);
+}
+.topbar--grande .topbar__titulos { gap: 8px; min-width: 0; }
+.topbar--grande .topbar__ruta {
+  font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--texto-3);
+}
+.topbar--grande .topbar__titulo {
+  font: 800 32px/38px var(--display); letter-spacing: -0.03em; color: var(--texto);
+}
+
+/* Píldora de estado con punto que late */
+.topbar--grande .estado {
+  gap: 8px; padding: 6px 14px; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 999px;
+  background: #ecfdf5; font-size: 14px; line-height: 20px; font-weight: 500; color: #047857;
+}
+.topbar--grande .estado__punto { width: 10px; height: 10px; border-radius: 50%; background: #34d399; box-shadow: none; animation: topbar-pulso 1.8s ease-in-out infinite; }
+.topbar--grande .estado--error { border-color: rgba(239, 68, 68, 0.4); background: #fef2f2; color: #b91c1c; }
+.topbar--grande .estado--error .estado__punto { background: #f87171; }
+@keyframes topbar-pulso { 0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); } 50% { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); } }
+@media (prefers-reduced-motion: reduce) { .topbar--grande .estado__punto { animation: none; } }
+
+.topbar--grande .topbar__acciones { flex-wrap: wrap; gap: 12px; }
+
+/* Selector de periodo */
+.topbar--grande .segmentado { height: auto; padding: 6px; gap: 2px; border: 1px solid var(--borde); border-radius: 16px; background: var(--fondo); }
+.topbar--grande .segmentado__opcion {
+  padding: 8px 16px; border-radius: 12px; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--texto-2);
+  transition: background-color 0.15s, color 0.15s;
+}
+.topbar--grande .segmentado__opcion:hover { color: var(--texto); }
+.topbar--grande .segmentado__opcion--activa { background: #fff; color: var(--texto); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); filter: none; }
+.topbar--grande .segmentado__opcion:focus-visible { outline: 2px solid var(--ambar); outline-offset: 2px; }
+
+/* Buscador */
+.topbar--grande .buscador { width: 300px; height: 48px; gap: 10px; padding: 0 14px; border: 1px solid var(--borde); border-radius: 16px; background: #fff; }
+.topbar--grande .buscador:focus-within { border-color: var(--ambar); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
+.topbar--grande .buscador input { font-size: 14px; line-height: 20px; }
+.topbar--grande .buscador kbd { padding: 3px 7px; border-radius: 6px; font: 600 11px/14px var(--mono); }
+
+/* Exportar: llamado a la acción principal */
+.topbar--grande .boton-primario {
+  height: 48px; gap: 10px; padding: 0 24px; border-radius: 16px; background: #f59e0b;
+  font-size: 16px; line-height: 20px; font-weight: 700; color: #020617;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); transition: background-color 0.15s, transform 0.1s;
+}
+.topbar--grande .boton-primario:hover { background: #fbbf24; }
+.topbar--grande .boton-primario:active { transform: scale(0.95); }
+.topbar--grande .boton-primario:focus-visible { outline: 2px solid #f59e0b; outline-offset: 3px; }
+.topbar--grande .boton-primario__extra { font-size: 12px; font-weight: 600; opacity: 0.65; }
+
+/* Pantallas medianas: los controles bajan debajo del título y se reparten el ancho */
+@media (max-width: 1279px) {
+  .topbar--grande .topbar__acciones { width: 100%; }
+  .topbar--grande .buscador { flex: 1 1 240px; width: auto; }
+}
+@media (max-width: 767px) {
+  .topbar--grande { padding: 20px 16px; }
+  .topbar--grande .topbar__titulo { font-size: 24px; line-height: 30px; }
+  .topbar--grande .segmentado { width: 100%; }
+  .topbar--grande .segmentado__opcion { flex: 1; padding: 8px 6px; }
+  .topbar--grande .buscador, .topbar--grande .boton-primario { flex: 1 1 100%; }
+}
+
+/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
+:root[data-tema='oscuro'] .topbar--grande .estado { border: 1px solid rgba(16, 185, 129, 0.4); background: #1e293b; color: #6ef7d0; }
+:root[data-tema='oscuro'] .topbar--grande .estado__punto { background: #34d399; }
+:root[data-tema='oscuro'] .topbar--grande .estado--error { border-color: rgba(239, 68, 68, 0.4); background: #1e293b; color: #eb7a7a; }
+:root[data-tema='oscuro'] .topbar--grande .estado--error .estado__punto { background: #f87171; }
+:root[data-tema='oscuro'] .topbar--grande .segmentado__opcion--activa { background: #182234; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+:root[data-tema='oscuro'] .topbar--grande .buscador { background: #182234; }
+:root[data-tema='oscuro'] .topbar--grande .buscador:focus-within { box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18); }
+:root[data-tema='oscuro'] .topbar--grande .boton-primario { background: #f59e0b; color: #020617; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
+:root[data-tema='oscuro'] .topbar--grande .boton-primario:hover { background: #fbbf24; }
+:root[data-tema='oscuro'] .topbar--grande .boton-primario:focus-visible { outline: 2px solid #f59e0b; }
+/* ==== fin del tema oscuro ==== */
