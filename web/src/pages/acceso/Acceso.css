@@ -199,3 +199,16 @@
   .ac { grid-template-columns: 1fr; }
   .ac-marca { display: none; }
 }
+
+/* El acceso siempre es claro: sin esto, en modo oscuro el autocompletado del navegador pintaba
+   el correo y la contraseña con fondo gris oscuro sobre el formulario blanco */
+.ac { color-scheme: light; }
+.ac-panel input:-webkit-autofill,
+.ac-panel input:-webkit-autofill:hover,
+.ac-panel input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset;
+  -webkit-text-fill-color: #0f172a;
+  caret-color: #0f172a;
+  transition: background-color 9999s ease-out 0s;
+}
+.ac-panel input::selection { background: #fde68a; color: #0f172a; }
