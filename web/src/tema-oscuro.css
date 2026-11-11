@@ -10,18 +10,13 @@
 :root[data-tema='oscuro'] img[src$='.svg']:not(.menu img) { filter: none; }
 :root[data-tema='oscuro'] input, :root[data-tema='oscuro'] select, :root[data-tema='oscuro'] textarea { color-scheme: dark; }
 
-/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a mano) ==== */
-:root[data-tema='oscuro'][data-tema='oscuro'] .rg-serie { stroke: #2a3649; }
-:root[data-tema='oscuro'][data-tema='oscuro'] .rg-punto { background: #182234; box-shadow: 0 0 0 4px rgba(24, 34, 52, 0.9), 0 1px 4px rgba(0, 0, 0, 0.4); }
-:root[data-tema='oscuro'][data-tema='oscuro'] .rg-punto-valor { background: #182234; color: #8ea4d7; }
-:root[data-tema='oscuro'][data-tema='oscuro'] .ud__limite em, :root[data-tema='oscuro'][data-tema='oscuro'] .pg-semana__meta-linea em { background: #182234; }
-:root[data-tema='oscuro'][data-tema='oscuro'] .mp-anillo__pista { stroke: #1e293b; }
-:root[data-tema='oscuro'][data-tema='oscuro'] .ayuda-globo { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); border: 1px solid #334155; }
-/* ==== fin del tema oscuro ==== */
-
-/* Barra superior de Inicio en oscuro: fondo profundo, píldora esmeralda y segmentado más contrastado */
+/* Barra superior de Inicio en oscuro: fondo profundo, píldora esmeralda y controles sobre #141b2d */
 :root[data-tema='oscuro'] .topbar--grande { background: #0d1322; border-bottom-color: rgba(30, 41, 59, 0.8); }
 :root[data-tema='oscuro'] .topbar--grande .estado { background: rgba(2, 44, 34, 0.6); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
 :root[data-tema='oscuro'] .topbar--grande .segmentado { background: #141b2d; border-color: #1e293b; }
+:root[data-tema='oscuro'] .topbar--grande .segmentado__opcion { color: #94a3b8; }
 :root[data-tema='oscuro'] .topbar--grande .segmentado__opcion--activa { background: rgba(51, 65, 85, 0.8); color: #fff; }
 :root[data-tema='oscuro'] .topbar--grande .buscador { background: #141b2d; border-color: #1e293b; }
+:root[data-tema='oscuro'] .topbar--grande .buscador input { color: #fff; }
+:root[data-tema='oscuro'] .topbar--grande .buscador input::placeholder { color: #64748b; }
+:root[data-tema='oscuro'] .topbar--grande .topbar__ruta { color: #f59e0b; }

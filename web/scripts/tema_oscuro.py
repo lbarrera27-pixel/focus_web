@@ -20,7 +20,7 @@ INICIO = '/* ==== tema oscuro (generado por scripts/tema_oscuro.py; no editar a 
 FIN = '/* ==== fin del tema oscuro ==== */'
 PREFIJO = ":root[data-tema='oscuro']"
 # El acceso tiene su propio panel oscuro y el menú lateral ya es oscuro
-OMITIR = {'Acceso.css', 'Menu.css'}
+OMITIR = {'Acceso.css', 'Menu.css', 'tema-oscuro.css'}
 
 FONDO = {'background', 'background-color', 'background-image', 'fill'}
 TEXTO = {'color', 'caret-color', '-webkit-text-fill-color'}
@@ -200,7 +200,10 @@ def main():
             continue
         s = f.read_text(encoding='utf-8')
         if INICIO in s:
-            s = s[:s.index(INICIO)].rstrip() + '\n'
+            # Se quita solo el bloque generado; lo que haya después de su cierre se conserva
+            antes, resto = s.split(INICIO, 1)
+            despues = resto.split(FIN, 1)[1] if FIN in resto else ''
+            s = antes.rstrip() + '\n' + despues.lstrip('\n')
         reglas = procesar(s)
         if reglas:
             s += f'\n{INICIO}\n' + '\n'.join(reglas) + f'\n{FIN}\n'
