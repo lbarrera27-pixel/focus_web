@@ -138,7 +138,7 @@ IA conversacional & Claude (Anthropic) & la usa la API para el Compañero Foqui 
 \end{center}
 
 \noindent El flujo es: \textbf{navegador o teléfono} $\rightarrow$ \textbf{API} (con el header
-\texttt{X-Usuario-Id}) $\rightarrow$ \textbf{Azure SQL} y \textbf{Blob Storage}. La API también llama a
+\texttt{Authorization: Bearer}) $\rightarrow$ \textbf{Azure SQL} y \textbf{Blob Storage}. La API también llama a
 Claude para las respuestas de Foqui.
 
 \begin{nota}[La base de datos se duerme]
@@ -210,20 +210,22 @@ Ajustes y reglas, Exportar mis datos, Ayuda y soporte y Cerrar sesión. Una dire
 \begin{lstlisting}
 {"status":"ok","base_datos":"ok","motor":"mssql"}
 \end{lstlisting}
-  \item Para las rutas privadas escribe el número de usuario en el campo \texttt{X-Usuario-Id}
-        (lo devuelve \ruta{POST /auth/login}). La cuenta de ejemplo \texttt{demo2@focus.app} es el usuario \textbf{8}.
+  \item Para las rutas privadas entra con \ruta{POST /auth/login} y copia el \texttt{access\_token} de la respuesta.
+  \item Clic en \menu{Authorize}, arriba a la derecha, pega el token y confirma. Swagger lo manda en cada petición.
 \end{enumerate}
 
 \begin{nota}[Los números de las rutas son por usuario]
-\ruta{GET /pausas/7} con \texttt{X-Usuario-Id: 8} es la 7.\textordmasculine{} pausa del usuario 8, no la pausa
-con id 7 de la tabla. Sin el header la API responde \texttt{422}; con un usuario inexistente o
-desactivado, \texttt{401}.
+\ruta{GET /pausas/7} con el token del usuario 8 es la 7.\textordmasculine{} pausa de ese usuario, no la pausa
+con id 7 de la tabla. Sin token la API responde \texttt{422}; con un token inválido o vencido, o de un
+usuario desactivado, \texttt{401}.
 \end{nota}
 
 \subsection{Desde PowerShell}
 \begin{lstlisting}[language=texto]
 $api = "https://focus-api-luisbb27.azurewebsites.net"
-$h   = @{ "X-Usuario-Id" = "8" }
+$cuerpo = '{"email":"demo2@focus.app","password":"TU_CONTRASENA"}'
+$login  = Invoke-RestMethod "$api/auth/login" -Method Post -ContentType "application/json" -Body $cuerpo
+$h   = @{ Authorization = "Bearer $($login.access_token)" }
 
 Invoke-RestMethod "$api/salud"
 Invoke-RestMethod "$api/apps" -Headers $h
@@ -285,8 +287,8 @@ Las dos están en la carpeta \texttt{postman/} del repositorio y en el ZIP de la
 \begin{paso}{3 \textperiodcentered{} Correr todo de una vez (Runner)}
 \begin{enumerate}[leftmargin=*]
   \item Clic derecho en la colección \textrightarrow{} \menu{Run collection} \textrightarrow{} \menu{Run}.
-  \item La colección hace sola el registro de un usuario de prueba, guarda su número en la variable
-        \texttt{usuarioId} y agrega el header \texttt{X-Usuario-Id} a cada petición.
+  \item La colección hace sola el registro de un usuario de prueba, inicia sesión, guarda el token en la
+        variable \texttt{token} y agrega el header \texttt{Authorization} a cada petición.
   \item Si la base de Azure estaba dormida, \texttt{GET /salud} espera 30 segundos y reintenta solo.
   \item Al final, la carpeta \emph{Limpieza} borra lo que se creó y desactiva el usuario de prueba.
   \item Resultado esperado de la colección de rutas nuevas: \textbf{25 peticiones, 33 pruebas en verde} y una
@@ -298,9 +300,9 @@ Las dos están en la carpeta \texttt{postman/} del repositorio y en el ZIP de la
 \begin{enumerate}[leftmargin=*]
   \item Abre \texttt{GET /salud} \textrightarrow{} \menu{Send}. Debe responder \texttt{\{"status":"ok","base\_datos":"ok"\}}.
   \item Para ver los datos de una cuenta que ya existe, entra con \texttt{POST /auth/login}
-        (Body \textrightarrow{} raw \textrightarrow{} JSON con \texttt{email} y \texttt{password}). La respuesta trae \texttt{usuario\_id}.
-  \item Copia ese número en la variable \texttt{usuarioId} de la colección. Desde ahí todas las
-        peticiones son de ese usuario. La cuenta de ejemplo \texttt{demo2@focus.app} es el usuario \textbf{8}.
+        (Body \textrightarrow{} raw \textrightarrow{} JSON con \texttt{email} y \texttt{password}). La respuesta trae \texttt{access\_token}.
+  \item Copia ese valor en la variable \texttt{token} de la colección. Desde ahí todas las
+        peticiones son de ese usuario. El token dura 30 días; cuando venza, vuelve a entrar.
   \item Para subir una foto: \texttt{POST /usuarios/me/foto/archivo} \textrightarrow{} \menu{Body}
         \textrightarrow{} \menu{form-data} \textrightarrow{} en la llave \texttt{archivo} elige \menu{File} y una imagen
         JPG, PNG o WEBP de hasta 5 MB \textrightarrow{} \menu{Send}. Se guarda en Blob Storage.
@@ -357,7 +359,7 @@ Sin configurar nada usa una base SQLite local (\texttt{focus.db}); Swagger queda
 Respuesta & Qué significa \\
 \midrule
 \texttt{503} & La base de Azure está despertando. Espera 30 s y vuelve a enviar. \\
-\texttt{401} & El \texttt{usuarioId} no existe o el usuario está desactivado. Vuelve a correr \texttt{POST /auth/registro} o usa otro número. \\
+\texttt{401} & El token es inválido o venció, o el usuario está desactivado. Vuelve a entrar con \texttt{POST /auth/login} y actualiza la variable \texttt{token}. \\
 \texttt{422} & Falta un dato o tiene un formato inválido (por ejemplo, batería mayor a 100). \\
 \texttt{404} & Ese número no existe para ese usuario (los números son por usuario). \\
 \emph{Could not send request} & Con \texttt{127.0.0.1} la API local no está encendida; con Azure, revisa tu internet. \\

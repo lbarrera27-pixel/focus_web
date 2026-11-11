@@ -24,6 +24,11 @@ class RecuperarEntrada(BaseModel):
     email: str = Field(..., pattern=PATRON_EMAIL, examples=["dazai@focus.app"])
 
 
+class RestablecerEntrada(BaseModel):
+    token: str = Field(..., min_length=20, max_length=200)
+    password: str = Field(..., min_length=8, max_length=72, examples=["NuevaClave123"])
+
+
 class UsuarioActualizar(BaseModel):
     nombre: Optional[str] = Field(None, min_length=1, max_length=120)
     seudonimo: Optional[str] = Field(None, max_length=60)
@@ -47,4 +52,7 @@ class UsuarioRespuesta(Respuesta):
 class LoginRespuesta(BaseModel):
     usuario_id: int
     nombre: str
-    header: str = Field(..., description="Header que debe enviarse en las demás rutas")
+    header: str = Field(..., description="Header del modo anterior (X-Usuario-Id)")
+    access_token: str = Field(..., description="JWT para Authorization: Bearer <token>")
+    token_type: str = "bearer"
+    expira_en: int = Field(..., description="Segundos de vigencia del token")

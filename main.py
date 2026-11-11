@@ -21,8 +21,9 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from app.config import CORS_ORIGINS
 from app.controllers import (
     app_controller, auth_controller, companero_controller, configuracion_controller, dominio_controller,
-    estadisticas_controller, evento_controller, franja_controller, ia_controller, pausa_controller,
-    plan_controller, riesgo_controller, salud_controller, sesion_controller, token_controller, usuario_controller,
+    estadisticas_controller, evento_controller, franja_controller, ia_controller, metricas_controller,
+    pausa_controller, plan_controller, riesgo_controller, salud_controller, sesion_controller, token_controller,
+    usuario_controller, v1_controller,
 )
 from app.database import sincronizar_esquema
 from app.utils.errores import Conflicto, NoEncontrado
@@ -43,7 +44,8 @@ app = FastAPI(
     version="2.0.0",
     description=(
         "Backend de Focus!, app Android para reducir gradualmente el tiempo en pantalla.\n\n"
-        "**Identificación:** las rutas privadas requieren el header `X-Usuario-Id`. "
+        "**Identificación:** las rutas privadas requieren `Authorization: Bearer <token>` (de `POST /auth/login`) "
+        "o, en el modo anterior, el header `X-Usuario-Id`. "
         "Los números en las rutas son relativos a ese usuario: "
         "`GET /pausas/7` con `X-Usuario-Id: 1` devuelve la 7.ª pausa del usuario 1."
     ),
@@ -95,6 +97,6 @@ for modulo in (
     salud_controller, auth_controller, usuario_controller, app_controller, evento_controller,
     franja_controller, plan_controller, pausa_controller, dominio_controller, sesion_controller,
     token_controller, estadisticas_controller, configuracion_controller, riesgo_controller, companero_controller,
-    ia_controller,
+    ia_controller, metricas_controller, v1_controller,
 ):
     app.include_router(modulo.router)

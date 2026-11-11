@@ -5,7 +5,7 @@ from app.utils.errores import Conflicto
 
 class AppService(ServicioPorUsuario):
     no_encontrado = "No existe la app {numero} para este usuario"
-    campos_anulables = {"categoria"}
+    campos_anulables = {"categoria", "limite_minutos"}
     repo: AppRepository
 
     def antes_de_eliminar(self, app) -> None:

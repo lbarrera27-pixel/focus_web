@@ -41,6 +41,33 @@ def get_db():
         db.close()
 
 
+# Columnas agregadas después de crear las tablas en Azure: (tabla, columna, tipo SQL Server, tipo SQLite).
+# create_all() solo crea tablas nuevas; estas se agregan con ALTER TABLE si faltan (idempotente).
+_COLUMNAS_NUEVAS = [
+    ("app", "limite_minutos", "INT NULL", "INTEGER"),
+    ("app", "nivel", "INT NOT NULL CONSTRAINT df_app_nivel DEFAULT 2", "INTEGER NOT NULL DEFAULT 2"),
+    ("app", "vigilada", "BIT NOT NULL CONSTRAINT df_app_vigilada DEFAULT 1", "BOOLEAN NOT NULL DEFAULT 1"),
+    ("app", "actualizado", "DATETIME2 NOT NULL CONSTRAINT df_app_actualizado DEFAULT SYSUTCDATETIME()",
+     "DATETIME NOT NULL DEFAULT '2026-01-01 00:00:00'"),
+]
+
+
+def _agregar_columnas_nuevas() -> None:
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    with engine.begin() as con:
+        for tabla, columna, tipo_mssql, tipo_sqlite in _COLUMNAS_NUEVAS:
+            existentes = {c["name"] for c in inspector.get_columns(tabla)}
+            if columna in existentes:
+                continue
+            if es_sqlite:
+                con.execute(text(f"ALTER TABLE {tabla} ADD COLUMN {columna} {tipo_sqlite}"))
+            else:
+                con.execute(text(f"ALTER TABLE {tabla} ADD {columna} {tipo_mssql}"))
+            log.info("Columna agregada: %s.%s", tabla, columna)
+
+
 def sincronizar_esquema(intentos: int = 5, espera_seg: int = 15) -> None:
     """Crea las tablas que no existan (ORM sincronizando el esquema desde el servidor).
 
@@ -52,6 +79,7 @@ def sincronizar_esquema(intentos: int = 5, espera_seg: int = 15) -> None:
     for intento in range(1, intentos + 1):
         try:
             Base.metadata.create_all(bind=engine)
+            _agregar_columnas_nuevas()
             log.info("Esquema sincronizado (%s)", engine.dialect.name)
             return
         # DBAPIError y no solo OperationalError: el error 40613 de Azure SQL ("database not currently
